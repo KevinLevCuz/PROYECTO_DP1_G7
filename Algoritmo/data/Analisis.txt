@@ -1,0 +1,13 @@
+ANALISIS:
+    Entrada:
+        1. Data de Bloqueos.
+        2. Data de Mantenimiento.
+        3. Data de Pedidos.
+        4. Data de Averias(Por ahora no se tomará en cuenta.)
+        4. X extremo del mapa.
+        5. Y extremo del mapa.
+        6. Fecha y Hora de Inicio.
+        7. Plazo Minimo en horas.
+        8. Tiempo del Salto del Algoritmo.
+        9. 
+
