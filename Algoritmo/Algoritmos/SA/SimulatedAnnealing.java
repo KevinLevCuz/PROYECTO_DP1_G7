@@ -3,23 +3,25 @@ package Algoritmos.SA;
 import java.util.*;
 
 import java.io.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.awt.Point;
 
 public class SimulatedAnnealing {
 
-    static double T = 1000;
+    static double T = 0.3;
     static double Tmin = 0.01;
     static double alpha = 0.95;
-    static int iterPerTemp = 500;
+    static int iterPerTemp = 10;
 
     public static void main(String[] args) throws IOException {
-        List<Pedido> pedidos = cargarPedidos("C:\\Users\\josep\\OneDrive\\Desktop\\PUCP\\2025-1\\PDDS\\PDDS_Algoritmos\\data\\pedidos.txt");
-        List<Camion> camiones = cargarCamiones("C:\\Users\\josep\\OneDrive\\Desktop\\PUCP\\2025-1\\PDDS\\PDDS_Algoritmos\\data\\camiones.txt");
-        Set<Bloqueo> bloqueos = cargarBloqueos("C:\\Users\\josep\\OneDrive\\Desktop\\PUCP\\2025-1\\PDDS\\PDDS_Algoritmos\\data\\bloqueos.txt");
-        // Set<Integer> camionesEnMantenimiento =
-        // cargarMantenimiento("../../data/mantenimiento.txt");
+
+        List<Pedido> pedidos = cargarPedidos("data\\pedidos.txt");
+        List<Camion> camiones = cargarCamiones("data\\camiones.txt");
+        Set<Bloqueo> bloqueos = cargarBloqueos("data\\bloqueos.txt");
+        List<Mantenimiento> mantenimiento = cargaMantenimientos("data\\mantenimiento.txt");
 
         Solucion current = generarSolucionInicial(pedidos, camiones, bloqueos/* , camionesEnMantenimiento */);
         System.out.println("El costo total es:" + current.costoTotal(bloqueos));
@@ -30,7 +32,25 @@ public class SimulatedAnnealing {
 
         Random rand = new Random();
 
+        LocalDate fecha;
+        // AQUI OBTENEMOS LA FECHA SIMULADA.
+        if (args.length > 0) {
+            // Suponemos que la fecha viene como "yyyy-MM-dd"
+            String fechaString = args[0];
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            fecha = LocalDate.parse(fechaString, formatter);
+
+            System.out.println("Fecha simulada: " + fecha);
+        } else {
+            fecha = LocalDate.now();
+            System.out.println("No se pasó fecha simulada, usando fecha actual: " + fecha);
+        }
+
+        // ACTUALIZAR ESTADOS DE CAMIONES
+        actualizarEstadoCamiones(fecha, camiones, mantenimiento);
+
         while (T > Tmin) {
+
             for (int i = 0; i < iterPerTemp; i++) {
                 Solucion neighbor = generarVecino(current, camiones, bloqueos/* , camionesEnMantenimiento */);
                 double delta = neighbor.costoTotal(bloqueos) - current.costoTotal(bloqueos);
@@ -41,7 +61,9 @@ public class SimulatedAnnealing {
                     best = new Solucion(current);
                 }
             }
+            System.out.println("Sali del for");
             T *= alpha;
+            System.out.println("Ahora el T es: " + T);
         }
         System.out.println("Mejor consumo encontrado: " + best.costoTotal(bloqueos));
         best.imprimirRutas();
@@ -197,8 +219,8 @@ public class SimulatedAnnealing {
         return bloqueos;
 
     }
-    // static Set<Integer> cargarMantenimiento(String archivo) throws IOException {
-    // /* Implementar */ }
+    //static Set<Integer> cargarMantenimiento(String archivo) throws IOException {// /* Implementar */ }
+    
 
     private static LocalDateTime parsearFechaHora(String texto) {
         // Eliminar posibles espacios
@@ -252,22 +274,89 @@ public class SimulatedAnnealing {
         Random rand = new Random();
 
         List<Camion> camionesDisponibles = new ArrayList<>(vecino.rutas.keySet());
+//rutas: Objeto que relaciona el camion con su lista de pedidos -- {"TA01":{"PED1"},"TA02":{"PED2"}}
         if (camionesDisponibles.size() < 2)
             return vecino;
 
+
         Camion camionOrigen = camionesDisponibles.get(rand.nextInt(camionesDisponibles.size()));
         List<Pedido> pedidosOrigen = vecino.rutas.get(camionOrigen);
-        if (pedidosOrigen.isEmpty())
+
+        if (pedidosOrigen.isEmpty()) 
             return vecino;
 
         Pedido pedidoMovido = pedidosOrigen.remove(rand.nextInt(pedidosOrigen.size()));
         Camion camionDestino = camionesDisponibles.get(rand.nextInt(camionesDisponibles.size()));
 
-        if (camionDestino.getCapacidadEfectiva() >= pedidoMovido.getCantidad()) {
+        if (camionDestino.getCapacidadEfectiva() >= pedidoMovido.getCantidad() /* + peso que ya tiene el camion*/) {
             vecino.rutas.computeIfAbsent(camionDestino, k -> new ArrayList<>()).add(pedidoMovido);
         } else {
             pedidosOrigen.add(pedidoMovido); // Si no cabe, lo devolvemos
         }
         return vecino;
     }
+
+    public static List<Mantenimiento> cargaMantenimientos(String rutaArchivo) throws IOException {
+        List<Mantenimiento> listaMantenimientos = new ArrayList<>();
+        BufferedReader br = new BufferedReader(new FileReader(rutaArchivo));
+        String linea;
+
+        while ((linea = br.readLine()) != null) {
+            linea = linea.trim();
+            if (linea.isEmpty() || linea.startsWith("#")) {
+                continue; // Omitir líneas vacías o comentarios
+            }
+
+            String[] partes = linea.split(":");
+            if (partes.length != 2) {
+                System.err.println("Línea inválida: " + linea);
+                continue; // Puedes lanzar excepción si prefieres
+            }
+
+            String fecha = partes[0]; // Ejemplo: 20250401
+            String codigoCamion = partes[1].trim();
+
+            int anho = Integer.parseInt(fecha.substring(0, 4));
+            int mes = Integer.parseInt(fecha.substring(4, 6));
+            int dia = Integer.parseInt(fecha.substring(6, 8));
+
+            Mantenimiento mantenimiento = new Mantenimiento();
+            mantenimiento.setAnho(anho);
+            mantenimiento.setMes(mes);
+            mantenimiento.setDia(dia);
+            mantenimiento.setIdMantenimiento(1); // Usas el día como ID (si es así como lo quieres)
+
+            mantenimiento.setCodigo(codigoCamion);
+
+            listaMantenimientos.add(mantenimiento);
+        }
+        br.close();
+        return listaMantenimientos;
+    }
+
+    public static void actualizarEstadoCamiones(LocalDate fecha, List<Camion> camiones, List<Mantenimiento> mantenimientos) {
+        // Primero, marcamos todos los camiones como disponibles
+        /*for (Camion camion : camiones) {
+            camion.setDisponible(true);
+        }*/
+        
+        // Luego verificamos los mantenimientos programados para la fecha actual
+        for (Mantenimiento m : mantenimientos) {
+            // Creamos la fecha de mantenimiento a partir de los datos del objeto
+            LocalDate fechaMantenimiento = LocalDate.of(m.getAnho(), m.getMes(), m.getDia());
+            
+            // Si coincide con la fecha simulada/actual, marcamos el camión como no disponible
+            if (fecha.equals(fechaMantenimiento)) {
+                // Buscamos el camión por su código
+                for (Camion camion : camiones) {
+                    if (camion.getCodigo().equals(m.getCodigo())) {
+                        camion.setDisponible(false);
+                        System.out.println("Camión " + camion.getCodigo() + " en mantenimiento el " + fecha);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
 }
