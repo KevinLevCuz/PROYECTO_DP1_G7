@@ -97,6 +97,7 @@ class Solucion {
         for (Map.Entry<Camion, List<Pedido>> entry : rutas.entrySet()) {
             Camion camion = entry.getKey();
             List<Pedido> pedidos = entry.getValue();
+            System.out.println("Camión " + camion.getCodigo() + " (" + camion.getTipo() + "):");
 
             Point origen = new Point(0, 0);
             double consumoCamion = 0.0;
@@ -107,9 +108,9 @@ class Solucion {
                 double consumo = camion.calcularConsumoCombustible(distancia, p.getCantidad());
                 consumoCamion += consumo;
 
-                //System.out.println("  Planta (" + origen.x + "," + origen.y + ") → Cliente ("
-                  //      + destino.x + "," + destino.y + ") [Carga: " + p.getCantidad() + "m³, Distancia: "
-                    //    + distancia + ", Consumo: " + String.format("%.2f", consumo) + "]");
+                System.out.println("  Planta (" + origen.x + "," + origen.y + ") → Cliente ("
+                        + destino.x + "," + destino.y + ") [Carga: " + p.getCantidad() + "m³, Distancia: "
+                        + distancia + ", Consumo: " + String.format("%.2f", consumo) + "]");
 
                 origen = destino; // Para el siguiente pedido, el origen es el destino actual
             }
@@ -134,13 +135,11 @@ class Solucion {
         while (x != destino.x) {
             x += (destino.x > x) ? 1 : -1;
             camino.add(new Point(x, y));
-            
         }
         while (y != destino.y) {
             y += (destino.y > y) ? 1 : -1;
             camino.add(new Point(x, y));
         }
-        
         return camino;
     }
 
