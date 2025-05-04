@@ -47,4 +47,10 @@ public class Bloqueo {
                (fechaHora.isEqual(fechaHoraInicio) || fechaHora.isAfter(fechaHoraInicio)) &&
                (fechaHora.isBefore(fechaHoraFin) || fechaHora.isEqual(fechaHoraFin));
     }
+
+    public boolean estaActivo(LocalDateTime fechaHora) {
+        return (fechaHora.isEqual(fechaHoraInicio) || fechaHora.isAfter(fechaHoraInicio)) &&
+               (fechaHora.isBefore(fechaHoraFin) || fechaHora.isEqual(fechaHoraFin));
+    }
+
 }

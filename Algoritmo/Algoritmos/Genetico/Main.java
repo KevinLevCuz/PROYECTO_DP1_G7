@@ -3,35 +3,68 @@ package Algoritmos.Genetico;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import Algoritmos.SA.Mantenimiento;
+
 import java.awt.Point;
 
 
 public class Main {
     static Random rand = new Random();
-    static int TAMANO_POBLACION = 50;
+    static int TAMANO_POBLACION = 100;
     static int GENERACIONES = 200;
     static double PROB_MUTACION = 0.1;
     static double PROB_CRUCE = 0.8;
     static int TORNEOS_K = 3; 
 
-    public static void main(String[] args) throws IOException {
-        List<Pedido> pedidos = cargarPedidos("C:\\Users\\moral\\Documents\\PDDS_Algoritmos\\data\\pedidos.txt");
-        List<Camion> camiones = cargarCamiones("C:\\Users\\moral\\Documents\\PDDS_Algoritmos\\data\\camiones.txt");
-        Set<Bloqueo> bloqueos = cargarBloqueos("C:\\Users\\moral\\Documents\\PDDS_Algoritmos\\data\\bloqueos.txt");
+    public static void main(String[] args) throws IOException {        
+        List<Pedido> pedidos = cargarPedidos("data\\pedidos.txt");
+        List<Camion> camiones = cargarCamiones("data\\camiones.txt");
+        List<Bloqueo> bloqueos = cargarBloqueos("data\\bloqueos.txt");
         
+        List<Mantenimiento> mantenimiento = cargaMantenimientos("data\\mantenimiento.txt");
+
+        LocalDateTime fechaHora;
+        // AQUI OBTENEMOS LA FECHA SIMULADA.
+        if (args.length > 0) {
+            // Suponemos que la fecha viene como "yyyy-MM-dd HH:mm"
+            String fechaString = args[0];   
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            fechaHora = LocalDateTime.parse(fechaString, formatter);
+
+            System.out.println("Fecha y hora simulada: " + fechaHora);
+        } else {
+            fechaHora = LocalDateTime.now();
+            System.out.println("No se pasó fecha simulada, usando fecha y hora actual: " + fechaHora);
+        }
+
+
+        //Realizar un metodo que actualice los estados de los camiones.
+        actualizarEstadoCamiones(fechaHora, camiones, mantenimiento);
+
+        long camionesDisponibles = camiones.stream().filter(Camion::getDisponible).count();
+        if (camionesDisponibles == 0) {
+            System.err.println("Error: No hay camiones disponibles para la fecha " + fechaHora);
+            return;
+        }
+
         // 1. Inicializar población
         List<Solucion> poblacion = inicializarPoblacion(pedidos, camiones);
         
         // 2. Evolución
         for (int generacion = 0; generacion < GENERACIONES; generacion++) {
+            double fitnessInicial;
             // Evaluar fitness
-            evaluarPoblacion(poblacion);
+            fitnessInicial = evaluarPoblacion(poblacion, bloqueos, fechaHora);
             
             // Seleccionar padres
-            List<Solucion> padres = seleccionarPadres(poblacion);
+            List<Solucion> padres = seleccionarPadres(poblacion, bloqueos, fechaHora);
             
             // Cruzar
             List<Solucion> descendientes = cruzar(padres);
@@ -47,11 +80,11 @@ public class Main {
                     // Encontrar la mejor solución válida
                     Optional<Solucion> mejorSolucion = poblacion.stream()
                         .filter(s -> esSolucionValida(s, camiones))
-                        .min(Comparator.comparingDouble(Solucion::costoTotal));
+                        .min(Comparator.comparingDouble(s -> s.costoTotal(bloqueos, fechaHora)));
                     
                     if (mejorSolucion.isPresent()) {
                         System.out.println("Generación " + generacion + " - Mejor costo: " + 
-                                mejorSolucion.get().costoTotal());
+                                mejorSolucion.get().costoTotal(bloqueos, fechaHora));
                     } else {
                         System.out.println("Generación " + generacion + " - No hay soluciones válidas");
                     }
@@ -61,12 +94,13 @@ public class Main {
             }
         }
         // 3. Obtener mejor solución
-        evaluarPoblacion(poblacion);
-        Solucion mejorSolucion = Collections.min(poblacion, Comparator.comparingDouble(Solucion::costoTotal));
+        Double fitnessFinal;
+        fitnessFinal = evaluarPoblacion(poblacion, bloqueos, fechaHora);
+        Solucion mejorSolucion = Collections.min(poblacion, Comparator.comparingDouble(s -> s.costoTotal(bloqueos, fechaHora)));
         
         System.out.println("\n--- MEJOR SOLUCIÓN ENCONTRADA ---");
-        System.out.println("Costo total (consumo combustible): " + mejorSolucion.costoTotal());
-        mejorSolucion.imprimirRutas();
+        System.out.println("Costo total (consumo combustible): " + mejorSolucion.costoTotal(bloqueos, fechaHora));
+        mejorSolucion.imprimirRutasDetalladas(camiones,bloqueos); 
     }
 
     static boolean esSolucionValida(Solucion solucion, List<Camion> camiones) {
@@ -92,13 +126,24 @@ public class Main {
             
             // Asignar pedidos a camiones respetando capacidades
             for (Camion camion : camiones) {
-                sol.rutas.put(camion, new ArrayList<>());
+                if(camion.getDisponible()){
+                    sol.rutas.put(camion, new ArrayList<>());
+                }
+            }
+
+            // Obtener lista de camiones disponibles
+            List<Camion> camionesDisponibles = camiones.stream()
+                .filter(Camion::getDisponible)
+                .collect(Collectors.toList());
+                
+            if (camionesDisponibles.isEmpty()) {
+                throw new RuntimeException("No hay camiones disponibles para asignar pedidos");
             }
             
             for (Pedido pedido : pedidosAleatorios) {
                 boolean asignado = false;
                 // Intentar asignar a un camión aleatorio con capacidad suficiente
-                List<Camion> camionesAleatorios = new ArrayList<>(camiones);
+                List<Camion> camionesAleatorios = new ArrayList<>(camionesDisponibles);
                 Collections.shuffle(camionesAleatorios);
                 
                 for (Camion camion : camionesAleatorios) {
@@ -111,7 +156,23 @@ public class Main {
                 
                 
                 if (!asignado) {
-                    camionesAleatorios.get(0).getCapacidadEfectiva();
+                    Camion mejorCamion = null;
+                    int espacioDisponible = -1;
+                    
+                    for (Camion camion : camionesDisponibles) {
+                        int cargaActual = sol.rutas.get(camion).stream().mapToInt(Pedido::getCantidad).sum();
+                        int espacio = camion.getCapacidadEfectiva() - cargaActual;
+                        if (espacio > espacioDisponible && espacio >= pedido.getCantidad()) {
+                            espacioDisponible = espacio;
+                            mejorCamion = camion;
+                        }
+                    }
+                    
+                    if (mejorCamion != null) {
+                        sol.rutas.get(mejorCamion).add(pedido);
+                    } else {
+                        System.err.println("No hay camión disponible con capacidad suficiente para el pedido: " + pedido.getId());
+                    }
                 }
             }
             
@@ -128,12 +189,20 @@ public class Main {
     }
     
     // Evalúa el fitness de toda la población (menor costo es mejor)
-    static void evaluarPoblacion(List<Solucion> poblacion) {
-        
+    static double evaluarPoblacion(List<Solucion> poblacion, List<Bloqueo> bloqueos, LocalDateTime fechaHora) {
+        double sumaTotal=0;
+        for (Solucion sol : poblacion) {
+            double costo = sol.costoTotal(bloqueos, fechaHora);
+            if (costo == Double.MAX_VALUE) {
+                continue; // No sumar soluciones inválidas
+            }
+            sumaTotal += costo;
+        }
+        return sumaTotal;
     }
     
     // Selección por torneo
-    static List<Solucion> seleccionarPadres(List<Solucion> poblacion) {
+    static List<Solucion> seleccionarPadres(List<Solucion> poblacion, List<Bloqueo> bloqueos, LocalDateTime fechaHora) {
         List<Solucion> padres = new ArrayList<>();
         
         while (padres.size() < poblacion.size()) {
@@ -144,7 +213,7 @@ public class Main {
             }
             
             // El mejor del torneo (menor costo) es seleccionado
-            padres.add(Collections.min(torneo, Comparator.comparingDouble(Solucion::costoTotal)));
+            padres.add(Collections.min(torneo, Comparator.comparingDouble(s -> s.costoTotal(bloqueos, fechaHora))));
         }
         
         return padres;
@@ -267,16 +336,21 @@ public class Main {
         Collections.shuffle(pedidosFaltantes);
         for (Pedido p : pedidosFaltantes) {
             boolean asignado = false;
-            List<Camion> camionesAleatorios = new ArrayList<>(solucion.rutas.keySet());
-            Collections.shuffle(camionesAleatorios);
             
-            for (Camion camion : camionesAleatorios) {
-                if (puedeAsignarPedido(camion, solucion.rutas.get(camion), p)) {
-                    solucion.rutas.get(camion).add(p);
-                    asignado = true;
-                    break;
-                }
-            }
+            List<Camion> camionesConEspacio = solucion.rutas.keySet().stream()
+            .filter(c -> c.getDisponible())
+            .filter(c -> {
+                int cargaActual = solucion.rutas.get(c).stream().mapToInt(Pedido::getCantidad).sum();
+                return (cargaActual + p.getCantidad()) <= c.getCapacidadEfectiva();
+            })
+            .collect(Collectors.toList());
+            
+        if (!camionesConEspacio.isEmpty()) {
+            // Asignar a un camión aleatorio con espacio
+            Camion camion = camionesConEspacio.get(rand.nextInt(camionesConEspacio.size()));
+            solucion.rutas.get(camion).add(p);
+            asignado = true;
+        }
             
             // Si no se pudo asignar (por capacidad), forzar en el camión con más espacio
             if (!asignado) {
@@ -284,6 +358,8 @@ public class Main {
                 int espacioDisponible = -1;
                 
                 for (Camion camion : solucion.rutas.keySet()) {
+                    if (!camion.getDisponible()) continue;
+                    
                     int cargaActual = solucion.rutas.get(camion).stream().mapToInt(Pedido::getCantidad).sum();
                     int espacio = camion.getCapacidadEfectiva() - cargaActual;
                     if (espacio > espacioDisponible) {
@@ -323,20 +399,24 @@ public class Main {
     
     // Mutación por intercambio de dos pedidos entre camiones
     static void mutarIntercambio(Solucion sol, List<Camion> camiones) {
-        if (camiones.size() < 2) return;
+        List<Camion> camionesDisponibles = camiones.stream()
+        .filter(Camion::getDisponible)
+        .collect(Collectors.toList());
+
+        if (camionesDisponibles.size() < 2) return;
         
         // Seleccionar dos camiones aleatorios diferentes
-        Camion camion1 = camiones.get(rand.nextInt(camiones.size()));
+        Camion camion1 = camionesDisponibles.get(rand.nextInt(camionesDisponibles.size()));
         Camion camion2;
         do {
-            camion2 = camiones.get(rand.nextInt(camiones.size()));
+            camion2 = camionesDisponibles.get(rand.nextInt(camionesDisponibles.size()));
         } while (camion1 == camion2);
         
         List<Pedido> ruta1 = sol.rutas.get(camion1);
         List<Pedido> ruta2 = sol.rutas.get(camion2);
         
         if (ruta1.isEmpty() || ruta2.isEmpty()) return;
-        
+
         // Seleccionar pedidos aleatorios para intercambiar
         Pedido pedido1 = ruta1.get(rand.nextInt(ruta1.size()));
         Pedido pedido2 = ruta2.get(rand.nextInt(ruta2.size()));
@@ -357,20 +437,24 @@ public class Main {
     
     // Mutación por movimiento de un pedido a otro camión
     static void mutarMovimiento(Solucion sol, List<Camion> camiones) {
-        if (camiones.size() < 2) return;
+        List<Camion> camionesDisponibles = camiones.stream()
+        .filter(Camion::getDisponible)
+        .collect(Collectors.toList());
+        
+        if (camionesDisponibles.size() < 2) return;
         
         // Seleccionar camión origen aleatorio con al menos un pedido
         Camion camionOrigen;
         List<Pedido> rutaOrigen;
         do {
-            camionOrigen = camiones.get(rand.nextInt(camiones.size()));
+            camionOrigen = camionesDisponibles.get(rand.nextInt(camionesDisponibles.size()));
             rutaOrigen = sol.rutas.get(camionOrigen);
         } while (rutaOrigen.isEmpty());
         
         // Seleccionar camión destino diferente
         Camion camionDestino;
         do {
-            camionDestino = camiones.get(rand.nextInt(camiones.size()));
+            camionDestino = camionesDisponibles.get(rand.nextInt(camionesDisponibles.size()));
         } while (camionOrigen == camionDestino);
         
         List<Pedido> rutaDestino = sol.rutas.get(camionDestino);
@@ -504,8 +588,8 @@ public class Main {
         return camiones;
     }
 
-    static Set<Bloqueo> cargarBloqueos(String archivo) throws IOException {
-        Set<Bloqueo> bloqueos = new HashSet<>();
+    static List<Bloqueo> cargarBloqueos(String archivo) throws IOException {
+        List<Bloqueo> bloqueos = new ArrayList<>();
         BufferedReader br = new BufferedReader(new FileReader(archivo));
         String linea;
 
@@ -578,8 +662,64 @@ public class Main {
         int hora = Integer.parseInt(partes[1]);
         int minuto = Integer.parseInt(partes[2]);
         // Crear objeto LocalDateTime (asumiendo mes actual y año actual)
-        return LocalDateTime.of(2025, Month.JANUARY, dia, hora, minuto, 0, 0);
+        return LocalDateTime.of(2025, Month.MAY, dia, hora, minuto, 0, 0);
 
     }
 
+
+    public static List<Mantenimiento> cargaMantenimientos(String rutaArchivo) throws IOException {
+        List<Mantenimiento> listaMantenimientos = new ArrayList<>();
+        BufferedReader br = new BufferedReader(new FileReader(rutaArchivo));
+        String linea;
+
+        while ((linea = br.readLine()) != null) {
+            linea = linea.trim();
+            if (linea.isEmpty() || linea.startsWith("#")) {
+                continue; // Omitir líneas vacías o comentarios
+            }
+
+            String[] partes = linea.split(":");
+            if (partes.length != 2) {
+                System.err.println("Línea inválida: " + linea);
+                continue; // Puedes lanzar excepción si prefieres
+            }
+
+            String fecha = partes[0]; // Ejemplo: 20250401
+            String codigoCamion = partes[1].trim();
+
+            int anho = Integer.parseInt(fecha.substring(0, 4));
+            int mes = Integer.parseInt(fecha.substring(4, 6));
+            int dia = Integer.parseInt(fecha.substring(6, 8));
+
+            Mantenimiento mantenimiento = new Mantenimiento();
+            mantenimiento.setAnho(anho);
+            mantenimiento.setMes(mes);
+            mantenimiento.setDia(dia);
+            mantenimiento.setIdMantenimiento(1); // Usas el día como ID (si es así como lo quieres)
+
+            mantenimiento.setCodigo(codigoCamion);
+
+            listaMantenimientos.add(mantenimiento);
+        }
+        br.close();
+        return listaMantenimientos;
+    }
+
+    public static void actualizarEstadoCamiones(LocalDateTime fechaHora, List<Camion> camiones, List<Mantenimiento> mantenimientos) {
+        for (Mantenimiento m : mantenimientos) {
+            LocalDate fechaMantenimiento = LocalDate.of(m.getAnho(), m.getMes(), m.getDia());
+    
+            if (fechaHora.toLocalDate().equals(fechaMantenimiento)) {
+                for (Camion camion : camiones) {
+                    if (camion.getCodigo().equals(m.getCodigo())) {
+                        camion.setDisponible(false);
+                        System.out.println("Camión " + camion.getCodigo() + " en mantenimiento el " + fechaHora);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
 }
+

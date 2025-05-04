@@ -52,7 +52,7 @@ public class Camion {
     public double getPesoVacio() { return pesoVacio; }
     public int getCapacidadEfectiva() { return capacidadEfectiva; }
     public double getPesoMaximoCarga() { return pesoMaximoCarga; }
-    public boolean estaDisponible() { return disponible; }
+    public boolean getDisponible() { return disponible; }
     public LocalDateTime getProximoMantenimiento() { return proximoMantenimiento; }
 
     public void setDisponible(boolean disponible) { this.disponible = disponible; }

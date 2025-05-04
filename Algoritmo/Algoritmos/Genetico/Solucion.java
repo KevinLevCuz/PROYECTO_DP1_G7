@@ -1,6 +1,7 @@
 package Algoritmos.Genetico;
 
 import java.awt.Point;
+import java.time.LocalDateTime;
 import java.util.*;
 
 class Solucion {
@@ -18,7 +19,7 @@ class Solucion {
         }
     }
 
-    double costoTotal() {
+    double costoTotal(List<Bloqueo> bloqueos,LocalDateTime fechaHoraActual) {
         double consumoTotal = 0.0;
         for (Map.Entry<Camion, List<Pedido>> entry : rutas.entrySet()) {
             Camion camion = entry.getKey();
@@ -34,13 +35,46 @@ class Solucion {
             for (Pedido pedido : pedidosAsignados) {
                 Point destino = new Point(pedido.getUbicacionX(), pedido.getUbicacionY());
                 double distancia = calcularDistanciaManhattan(origen, destino);
+
+                // Verificar si hay bloqueos en este trayecto
+                if (hayBloqueoEnTrayecto(origen, destino, bloqueos, fechaHoraActual)) {
+                    return Double.MAX_VALUE; // Ruta inválida
+                }
+
                 consumoTotal += camion.calcularConsumoCombustible(distancia, pedido.getCantidad());
                 origen = destino;
             }
             // Retorno a la planta (0,0) sin carga
-            consumoTotal += camion.calcularConsumoCombustible(calcularDistanciaManhattan(origen, new Point(0, 0)), 0);
+            double distanciaRetorno = calcularDistanciaManhattan(origen, new Point(0, 0));
+            if (hayBloqueoEnTrayecto(origen, new Point(0, 0), bloqueos, fechaHoraActual)) {
+                return Double.MAX_VALUE;
+            }
+            consumoTotal += camion.calcularConsumoCombustible(distanciaRetorno, 0);
         }
         return consumoTotal;
+    }
+ 
+    private boolean hayBloqueoEnTrayecto(Point inicio, Point fin, List<Bloqueo> bloqueos, LocalDateTime fechaHora) {
+        for (Bloqueo bloqueo : bloqueos) {
+            // Verificar si el bloqueo está activo en este momento
+            if (!bloqueo.estaActivo(fechaHora)) {
+                continue;
+            }
+            
+            // Verificar si algún nodo bloqueado está en este trayecto
+            for (Point nodoBloqueado : bloqueo.getNodos()) {
+                if (puntoEnLinea(inicio, fin, nodoBloqueado)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean puntoEnLinea(Point a, Point b, Point p) {
+        // Verifica si el punto p está en la línea recta entre a y b (usando distancia Manhattan)
+        return p.x >= Math.min(a.x, b.x) && p.x <= Math.max(a.x, b.x) &&
+               p.y >= Math.min(a.y, b.y) && p.y <= Math.max(a.y, b.y);
     }
 
     private double calcularDistanciaManhattan(Point a, Point b) {
@@ -78,6 +112,43 @@ class Solucion {
                //     + distanciaRegreso + ", Consumo: " + String.format("%.2f", consumoRegreso) + "]");
             //System.out.println("  Consumo total de este camión: " + String.format("%.2f", consumoCamion));
             //System.out.println();
+        }
+    }
+    public void imprimirRutasDetalladas(List<Camion> camiones, List<Bloqueo> bloqueos) {
+        System.out.println("\n=== DETALLE DE RUTAS ===");
+        
+        for (Camion camion : rutas.keySet()) {
+            if (!camion.getDisponible()) {
+                System.out.println("\n🚛 Camión " + camion.getCodigo() + " - NO DISPONIBLE (en mantenimiento)");
+                continue;
+            }
+            
+            List<Pedido> ruta = rutas.get(camion);
+            int cargaTotal = ruta.stream().mapToInt(Pedido::getCantidad).sum();
+            
+            if(ruta.size() != 0){
+                System.out.printf("\n🚛 Camión %s (%s) - Capacidad: %d/%d m3 - Ruta: %d pedidos%n",
+                    camion.getCodigo(),
+                    camion.getTipo(),
+                    cargaTotal,
+                    camion.getCapacidadEfectiva(),
+                    ruta.size());
+            }
+            
+            
+            // Verificar bloqueos para cada segmento de la ruta
+            Point ubicacionActual = new Point(0, 0); // Asumiendo que el depósito está en (0,0)
+            for (Pedido pedido : ruta) {
+                Point destino = new Point(pedido.getUbicacionX(), pedido.getUbicacionY());
+                System.out.printf("   📦 Pedido %d → Cliente %s (%d m3) - Entrega: (%d, %d)%n",
+                        pedido.getId(),
+                        pedido.getCliente().getId(),
+                        pedido.getCantidad(),
+                        destino.x, destino.y);
+                
+                
+                ubicacionActual = destino;
+            }
         }
     }
 
