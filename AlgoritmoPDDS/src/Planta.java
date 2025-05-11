@@ -5,9 +5,11 @@ public class Planta {
     private double glpMaxima;
     private double glpRest;
     private Nodo ubicacion;
+    private double glpRestSim;
 
     public Planta(String tipo, Nodo ubicacion) {
         this.id = contadorId++;
+        this.tipo = tipo;
         AsignarGlpPorTipo(tipo);
         this.ubicacion = ubicacion;
     }
@@ -15,12 +17,14 @@ public class Planta {
     private void AsignarGlpPorTipo(String tipo) {
         switch (tipo) {
             case "PRINCIPAL":
-                this.glpMaxima = 100000.0;
-                this.glpRest=100000.0;
+                this.glpMaxima = 10000;
+                this.glpRest=10000;
+                this.glpRestSim=10000;
                 break;
             case "SECUNDARIA":
                 this.glpMaxima = 60.0;
                 this.glpRest=60.0;
+                this.glpRestSim=60;
                 break;
             default:
                 System.out.println("Ingreso mal algún tipo de Planta.");
@@ -56,5 +60,14 @@ public class Planta {
     }
     public void setUbicacion(Nodo ubicacion) {
         this.ubicacion = ubicacion;
+    }
+     public double getGlpRestSim() {
+        return glpRestSim;
+    }
+    public void setGlpRestSim(double glpRestSim) {
+        this.glpRestSim = glpRestSim;
+    }
+    public void resetSimulacion() {
+        this.glpRestSim = this.glpRest;
     }
 }

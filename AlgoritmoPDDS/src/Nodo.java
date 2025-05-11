@@ -1,32 +1,82 @@
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Nodo {
-    private int posX;
-    private int posY;
-    private boolean bloqueado;
-    
-    public Nodo(int posX, int posY) {
-        this.posX = posX;
-        this.posY = posY;
-        this.bloqueado = false;
+    public int posX, posY;
+    public double g = Double.MAX_VALUE;
+    public double h = 0;
+    public double f = 0;
+    public double getG() {
+        return g;
     }
-    public int getPosX() {
-        return posX;
+
+    public void setG(double g) {
+        this.g = g;
     }
-    public void setPosX(int posX) {
-        this.posX = posX;
+
+    public double getH() {
+        return h;
     }
-    public int getPosY() {
-        return posY;
+
+    public void setH(double h) {
+        this.h = h;
     }
-    public void setPosY(int posY) {
-        this.posY = posY;
+
+    public double getF() {
+        return f;
     }
-    public boolean isBloqueado() {
-        return bloqueado;
+
+    public void setF(double f) {
+        this.f = f;
     }
-    public void setBloqueado(boolean bloqueado) {
-        this.bloqueado = bloqueado;
+
+    public Nodo parent = null;
+    public List<TimeRange> bloqueos = new ArrayList<>();
+
+    public List<TimeRange> getBloqueos() {
+        return bloqueos;
+    }
+
+    public void setBloqueos(List<TimeRange> bloqueos) {
+        this.bloqueos = bloqueos;
+    }
+
+    public Nodo(int x, int y) {
+        this.posX = x;
+        this.posY = y;
+    }
+
+    public boolean isBlockedAt(LocalDateTime dateTime) {
+        for (TimeRange r : bloqueos) {
+            if (r.contains(dateTime)) {
+                return true;
+            }
+        }
+        return false;
     }
     public String detallarEnString(){
         return "("+posX+","+posY+")";
     }
+
+    public void agregarBloqueo(LocalDateTime inicio, LocalDateTime fin) {
+        this.bloqueos.add(new TimeRange(inicio, fin));
+    }
+
+    public int getPosX() {
+        return posX;
+    }
+
+    public void setPosX(int posX) {
+        this.posX = posX;
+    }
+
+    public int getPosY() {
+        return posY;
+    }
+
+    public void setPosY(int posY) {
+        this.posY = posY;
+    }
+
 }

@@ -3,31 +3,37 @@ import java.time.LocalDateTime;
 public class Pedido {
     private static int contadorId = 1;
     private int id;
-    private Nodo ubicacion; 
-    private Ruta ruta;
+    private Nodo ubicacion;
     private String idCliente;
     private double cantidadGlp;
     private LocalDateTime fechaRegistro;
     private LocalDateTime fechaMaximaEntrega;
     private double plazoHorasMaximo;
     private boolean entregado;
+    private boolean asignado;
+    private boolean asignadoSim;
 
-    public Pedido(Nodo ubicacion, Ruta ruta, String idCliente, double cantidadGlp, LocalDateTime fechaRegistro, double plazoHorasMaximo) {
+    public Pedido(Nodo ubicacion, String idCliente, double cantidadGlp, LocalDateTime fechaRegistro, double plazoHorasMaximo) {
         this.id = contadorId++;
         this.ubicacion = ubicacion;
-        this.ruta = ruta;
         this.idCliente = idCliente;
         this.cantidadGlp = cantidadGlp;
         this.entregado=false;
         this.fechaRegistro = fechaRegistro;
         this.plazoHorasMaximo = plazoHorasMaximo;
         this.fechaMaximaEntrega = sumarHoras(fechaRegistro, plazoHorasMaximo);
+        this.asignado = false;
+        this.asignadoSim = false;
     }
 
     public LocalDateTime sumarHoras(LocalDateTime fechaHora, double horas){
         long horasEnteras = (long) horas;
         long minutos = Math.round((horas - horasEnteras) * 60);
         return fechaHora.plusHours(horasEnteras).plusMinutes(minutos);
+    }
+
+    public LocalDateTime getFechaMinimaEntrega() {
+        return this.fechaRegistro.plusHours(4); 
     }
 
     public int getId() {
@@ -38,12 +44,6 @@ public class Pedido {
     }
     public void setUbicacion(Nodo ubicacion) {
         this.ubicacion = ubicacion;
-    }
-    public Ruta getRuta() {
-        return ruta;
-    }
-    public void setRuta(Ruta ruta) {
-        this.ruta = ruta;
     }
     public String getIdCliente() {
         return idCliente;
@@ -80,5 +80,17 @@ public class Pedido {
     }
     public void setPlazoHorasMaximo(double plazoHorasMaximo) {
         this.plazoHorasMaximo = plazoHorasMaximo;
+    }
+        public boolean isAsignado() {
+        return asignado;
+    }
+    public void setAsignado(boolean asignado) {
+        this.asignado = asignado;
+    }
+        public boolean isAsignadoSim() {
+        return asignadoSim;
+    }
+    public void setAsignadoSim(boolean asignadoSim) {
+        this.asignadoSim = asignadoSim;
     }
 }

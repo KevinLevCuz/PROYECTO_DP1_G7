@@ -3,9 +3,9 @@ import java.util.List;
 public class Solucion {
     private static int contadorId;
     private int id;
-    private List<Ruta> solucion;
+    private List<Asignacion> solucion;
 
-    public Solucion(List<Ruta> solucion) {
+    public Solucion(List<Asignacion> solucion) {
         this.id = contadorId++;
         this.solucion = solucion;
     }
@@ -14,11 +14,11 @@ public class Solucion {
         return id;
     }
 
-    public List<Ruta> getSolucion() {
+    public List<Asignacion> getSolucion() {
         return solucion;
     }
 
-    public void setSolucion(List<Ruta> solucion) {
+    public void setSolucion(List<Asignacion> solucion) {
         this.solucion = solucion;
     }
 
