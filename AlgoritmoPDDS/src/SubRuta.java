@@ -1,8 +1,12 @@
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.DuplicateFormatFlagsException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -18,9 +22,11 @@ public class SubRuta {
         this.ubicacionFin = ubicacionFin;
         this.trayectoria = new ArrayList<>();
     }
-    public List<Nodo> generarTrayectoria(Grid grid, LocalDateTime fechaSimulada) {
+    public Map.Entry<List<Nodo>,Integer> generarTrayectoria(Grid grid, LocalDateTime fechaSimulada, LocalDateTime fechaMaxima) {
         PriorityQueue<Nodo> openList = new PriorityQueue<>(Comparator.comparingDouble(n -> n.f));
         Set<Nodo> closedSet = new HashSet<>();
+        int segundos = 0;
+        int segundosMinimos = 14401;
 
         Nodo start = grid.getNodoAt(ubicacionInicio.getPosX(), ubicacionInicio.getPosY());
         Nodo end = grid.getNodoAt(ubicacionFin.getPosX(), ubicacionFin.getPosY());
@@ -41,19 +47,21 @@ public class SubRuta {
         start.h = heuristic(start, end);
         start.f = start.h;
         openList.add(start);
-        
+        LocalDateTime tiempoActualizadoTemporal = fechaSimulada;
+
+
         while (!openList.isEmpty()) {
             Nodo actual = openList.poll();
             
             if (actual.getPosX() == end.getPosX() && actual.getPosY()== end.getPosY()) {
-                return backtrace(actual);
+                return new AbstractMap.SimpleEntry<>(backtrace(actual), segundosMinimos);
             }
 
             closedSet.add(actual);
 
             for (Nodo vecino : grid.getNeighbors(actual)) {
 
-                if (vecino.isBlockedAt(fechaSimulada) || closedSet.contains(vecino)) {
+                if (vecino.isBlockedAt(tiempoActualizadoTemporal) || closedSet.contains(vecino)) {
                     continue;
                 }
 
@@ -65,15 +73,29 @@ public class SubRuta {
                     vecino.h = heuristic(vecino, end);
                     vecino.f = vecino.g + vecino.h;
 
-                    if (!openList.contains(vecino)) {
-                        openList.add(vecino);
+                    
+                    if (openList.contains(vecino)) {
+                        openList.remove(vecino); 
+                    }
+                    openList.add(vecino);
+
+                    segundos = vecino.SegundosParaProximoInicioBloqueo(tiempoActualizadoTemporal);
+                    if(segundos < segundosMinimos && segundos!=0){
+                        segundosMinimos = segundos;
                     }
 
+                    tiempoActualizadoTemporal = tiempoActualizadoTemporal.plusSeconds(72);
+                    
+                    if(tiempoActualizadoTemporal.isAfter(fechaMaxima)){
+                        System.out.println("Parece que no se va a alcanzar el tiempo pa llegar. GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                        return new AbstractMap.SimpleEntry<>(new ArrayList<>(), segundosMinimos);
+                        
+                    }
                 }
             }
         }
 
-        return new ArrayList<>(); 
+        return new AbstractMap.SimpleEntry<>(new ArrayList<>(), segundosMinimos);
     }
 
     private double heuristic(Nodo a, Nodo b) {

@@ -22,7 +22,7 @@ public class VisualizadorAsignaciones {
                 asignacion.getFechaPartida().format(formatter),
                 fin.format(formatter),
                 numPedidos,
-                Utilidades.calcularDistanciaTotal(asignacion.getSubRutas(),grid, fechaHora),
+                Utilidades.calcularDistanciaTotal(asignacion),
                 asignacion.getSubRutas().getFirst().getUbicacionFin().detallarEnString());
         }
     }
@@ -39,7 +39,7 @@ public class VisualizadorAsignaciones {
         int orden = 1;
         double distanciaAcumulada = 0;
         for (SubRuta subRuta : asignacion.getSubRutas()) {
-            List<Nodo> trayectoria = subRuta.generarTrayectoria(grid, fechaHora);
+            List<Nodo> trayectoria = subRuta.getTrayectoria();
             double distancia = trayectoria.size()-1;
             distanciaAcumulada += distancia;
             

@@ -16,7 +16,7 @@ public class Utilidades {
     public static LocalDateTime calcularHoraFin(Asignacion asignacion) {
         return asignacion.getSubRutas().getLast().getFechaLlegada();
     }
-    private static int contarParadas(List<SubRuta> subRutas,List<Pedido> pedidos, List<Planta> plantas) {
+    public static int contarParadas(List<SubRuta> subRutas,List<Pedido> pedidos, List<Planta> plantas) {
         // Cada subruta que termina en cliente o planta cuenta como parada
         int contador=0;
         for(SubRuta subRuta: subRutas){
@@ -26,10 +26,10 @@ public class Utilidades {
         }
         return contador-1;
     }
-    public static double calcularDistanciaTotal(List<SubRuta> subRutas, Grid grid, LocalDateTime fechaHora) {
+    public static double calcularDistanciaTotal(Asignacion asignacion) {
         double distancia = 0.0;
-        for(SubRuta subRuta:subRutas){
-            distancia += subRuta.generarTrayectoria(grid, fechaHora).size()-1;
+        for(SubRuta subRuta: asignacion.getSubRutas()){
+            distancia += subRuta.getTrayectoria().size()-1;
         }
         return distancia;
     }
@@ -59,7 +59,7 @@ public class Utilidades {
         .findFirst()
         .orElse(null);
     }
-    public static double calcularDistanciaDeTrayectoria(List<Nodo> trayectoria) {
+    public static int calcularDistanciaDeTrayectoria(List<Nodo> trayectoria) {
         /* 
         System.out.println("La trayectoria a utilizar es: ");
         for(Nodo n: trayectoria){

@@ -1,3 +1,4 @@
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +8,9 @@ public class Nodo {
     public double g = Double.MAX_VALUE;
     public double h = 0;
     public double f = 0;
+    public Nodo parent = null;
+    public List<TimeRange> bloqueos = new ArrayList<>();
+
     public double getG() {
         return g;
     }
@@ -30,9 +34,6 @@ public class Nodo {
     public void setF(double f) {
         this.f = f;
     }
-
-    public Nodo parent = null;
-    public List<TimeRange> bloqueos = new ArrayList<>();
 
     public List<TimeRange> getBloqueos() {
         return bloqueos;
@@ -77,6 +78,26 @@ public class Nodo {
 
     public void setPosY(int posY) {
         this.posY = posY;
+    }
+
+    public int SegundosParaProximoInicioBloqueo(LocalDateTime fechaSimulada) {
+        LocalDateTime proximoBloqueo = null;
+        int segundos = 0;
+        for (TimeRange bloqueo : bloqueos) {
+            LocalDateTime inicioBloqueo = bloqueo.getStart();
+            
+            if (inicioBloqueo.isAfter(fechaSimulada)) {
+                if (proximoBloqueo == null || inicioBloqueo.isBefore(proximoBloqueo)) {
+                    proximoBloqueo = inicioBloqueo;
+                }
+            }
+        }
+        if(proximoBloqueo==null){
+            segundos=0;
+        } else{
+            segundos = (int) Duration.between(fechaSimulada, proximoBloqueo).toSeconds();
+        }        
+        return segundos;
     }
 
 }
