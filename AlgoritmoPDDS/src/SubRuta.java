@@ -16,11 +16,13 @@ public class SubRuta {
     private LocalDateTime fechaPartida;
     private LocalDateTime fechaLlegada;
     private List<Nodo> trayectoria;
+    private Pedido pedido;
 
-    public SubRuta(Nodo ubicacionInicio, Nodo ubicacionFin) {
+    public SubRuta(Nodo ubicacionInicio, Nodo ubicacionFin, Pedido pedido) {
         this.ubicacionInicio = ubicacionInicio;
         this.ubicacionFin = ubicacionFin;
         this.trayectoria = new ArrayList<>();
+        this.pedido = pedido;
     }
     public Map.Entry<List<Nodo>,Integer> generarTrayectoria(Grid grid, LocalDateTime fechaSimulada, LocalDateTime fechaMaxima) {
         PriorityQueue<Nodo> openList = new PriorityQueue<>(Comparator.comparingDouble(n -> n.f));
@@ -110,7 +112,13 @@ public class SubRuta {
         }
         return path;
     }
-       public Nodo getUbicacionInicio() {
+    public Pedido getPedido() {
+        return pedido;
+    }
+    public void setPedido(Pedido pedido) {
+        this.pedido = pedido;
+    }
+    public Nodo getUbicacionInicio() {
         return ubicacionInicio;
     }
     public void setUbicacionInicio(Nodo ubicacionInicio) {

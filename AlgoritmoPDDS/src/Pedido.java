@@ -93,4 +93,10 @@ public class Pedido {
     public void setAsignadoSim(boolean asignadoSim) {
         this.asignadoSim = asignadoSim;
     }
+    public boolean estaEntre(LocalDateTime inicio, LocalDateTime fin){
+        if(this.fechaRegistro.isAfter(inicio) && this.fechaRegistro.isBefore(fin)){
+            return true;
+        }
+        return false;
+    }
 }

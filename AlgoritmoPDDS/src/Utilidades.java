@@ -101,4 +101,16 @@ public class Utilidades {
                 planta.getGlpMaxima());
         }
     }
+    public static int obtenerGlpACargar(Asignacion asignacion, int numero){
+        int carga = 0;
+        while(numero<=asignacion.getSubRutas().size() ){
+            Pedido pedido = asignacion.getSubRutas().get(numero).getPedido();
+            if(pedido!=null){
+                carga+=pedido.getCantidadGlp();
+            } else {
+                break;
+            }
+        }
+        return carga;
+    }
 }

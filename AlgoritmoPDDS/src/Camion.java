@@ -17,6 +17,7 @@ public class Camion {
     private double glpCargaRestSim; 
     private double glpTanqueRestSim;
     private boolean asignacionSimulada;
+    private boolean deRegreso;
 
     public Camion(String tipo, Nodo ubicacion) {
         this.tipo = tipo;
@@ -27,6 +28,7 @@ public class Camion {
         this.disponible=true;
         this.mantenimientos = new ArrayList<>();
         this.asignacionSimulada = false;
+        this.deRegreso=false;
         AsignarCaracteristicasFlota(tipo);
     }
 
@@ -191,5 +193,11 @@ public class Camion {
     }
     public void setAsignacionSimulada(boolean asignacionSimulada) {
         this.asignacionSimulada = asignacionSimulada;
+    }
+    public boolean isDeRegreso() {
+        return deRegreso;
+    }
+    public void setDeRegreso(boolean deRegreso) {
+        this.deRegreso = deRegreso;
     }
 }
