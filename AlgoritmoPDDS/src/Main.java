@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 public class Main {
-    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 2, 36); 
+    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 2, 23); 
     static LocalDateTime fechaMinima = LocalDateTime.of(2025, Month.MAY, 1, 0, 0); 
-    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 5, 3, 0); 
+    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 5, 7, 0); 
 
     //static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 0, 1); 
     static Grid grid = new Grid(70,50);
@@ -35,7 +35,7 @@ public class Main {
             cargarBloqueos("..\\data\\bloqueos.txt", grid);
             cargaMantenimientos("..\\data\\mantenimiento.txt",camiones);
             List<Asignacion> asignaciones = new ArrayList<>();
-            int tiempoSalto = 12;
+            int tiempoSalto = 60;
 
            while(fechaSimulada.isBefore(fechaHoraLimite)){
                 System.out.println("Ingreso: La fecha Simulada es: "+fechaSimulada);
@@ -49,9 +49,9 @@ public class Main {
                 if(!asignaciones.isEmpty()){
                     main.actualizarDatos(fechaSimulada, asignaciones, plantas);
              
-                    //for(Camion camion: camiones){
-                      // System.out.println("El camion:"+camion.getCodigo()+" esta en la ubicacion: "+camion.getUbicacion().detallarEnString()+ " con una carga restante de: "+camion.getGlpCargaRest()+" y un tanque restante de: "+camion.getGlpTanqueRest()+" y su estado de regreso es: "+camion.isDeRegreso());
-                    //}
+                    for(Camion camion: camiones){
+                        System.out.println("El camion con codigo:"+camion.getCodigo()+" esta disponible?"+ camion.isDisponible(fechaSimulada)+"en la ubicacion: "+camion.getUbicacion().detallarEnString()+ " con una carga restante de: "+camion.getGlpCargaRest()+" y un tanque restante de: "+camion.getGlpTanqueRest()+" y su estado de regreso es: "+camion.isDeRegreso() +" su simulacion esta en: "+camion.getGlpCargaRestSim()+" y el del tanque esta en:"+camion.getGlpTanqueRestSim());
+                    }
                 }
 
                 asignaciones = main.generarSolucionInicial(pedidosParaAsignar, camiones, plantas, fechaSimulada);
@@ -117,6 +117,7 @@ public class Main {
         int tiempoDespuesDePartir = 0;
         int contador = 0;
         for(Asignacion asignacion: asignaciones){
+            asignacion.getCamion().resetSimulacion();
             if(asignacion.getFechaPartida().isAfter(fechaHora)){
                 continue;
             }
@@ -196,9 +197,9 @@ public class Main {
             boolean asignado = false;
             Collections.shuffle(camiones);
             for (Camion camion : camiones) {
-                if (!camion.isDisponible(fechaSimulada)) {
-                    continue; //En un futuro implementaré que se pueda asignar si en el tiempo estimado de ese pedido se pueda. Talves no esta disponible ahora pero en un futuro sí.
-                }
+                //if (!camion.isDisponible(fechaSimulada)) {
+                  //  continue; //En un futuro implementaré que se pueda asignar si en el tiempo estimado de ese pedido se pueda. Talves no esta disponible ahora pero en un futuro sí.
+                //}
                 // Intentar asignación
                 List<SubRuta> subRutas = intentarAsignarPedidoSimple(camion, pedido, plantas, fechaSimulada,pedidos);
                 if(subRutas == null){

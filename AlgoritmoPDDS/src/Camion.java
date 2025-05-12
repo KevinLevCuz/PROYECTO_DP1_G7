@@ -89,6 +89,7 @@ public class Camion {
         }
         return copia;
     }
+
     public void resetSimulacion() {
         this.glpTanqueRestSim = this.glpTanqueRest;
         this.glpCargaRestSim = this.glpCargaRest;
