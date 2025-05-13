@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Main {
-    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 2, 26); 
+    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 2, 41); 
     static LocalDateTime fechaMinima = LocalDateTime.of(2025, Month.MAY, 1, 0, 0); 
     static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 5, 11, 0); 
 
@@ -144,6 +144,7 @@ public class Main {
         for(Asignacion asignacion: asignaciones){
             asignacion.getCamion().resetSimulacion();
             asignacion.getCamion().setAsignacionSimulada(false);
+            asignacion.getCamion().setSegundosFaltantesParaSalir(0);
             if(asignacion.getFechaPartida().isAfter(fechaHora)){
                 continue;
             }
