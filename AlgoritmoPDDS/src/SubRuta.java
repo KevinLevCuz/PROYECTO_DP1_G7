@@ -49,21 +49,37 @@ public class SubRuta {
         start.h = heuristic(start, end);
         start.f = start.h;
         openList.add(start);
-        LocalDateTime tiempoActualizadoTemporal = fechaSimulada;
-
+       // LocalDateTime tiempoActualizadoTemporal = fechaSimulada;
+     //   System.out.println("El tiempo actual de fecha Simulada que ingresa es:"+tiempoActualizadoTemporal);
 
         while (!openList.isEmpty()) {
             Nodo actual = openList.poll();
             
             if (actual.getPosX() == end.getPosX() && actual.getPosY()== end.getPosY()) {
-                return new AbstractMap.SimpleEntry<>(backtrace(actual), segundosMinimos);
+                List<Nodo> rutaFinal = backtrace(actual);
+                segundosMinimos = calcularSegundosMinimosRuta(rutaFinal, fechaSimulada);
+                return new AbstractMap.SimpleEntry<>(rutaFinal, segundosMinimos);
             }
 
             closedSet.add(actual);
 
+
+
             for (Nodo vecino : grid.getNeighbors(actual)) {
 
-                if (vecino.isBlockedAt(tiempoActualizadoTemporal) || closedSet.contains(vecino)) {
+                int pasosHastaVecino = (int) actual.g + 1;
+                LocalDateTime tiempoLlegadaVecino = fechaSimulada.plusSeconds(pasosHastaVecino * 72);
+
+                //System.out.println("Estoy en el nodo: "+actual.detallarEnString()+" y el pasos hasta vecino es: "+pasosHastaVecino);
+
+                if (tiempoLlegadaVecino.isAfter(fechaMaxima)) {
+                    System.out.println("No se alcanza llegar a tiempo al nodo final. Tiempo de llegada: " + tiempoLlegadaVecino + ", fecha máxima: " + fechaMaxima);
+                    return new AbstractMap.SimpleEntry<>(new ArrayList<>(), 14401);
+                }
+
+                if (vecino.isBlockedAt(tiempoLlegadaVecino) || closedSet.contains(vecino)) {
+                    //System.out.println("Ingreso aqui con: "+vecino.isBlockedAt(tiempoActualizadoTemporal) +" y "+ closedSet.contains(vecino));
+                    
                     continue;
                 }
 
@@ -81,20 +97,22 @@ public class SubRuta {
                     }
                     openList.add(vecino);
 
-                    segundos = vecino.SegundosParaProximoInicioBloqueo(tiempoActualizadoTemporal);
+                    /*segundos = vecino.SegundosParaProximoInicioBloqueo(tiempoActualizadoTemporal);
                     if(segundos < segundosMinimos && segundos!=0){
                         segundosMinimos = segundos;
                     }
 
-                    tiempoActualizadoTemporal = tiempoActualizadoTemporal.plusSeconds(72);
                     
                     if(tiempoActualizadoTemporal.isAfter(fechaMaxima)){
+                        System.out.println("El tiempoActualizatemporal es: "+tiempoActualizadoTemporal+" y la fechaMaxima es:"+fechaMaxima+" y el openlist.size es "+openList.size() + " y los nodos son: "+start.detallarEnString()+" y el final es:"+end.detallarEnString());
                         System.out.println("Parece que no se va a alcanzar el tiempo pa llegar. GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
                         return new AbstractMap.SimpleEntry<>(new ArrayList<>(), segundosMinimos);
                         
-                    }
+                    }*/
                 }
+                
             }
+            //tiempoActualizadoTemporal = tiempoActualizadoTemporal.plusSeconds(72);
         }
 
         return new AbstractMap.SimpleEntry<>(new ArrayList<>(), segundosMinimos);
@@ -112,6 +130,20 @@ public class SubRuta {
         }
         return path;
     }
+    private int calcularSegundosMinimosRuta(List<Nodo> ruta, LocalDateTime inicio) {
+        int segundosMinimos = 14401;
+        for (int i = 0; i < ruta.size(); i++) {
+            Nodo nodo = ruta.get(i);
+            LocalDateTime tiempoLlegada = inicio.plusSeconds(i * 72);
+            int segundos = nodo.SegundosParaProximoInicioBloqueo(tiempoLlegada);
+
+            if (segundos != 0 && segundos < segundosMinimos) {
+                segundosMinimos = segundos;
+            }
+        }
+        return segundosMinimos;
+    }
+
     public Pedido getPedido() {
         return pedido;
     }
