@@ -1,100 +1,53 @@
-package Algoritmos.SA;
+package Algoritmos.SA2;
+
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.ArrayList;
 
 public class Pedido {
-    int id;
-    int dia;
-    int cantidad;
-    int ubicacionX;
-    int ubicacionY;
-    int hora;
-    Cliente cliente;
-    String estado;
-    int tiempoMaximo;
+    private String id;
+    private Nodo destino;
+    private double cantidadGlp;
+    private LocalDateTime horaPedido;
+    private LocalDateTime plazoMaximoEntrega;
+    private LocalDateTime tiempoDescarga;
+    private String idCliente;
 
-    
-    // Constructor
-    public Pedido(){}
-    public Pedido(int id, int dia, int cantidad, int ubicacionX, int ubicacionY, int hora, Cliente cliente) {
+    public Pedido() {}
+
+    public Pedido(String id, Nodo destino, double cantidadGlp,
+                  LocalDateTime horaPedido, LocalDateTime plazoMaximoEntrega,
+                  LocalDateTime tiempoDescarga) {
         this.id = id;
-        this.dia = dia;
-        this.cantidad = cantidad;
-        this.ubicacionX = ubicacionX;
-        this.ubicacionY = ubicacionY;
-        this.hora = hora;
-        this.cliente=cliente;
+        this.destino = destino;
+        this.cantidadGlp = cantidadGlp;
+        this.horaPedido = horaPedido;
+        this.plazoMaximoEntrega = plazoMaximoEntrega;
+        this.tiempoDescarga = tiempoDescarga;
     }
 
-    // Getters
-    public int getId() {
-        return id;
+    public Pedido(Nodo destino, String idCliente, double cantidadGlp, LocalDateTime horaPedido, LocalDateTime plazoMaximoEntrega) {
+        this.destino = destino;
+        this.idCliente = idCliente;
+        this.cantidadGlp = cantidadGlp;
+        this.horaPedido = horaPedido;
+        this.plazoMaximoEntrega = plazoMaximoEntrega;
     }
+    public String getId() { return id; }
+    public void setId(String id) { this.id = id; }
 
-    public int getDia() {
-        return dia;
-    }
+    public Nodo getDestino() { return destino; }
+    public void setDestino(Nodo destino) { this.destino = destino; }
 
-    public int getCantidad() {
-        return cantidad;
-    }
+    public double getCantidadGlp() { return cantidadGlp; }
+    public void setCantidadGlp(double cantidadGlp) { this.cantidadGlp = cantidadGlp; }
 
-    public int getUbicacionX() {
-        return ubicacionX;
-    }
+    public LocalDateTime getHoraPedido() { return horaPedido; }
+    public void setHoraPedido(LocalDateTime horaPedido) { this.horaPedido = horaPedido; }
 
-    public int getUbicacionY() {
-        return ubicacionY;
-    }
+    public LocalDateTime getPlazoMaximoEntrega() { return plazoMaximoEntrega; }
+    public void setPlazoMaximoEntrega(LocalDateTime plazoMaximoEntrega) { this.plazoMaximoEntrega = plazoMaximoEntrega; }
 
-    public int getHora() {
-        return hora;
-    }
-
-    public int getTiempoMaximo() {
-        return tiempoMaximo;
-    }
-
-    // Setters
-    public void setId(int id) {
-        this.id = id;
-    }
-    
-    public void setDia(int dia) {
-        this.dia = dia;
-    }
-
-
-
-    public void setCantidad(int cantidad) {
-        this.cantidad = cantidad;
-    }
-
-    public void setUbicacionX(int ubicacionX) {
-        this.ubicacionX = ubicacionX;
-    }
-
-    public void setUbicacionY(int ubicacionY) {
-        this.ubicacionY = ubicacionY;
-    }
-
-    public void setHora(int hora) {
-        this.hora = hora;
-    }
-
-    public void setTiempoMaximo(int tiempoMaximo) {
-        this.tiempoMaximo = tiempoMaximo;
-    }
-
-    public void setCliente(Cliente cliente){
-        this.cliente=cliente;
-    }
-    public Cliente getCliente(){
-        return this.cliente;
-    }
-    public void setEstado(String estado){
-        this.estado=estado;
-    }
-    public String getEstado(){
-        return this.estado;
-    }
-
+    public LocalDateTime getTiempoDescarga() { return tiempoDescarga; }
+    public void setTiempoDescarga(LocalDateTime tiempoDescarga) { this.tiempoDescarga = tiempoDescarga; }
 }

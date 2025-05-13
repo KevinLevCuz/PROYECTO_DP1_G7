@@ -1,53 +1,31 @@
-package Algoritmos.SA;
+package Algoritmos.SA2;
+
+import java.time.LocalDateTime;
 
 public class Mantenimiento {
-    private int idMantenimiento;
-    private int anho;
-    private int mes;
-    private int dia;
-    private String codigo;
+    private LocalDateTime inicio;
+    private LocalDateTime fin;
+    private String codigoCamion;
+    private String tipo;
 
     public Mantenimiento() {}
 
-    // Getters
-    public int getIdMantenimiento() {
-        return idMantenimiento;
+    public Mantenimiento(LocalDateTime inicio, LocalDateTime fin, String codigoCamion, String tipo) {
+        this.inicio = inicio;
+        this.fin = fin;
+        this.codigoCamion = codigoCamion;
+        this.tipo = tipo;
     }
 
-    public int getAnho() {
-        return anho;
-    }
+    public LocalDateTime getInicio() { return inicio; }
+    public void setInicio(LocalDateTime inicio) { this.inicio = inicio; }
 
-    public int getMes() {
-        return mes;
-    }
+    public LocalDateTime getFin() { return fin; }
+    public void setFin(LocalDateTime fin) { this.fin = fin; }
 
-    public int getDia() {
-        return dia;
-    }
+    public String getCodigoCamion() { return codigoCamion; }
+    public void setCodigoCamion(String codigoCamion) { this.codigoCamion = codigoCamion; }
 
-    public String getCodigo() {
-        return codigo;
-    }
-
-    // Setters
-    public void setIdMantenimiento(int idMantenimiento) {
-        this.idMantenimiento = idMantenimiento;
-    }
-
-    public void setAnho(int anho) {
-        this.anho = anho;
-    }
-
-    public void setMes(int mes) {
-        this.mes = mes;
-    }
-
-    public void setDia(int dia) {
-        this.dia = dia;
-    }
-
-    public void setCodigo(String codigo) {
-        this.codigo = codigo;
-    }
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
 }

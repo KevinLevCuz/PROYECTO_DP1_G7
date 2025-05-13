@@ -1,50 +1,29 @@
-package Algoritmos.SA;
+package Algoritmos.SA2;
 
-import java.awt.Point;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.ArrayList;
 
 public class Bloqueo {
-    private LocalDateTime fechaHoraInicio;
-    private LocalDateTime fechaHoraFin;
-    private List<Point> nodos;
+    private ArrayList<Nodo> nodos;
+    private LocalDateTime inicio;
+    private LocalDateTime fin;
 
-    public Bloqueo(){}
-
-    public Bloqueo(LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, List<Point> nodos) {
-        this.fechaHoraInicio = fechaHoraInicio;
-        this.fechaHoraFin = fechaHoraFin;
-        this.nodos = nodos;
+    public Bloqueo() {
+        this.nodos = new ArrayList<>();
     }
 
-    public LocalDateTime getFechaHoraInicio() {
-        return fechaHoraInicio;
+    public Bloqueo(ArrayList<Nodo> nodos, LocalDateTime inicio, LocalDateTime fin) {
+        this.nodos = new ArrayList<>(nodos);
+        this.inicio = inicio;
+        this.fin = fin;
     }
 
-    public void setFechaHoraInicio(LocalDateTime fechaHoraInicio) {
-        this.fechaHoraInicio = fechaHoraInicio;
-    }
+    public ArrayList<Nodo> getNodos() { return nodos; }
+    public void setNodos(ArrayList<Nodo> nodos) { this.nodos = nodos; }
 
-    public LocalDateTime getFechaHoraFin() {
-        return fechaHoraFin;
-    }
+    public LocalDateTime getInicio() { return inicio; }
+    public void setInicio(LocalDateTime inicio) { this.inicio = inicio; }
 
-    public void setFechaHoraFin(LocalDateTime fechaHoraFin) {
-        this.fechaHoraFin = fechaHoraFin;
-    }
-
-    public List<Point> getNodos() {
-        return nodos;
-    }
-
-    public void setNodos(List<Point> nodos) {
-        this.nodos = nodos;
-    }
-
-    // Método para verificar si un nodo está bloqueado en una fecha/hora específica
-    public boolean estaBloqueado(Point nodo, LocalDateTime fechaHora) {
-        return nodos.contains(nodo) && 
-               (fechaHora.isEqual(fechaHoraInicio) || fechaHora.isAfter(fechaHoraInicio)) &&
-               (fechaHora.isBefore(fechaHoraFin) || fechaHora.isEqual(fechaHoraFin));
-    }
+    public LocalDateTime getFin() { return fin; }
+    public void setFin(LocalDateTime fin) { this.fin = fin; }
 }
