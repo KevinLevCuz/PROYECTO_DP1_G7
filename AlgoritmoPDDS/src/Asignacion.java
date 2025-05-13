@@ -6,7 +6,7 @@ public class Asignacion {
     private List<SubRuta> subRutas;
     private LocalDateTime fechaPartida;
 
-    
+    public Asignacion(){}
     public Asignacion(Camion camion, List<SubRuta> subRutas, LocalDateTime fechaPartida){
         this.camion = camion;
         this.subRutas = subRutas;

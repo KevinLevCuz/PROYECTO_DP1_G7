@@ -18,6 +18,7 @@ public class Camion {
     private double glpTanqueRestSim;
     private boolean asignacionSimulada;
     private boolean deRegreso;
+    private int segundosFaltantesParaSalir;
 
     public Camion(String tipo, Nodo ubicacion) {
         this.tipo = tipo;
@@ -29,6 +30,7 @@ public class Camion {
         this.mantenimientos = new ArrayList<>();
         this.asignacionSimulada = false;
         this.deRegreso=false;
+        segundosFaltantesParaSalir = 0;
         AsignarCaracteristicasFlota(tipo);
     }
 
@@ -200,5 +202,11 @@ public class Camion {
     }
     public void setDeRegreso(boolean deRegreso) {
         this.deRegreso = deRegreso;
+    }
+    public int getSegundosFaltantesParaSalir() {
+        return segundosFaltantesParaSalir;
+    }
+    public void setSegundosFaltantesParaSalir(int segundosFaltantesParaSalir) {
+        this.segundosFaltantesParaSalir = segundosFaltantesParaSalir;
     }
 }

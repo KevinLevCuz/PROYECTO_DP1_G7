@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 public class Main {
-    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 2, 23); 
+    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 2, 26); 
     static LocalDateTime fechaMinima = LocalDateTime.of(2025, Month.MAY, 1, 0, 0); 
-    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 5, 7, 0); 
+    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 5, 11, 0); 
 
     //static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 0, 1); 
     static Grid grid = new Grid(70,50);
@@ -38,30 +38,55 @@ public class Main {
             int tiempoSalto = 60;
 
            while(fechaSimulada.isBefore(fechaHoraLimite)){
+                System.out.println("\n\n\n=======INICIO DE ASIGNACION =================================");
                 System.out.println("Ingreso: La fecha Simulada es: "+fechaSimulada);
                 List<Pedido> pedidosParaAsignar = new ArrayList<>();
 
+                if(!asignaciones.isEmpty()){
+                    main.actualizarDatos(fechaSimulada, asignaciones, plantas);
+                    asignaciones = new ArrayList<>();
+                    /* 
+                    for(Camion camion: camiones){
+                        System.out.println("El camion con codigo:"+camion.getCodigo()+" esta disponible?"+ camion.isDisponible(fechaSimulada)+"en la ubicacion: "+camion.getUbicacion().detallarEnString()+ " con una carga restante de: "+camion.getGlpCargaRest()+" y un tanque restante de: "+camion.getGlpTanqueRest()+"su simulacion esta en: "+camion.getGlpCargaRestSim()+" y el del tanque esta en:"+camion.getGlpTanqueRestSim()+" y su estado de simulacion esta en: "+camion.isAsignacionSimulada());
+                    }
+                    System.out.println("======================0");
+                    for(Pedido pedido: pedidos){
+                        System.out.println("El pedido es:"+pedido.getId()+" con una cantidad: "+pedido.getCantidadGlp()+" y tiene estado: "+pedido.isEntregado());
+                    }
+                    for(Pedido pedido: pedidosParaAsignar){
+                        System.out.println("Pedidos para asignar en esta asignacion: ");
+                        System.out.println("El pedido es:"+pedido.getId()+" con una cantidad: "+pedido.getCantidadGlp()+" y tiene estado: "+pedido.isEntregado());
+                    }*/
+                }
                 for(Pedido pedido:pedidos){
                     if(pedido.estaEntre(fechaMinima, fechaSimulada) && !pedido.isEntregado()){
                         pedidosParaAsignar.add(pedido);
                     }
                 }
-                if(!asignaciones.isEmpty()){
-                    main.actualizarDatos(fechaSimulada, asignaciones, plantas);
-             
-                    for(Camion camion: camiones){
-                        System.out.println("El camion con codigo:"+camion.getCodigo()+" esta disponible?"+ camion.isDisponible(fechaSimulada)+"en la ubicacion: "+camion.getUbicacion().detallarEnString()+ " con una carga restante de: "+camion.getGlpCargaRest()+" y un tanque restante de: "+camion.getGlpTanqueRest()+" y su estado de regreso es: "+camion.isDeRegreso() +" su simulacion esta en: "+camion.getGlpCargaRestSim()+" y el del tanque esta en:"+camion.getGlpTanqueRestSim());
+                
+                if(!pedidosParaAsignar.isEmpty()){
+                    asignaciones = main.generarSolucionInicial(pedidosParaAsignar, camiones, plantas, fechaSimulada);
+                } else {
+                    System.out.println("No hay pedidos pendientes. Con fecha simulada"+fechaSimulada);
+                }              
+                
+                for(Camion camion: camiones){
+                    System.out.println("El codigo es: "+camion.getCodigo()+" y la ubicacion en X:"+camion.getUbicacion().getPosX()+" y la de Y:"+camion.getUbicacion().getPosY()+" y su estado de asignqacion simulada es:"+camion.isAsignacionSimulada());
+                    if((camion.getUbicacion().getPosX()!=0 || camion.getUbicacion().getPosY()!=0 )&& !camion.isAsignacionSimulada()){
+                        Asignacion nuevaAsignacion = main.AsignarTrayectoriaRegreso(camion);
+                        System.out.println("Ingreso una nueva asignacion:");
+                        asignaciones.add(nuevaAsignacion);
                     }
                 }
 
-                asignaciones = main.generarSolucionInicial(pedidosParaAsignar, camiones, plantas, fechaSimulada);
-                
+                if(asignaciones.isEmpty()){
+                    break;
+                }
                 // Visualización
                 VisualizadorAsignaciones.mostrarResumenAsignaciones(asignaciones,grid, fechaSimulada, pedidos, plantas);
 
                 //  Mostrar detalle del primer camión (ejemplo)
                 if (!asignaciones.isEmpty()) {
-                    
                     for(Asignacion asignacion: asignaciones){
                         VisualizadorAsignaciones.mostrarDetalleCamion(asignacion, grid, fechaSimulada, pedidos, plantas);                        
                     }
@@ -118,6 +143,7 @@ public class Main {
         int contador = 0;
         for(Asignacion asignacion: asignaciones){
             asignacion.getCamion().resetSimulacion();
+            asignacion.getCamion().setAsignacionSimulada(false);
             if(asignacion.getFechaPartida().isAfter(fechaHora)){
                 continue;
             }
@@ -180,6 +206,8 @@ public class Main {
                         Planta planta = Utilidades.obtenerPlanta(subRuta.getUbicacionFin(), plantas);
                         planta.setGlpRest(planta.getGlpRest()- Utilidades.obtenerGlpACargar(asignacion,contador+1));
                     }
+                    int tiempoParaSalir = (int) Duration.between(subRuta.getFechaLlegada(),fechaHora).toSeconds();
+                    asignacion.getCamion().setSegundosFaltantesParaSalir(900-tiempoParaSalir);
                 }
             }
         }
@@ -189,7 +217,7 @@ public class Main {
                                                  List<Planta> plantas, LocalDateTime fechaSimulada) {
         List<Asignacion> asignaciones = new ArrayList<>();
         List<Pedido> pedidosPendientes = new ArrayList<>(pedidos);
-        
+
         // Ordenar pedidos por prioridad (fecha límite más cercana primero)
         pedidosPendientes.sort(Comparator.comparing(Pedido::getFechaMaximaEntrega));
     
@@ -201,11 +229,13 @@ public class Main {
                   //  continue; //En un futuro implementaré que se pueda asignar si en el tiempo estimado de ese pedido se pueda. Talves no esta disponible ahora pero en un futuro sí.
                 //}
                 // Intentar asignación
+                System.out.println("El camion actual es: "+camion.getCodigo());
                 List<SubRuta> subRutas = intentarAsignarPedidoSimple(camion, pedido, plantas, fechaSimulada,pedidos);
                 if(subRutas == null){
                    // intentarAsignarPedidoConRecarga(pedido, plantas, fechaSimulada, pedidosPendientes, asignaciones);
                 }
                 if (subRutas != null) {
+                    System.out.println("El numero de ingreso aqui es: ");
                     // Confirmar asignación en objetos reales
                     Asignacion asignacion = new Asignacion(camion, subRutas, subRutas.getFirst().getFechaPartida());
                     asignaciones.add(asignacion);
@@ -242,7 +272,7 @@ public class Main {
         }
         return asignaciones;
     }
-
+/* 
     private void AsignarDatosReales(List<Asignacion> asignaciones, List<Pedido> pedidos, List<Planta> plantas) {
         for(Asignacion asignacion: asignaciones){
             Camion camion = asignacion.getCamion();
@@ -262,6 +292,26 @@ public class Main {
                 }
             }
         }
+    }*/
+
+    private Asignacion AsignarTrayectoriaRegreso(Camion camion) {
+        Asignacion asignacion = new Asignacion();
+        List<SubRuta> subRutas = new ArrayList<>();
+        SubRuta subRuta = new SubRuta(camion.getUbicacion(), grid.getNodoAt(0, 0), null);
+        Map.Entry<List<Nodo>,Integer> resultado = subRuta.generarTrayectoria(grid, fechaSimulada, fechaHoraLimite);
+        List<Nodo> trayectoria = resultado.getKey();
+        subRuta.setTrayectoria(trayectoria);
+        double consumoGlp = camion.calcularConsumo(trayectoria.size()-1);
+        System.out.println("El camion es: "+camion.getCodigo()+" y "+camion.getGlpTanqueRest()+ " y el consumo a gastar es: "+ consumoGlp+ " y trayectoria es: "+trayectoria);
+        if(camion.getGlpTanqueRest()>consumoGlp || trayectoria.isEmpty()){
+            subRuta.setFechaPartida(fechaSimulada.plusSeconds(camion.getSegundosFaltantesParaSalir()));
+            subRuta.setFechaLlegada(subRuta.getFechaPartida().plusSeconds(Utilidades.calcularDistanciaDeTrayectoria(trayectoria)*72));
+            subRutas.add(subRuta);
+            return new Asignacion(camion, subRutas,subRuta.getFechaPartida());
+        } else {
+            System.out.println("Espero nunca ingrese aquí, sino hay algo mal en la validacion del consumo del glp al realizar la vuelta.");
+        }
+       return asignacion;
     }
 
     private List<SubRuta> intentarAsignarPedidoSimple(Camion camion, Pedido pedido, List<Planta> plantas, LocalDateTime fechaHora, List<Pedido> pedidos) {
@@ -320,7 +370,7 @@ public class Main {
             }
         }
     }
-*/
+
     private void intentarAsignarPedidoConRecarga(Pedido pedido, List<Planta> plantas, LocalDateTime fechaHora, List<Pedido> pedidos, List<Asignacion> asignaciones) {
         Asignacion asignacionAEliminar = null;
         Asignacion asignacionANueva = null;
@@ -363,7 +413,7 @@ public class Main {
             asignaciones.remove(asignacionAEliminar);
             asignaciones.add(asignacionANueva);
         }
-    }
+    }*/
 
     private void AsignarFechasYTrayectoriaSubRutas(List<SubRuta> RutaCompleta, List<Pedido> pedidos, List<Planta> plantas, Camion camion, int segundosRetorno) {
         LocalDateTime fechaSimuladaTemp = fechaSimulada.plusSeconds(segundosRetorno);
@@ -404,7 +454,7 @@ public class Main {
         int segundos = 0;
         /* 
         System.out.println(" El size es: "+ subRutas.size()+" y el boolean de regreso es: "+camionSim.isDeRegreso());
-        if(subRutas.size()==1 && camionSim.isDeRegreso()){
+        if(subRutas.size()==1 && Utilidades.esPedido(subRutas.get(0).getUbicacionInicio(), pedidos)){
             System.out.println("Para probar la fecha simulada de regreso es: "+fechaSimulada);
             resultado = subRutas.get(0).generarTrayectoria(grid,fechaSimulada, pedido.getFechaMaximaEntrega());
             trayectoria = resultado.getKey();
