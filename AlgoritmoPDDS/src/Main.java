@@ -14,7 +14,7 @@ import java.util.Map;
 public class Main {
     static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 0, 30); 
     static LocalDateTime fechaMinima = LocalDateTime.of(2025, Month.JANUARY, 1, 0, 0); 
-    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 5, 17, 59); 
+    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 5, 9, 59); 
 
     //static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 0, 1); 
     static Grid grid = new Grid(70,50);
@@ -41,10 +41,41 @@ public class Main {
                 System.out.println("\n\n\n=======INICIO DE ASIGNACION =================================");
                 System.out.println("Ingreso: La fecha Simulada es: "+fechaSimulada);
                 List<Pedido> pedidosParaAsignar = new ArrayList<>();
+                 List<Pedido> pedidosNoEntregados = new ArrayList<>();
+                 List<Camion> camionesOrdenados = new ArrayList<>();
 
                 if(!asignaciones.isEmpty()){
-                    main.actualizarDatos(fechaSimulada, asignaciones, plantas);
+
+                    for(Asignacion asignacion: asignaciones){
+                    }
+                    for(Camion camion:camiones){
+                        System.out.print("Camion con codigo: "+ camion.getCodigo()+" y ubicacion: "+camion.getUbicacion().detallarEnString()+" y la asignacion es: "+camion.isAsignacionSimulada());
+                    }
+                    
+                    System.out.println("\n");
+                    camiones.sort((a, b) -> {
+                        boolean aTieneAsignacion = a.isAsignacionSimulada() && !(a.getUbicacion().getPosX() == plantaPrincipal.getUbicacion().getPosX() && a.getUbicacion().getPosY() == plantaPrincipal.getUbicacion().getPosY());
+                        boolean bTieneAsignacion = b.isAsignacionSimulada() && !(b.getUbicacion().getPosX() == plantaPrincipal.getUbicacion().getPosX() && b.getUbicacion().getPosY() == plantaPrincipal.getUbicacion().getPosY());
+
+                        // Queremos que los que tienen pedidos (≠ 0) vayan primero
+                        if (aTieneAsignacion && !bTieneAsignacion){
+                            return -1;
+                        } 
+                        if (!aTieneAsignacion && bTieneAsignacion){
+                            return 1;
+                        }
+                        return 0; // si ambos son iguales (ambos 0 o ambos ≠ 0), mantenemos el orden
+                    });
+
+                    for(Camion camion:camiones){
+                        System.out.print("Camion con codigo: "+ camion.getCodigo()+" y ubicacion: "+camion.getUbicacion().detallarEnString()+" y la asignacion es: "+camion.isAsignacionSimulada());
+                    }
+                    System.out.println("\n");
+
+                    pedidosNoEntregados = main.actualizarDatos(fechaSimulada, asignaciones, plantas);
                     asignaciones = new ArrayList<>();
+                    
+                    System.out.println("\n");
                      
                     //for(Camion camion: camiones){
                       //  System.out.println("El camion con codigo:"+camion.getCodigo()+" esta disponible?"+ camion.isDisponible(fechaSimulada)+"en la ubicacion: "+camion.getUbicacion().detallarEnString()+ " con una carga restante de: "+camion.getGlpCargaRest()+" y un tanque restante de: "+camion.getGlpTanqueRest()+"su simulacion esta en: "+camion.getGlpCargaRestSim()+" y el del tanque esta en:"+camion.getGlpTanqueRestSim()+" y su estado de simulacion esta en: "+camion.isAsignacionSimulada());
@@ -58,10 +89,17 @@ public class Main {
                         System.out.println("El pedido es:"+pedido.getId()+" con una cantidad: "+pedido.getCantidadGlp()+" y tiene estado: "+pedido.isEntregado());
                     }*/
                 }
+                for(Pedido pedido: pedidosNoEntregados){
+                    pedidosParaAsignar.add(pedido);
+                }
+                pedidos.sort(Comparator.comparing(Pedido::getFechaMaximaEntrega));
                 for(Pedido pedido:pedidos){
-                    if(pedido.estaEntre(fechaMinima, fechaSimulada) && !pedido.isEntregado()){
+                    if(pedido.estaEntre(fechaSimulada.minusMinutes(tiempoSalto), fechaSimulada) && !pedido.isEntregado()){
                         pedidosParaAsignar.add(pedido);
                     }
+                }
+                for(Pedido pedido: pedidosParaAsignar){
+                    System.out.println("La lista queda asi: "+ pedido.getUbicacion().detallarEnString());
                 }
                 
                 if(!pedidosParaAsignar.isEmpty()){
@@ -138,14 +176,20 @@ public class Main {
         }
     }
 
-    public void actualizarDatos(LocalDateTime fechaHora, List<Asignacion> asignaciones, List<Planta> plantas){
+    public List<Pedido> actualizarDatos(LocalDateTime fechaHora, List<Asignacion> asignaciones, List<Planta> plantas){
         int tiempoDespuesDePartir = 0;
         int contador = 0;
+        List<Pedido> pedidosAunNoEntregados = new ArrayList<>();
         for(Asignacion asignacion: asignaciones){
             asignacion.getCamion().resetSimulacion();
             asignacion.getCamion().setAsignacionSimulada(false);
             asignacion.getCamion().setSegundosFaltantesParaSalir(0);
             if(asignacion.getFechaPartida().isAfter(fechaHora)){
+                for(SubRuta subRuta: asignacion.getSubRutas()){
+                    if(subRuta.getPedido()!=null){
+                        pedidosAunNoEntregados.add(subRuta.getPedido());
+                    }
+                }
                 continue;
             }
             
@@ -193,10 +237,15 @@ public class Main {
                     asignacion.getCamion().setGlpTanqueRest(asignacion.getCamion().getGlpTanqueRest()-glpConsumida);
                     if(asignacion.getSubRutas().getLast()==subRuta){
                         asignacion.getCamion().setDeRegreso(true);
+                        asignacion.getCamion().setAsignacionSimulada(false);
+                    }
+                    if(subRuta.getPedido()!=null){
+                        pedidosAunNoEntregados.add(subRuta.getPedido());
                     }
                 } 
             }
         }
+        return pedidosAunNoEntregados;
     }
 
     public List<Asignacion> generarSolucionInicial(List<Pedido> pedidos, List<Camion> camiones, 
@@ -205,17 +254,19 @@ public class Main {
         List<Pedido> pedidosPendientes = new ArrayList<>(pedidos);
 
         // Ordenar pedidos por prioridad (fecha límite más cercana primero)
-        pedidosPendientes.sort(Comparator.comparing(Pedido::getFechaMaximaEntrega));
+        //pedidosPendientes.sort(Comparator.comparing(Pedido::getFechaMaximaEntrega));
     
         for (Pedido pedido : pedidosPendientes) {
             boolean asignado = false;
-            Collections.shuffle(camiones);
             for (Camion camion : camiones) {
                 //if (!camion.isDisponible(fechaSimulada)) {
                   //  continue; //En un futuro implementaré que se pueda asignar si en el tiempo estimado de ese pedido se pueda. Talves no esta disponible ahora pero en un futuro sí.
                 //}
                 // Intentar asignación
                 //System.out.println("El camion actual es: "+camion.getCodigo());
+                if(camion.isAsignacionSimulada()){
+                    continue;
+                }
                 List<SubRuta> subRutas = intentarAsignarPedidoSimple(camion, pedido, plantas, fechaSimulada,pedidos);
                 if(subRutas == null){
                    // intentarAsignarPedidoConRecarga(pedido, plantas, fechaSimulada, pedidosPendientes, asignaciones);
@@ -228,6 +279,8 @@ public class Main {
                     camion.setAsignacionSimulada(true);
                     asignado = true;
                     break;
+                } else {
+                    System.out.println("No se pudo asignar con el camion: "+camion.getCodigo());
                 }
             }
             
@@ -646,6 +699,7 @@ public class Main {
         String linea;
 
         while ((linea = br.readLine()) != null) {
+            System.out.println("Ingreso aqui es:"+linea);
             String[] partes = linea.split(":");
             String tiempo = partes[0];
             String datos = partes[1];
