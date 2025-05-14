@@ -25,6 +25,7 @@ public class SubRuta {
         this.pedido = pedido;
     }
     public Map.Entry<List<Nodo>,Integer> generarTrayectoria(Grid grid, LocalDateTime fechaSimulada, LocalDateTime fechaMaxima) {
+    
         PriorityQueue<Nodo> openList = new PriorityQueue<>(Comparator.comparingDouble(n -> n.f));
         Set<Nodo> closedSet = new HashSet<>();
         int segundos = 0;
@@ -62,7 +63,7 @@ public class SubRuta {
             }
 
             closedSet.add(actual);
-            
+
             for (Nodo vecino : grid.getNeighbors(actual)) {
 
                 int pasosHastaVecino = (int) actual.g + 1;

@@ -31,6 +31,13 @@ public class Planta {
                 break;
         }
     }
+    public Planta crearCopiaSimulacion() {
+        Planta copia = new Planta(this.tipo, this.ubicacion);
+        copia.setGlpMaxima(this.glpMaxima);
+        copia.setGlpRest(this.glpRest);
+        copia.setGlpRestSim(this.glpRestSim);
+        return copia;
+    }
     public int getId() {
         return id;
     }
