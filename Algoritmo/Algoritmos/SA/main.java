@@ -87,11 +87,11 @@ public class Main {
             }
         }
         double fitnessMedio = (totalPedidos > 0 ? sumaFitness / totalPedidos : 0);
-        System.out.printf("Fitness promedio por pedido: %.3f%n", fitnessMedio);
+        System.out.printf("Fitness promedio por pedido: %.3f%n%n%n%n", fitnessMedio);
 
         
 
-        System.out.println("Se llegó a dar solución\n");
+        //System.out.println("Se llegó a dar solución\n");
         //mejor.imprimirRutas();
 
     }
