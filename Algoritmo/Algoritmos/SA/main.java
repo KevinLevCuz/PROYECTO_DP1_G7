@@ -24,7 +24,12 @@ public class Main {
     // private static Nodo ubicacionInicial = new Nodo(0,0);
     public static void main(String[] args) throws IOException {
 
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now()
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
 
         ArrayList<Pedido> pedidos = cargarPedidos("data/pedidos.txt");
         ArrayList<Camion> camiones = cargarCamiones("data/camiones.txt");
@@ -42,11 +47,52 @@ public class Main {
         plantas.add(plantaSecundaria2);
 
         SimulatedAnnealing sa = new SimulatedAnnealing(
-                10, 0.003, 3,
+                5000, 0.005, 100,
                 plantas, bloqueos, mantenimientos);
+        long t0 = System.nanoTime();
         Solucion mejor = sa.optimize(pedidos, camiones, plantas, bloqueos, mantenimientos, ahora);
+        long t1 = System.nanoTime();
+
+        double elapsedSec = (t1 - t0) / 1e9;
+        System.out.printf("Optimize() tardó %.3f segundos%n", elapsedSec);
+
+        double costeTotal = sa.cost(mejor);
+        System.out.printf("Función objetivo (coste total): %.3f%n", costeTotal);
+
+        int totalPedidos = 0;
+        for (PlanCamion plan : mejor.getPlanesCamion()) {
+            for (SubRuta sr : plan.getSubRutas()) {
+                if (sr.getPedido() != null)
+                    totalPedidos++;
+            }
+        }
+
+        // 3A) Fitness promedio = coste medio por pedido
+        double costeMedio = (totalPedidos > 0 ? costeTotal / totalPedidos : 0);
+        System.out.printf("Coste medio por pedido: %.3f%n", costeMedio);
+
+        double sumaFitness = 0;
+        for (PlanCamion plan : mejor.getPlanesCamion()) {
+            for (SubRuta sr : plan.getSubRutas()) {
+                if (sr.getPedido() != null) {
+                    // Calcula sólo el coste de esa subruta:
+                    double cPedido = 0;
+                    // (reutilizas tu lógica de cost() pero solo para este sr…
+                    // distancia+consumo+penalizaciones…)
+                    // por simplicidad: aproximamos cPedido = (costeTotal/totalPedidos)
+                    cPedido = costeTotal / totalPedidos;
+                    // fitness individual:
+                    sumaFitness += 1.0 / (1.0 + cPedido);
+                }
+            }
+        }
+        double fitnessMedio = (totalPedidos > 0 ? sumaFitness / totalPedidos : 0);
+        System.out.printf("Fitness promedio por pedido: %.3f%n", fitnessMedio);
+
+        
+
         System.out.println("Se llegó a dar solución\n");
-        mejor.imprimirRutas();
+        //mejor.imprimirRutas();
 
     }
 

@@ -56,5 +56,4 @@ public class Solucion {
             System.out.println();
         }
     }
-
 }

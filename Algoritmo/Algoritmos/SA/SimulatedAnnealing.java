@@ -51,18 +51,20 @@ public class SimulatedAnnealing {
             ArrayList<Mantenimiento> mantenimientos,
             LocalDateTime now) {
         Solucion current = initialSolution(pedidos, camiones, now);
-        System.out.println("Se llegó a dar solución\n");
         Solucion best = current;
         double temp = initialTemp;
 
         for (int i = 0; i < maxIterations; i++) {
             Solucion neighbor = neighborSolution(current, now);
-            double costC = cost(current);
-            double costN = cost(neighbor);
-            if (accept(costC, costN, temp)) {
+            /*double costC = cost(current);
+            double costN = cost(neighbor);*/
+            double fitC = fitness(current);
+            double fitN = fitness(neighbor);
+            if (fitN > fitC || Math.exp((fitN - fitC) / temp) > random.nextDouble()) {
                 current = neighbor;
             }
-            if (cost(current) < cost(best)) {
+
+            if (fitness(current) > fitness(best)) {
                 best = current;
             }
             temp *= (1 - coolingRate);
@@ -100,36 +102,46 @@ public class SimulatedAnnealing {
                 t = last.getHoraFin();
             }
 
+            // Espera mínima de 4 h tras horaPedido
+            LocalDateTime earliest = p.getHoraPedido().plusHours(4);
+            if (t.isBefore(earliest)) {
+                t = earliest;
+            }
+
             // 1.A) Si no hay GLP suficiente, inserta recarga
             double distPedido = distance(start, p.getDestino());
             double neededGLP = distPedido * (c.getCapacidadMaxima() / 180.0);
             if (c.getGlpActual() < neededGLP) {
-                // elegir planta más cercana (evitamos lambda sobre 'start')
-                Nodo loc = start;
+                // elige planta más cercana sin lambdas
                 Planta mejor = null;
                 double bestDist = Double.MAX_VALUE;
                 for (Planta pl : plantas) {
-                    double d = distance(loc, pl.getUbicacion());
+                    double d = distance(start, pl.getUbicacion());
                     if (d < bestDist) {
                         bestDist = d;
                         mejor = pl;
                     }
                 }
-                // subruta a la planta
-                ArrayList<Nodo> traj1 = PathFinder.findPath(start, mejor.getUbicacion(), bloqueos, t);
-                LocalDateTime t1 = avanzarTiempo(t, traj1);
-                plan.addSubRuta(new SubRuta(start, mejor.getUbicacion(), null, traj1, t, t1));
-                // repostar
+                ArrayList<Nodo> trajRec = PathFinder.findPath(start, mejor.getUbicacion(), bloqueos, t);
+                LocalDateTime tRec = avanzarTiempo(t, trajRec);
+                plan.addSubRuta(new SubRuta(start, mejor.getUbicacion(), null, trajRec, t, tRec));
                 c.setGlpActual(c.getCapacidadMaxima());
                 start = mejor.getUbicacion();
-                t = t1;
+                t = tRec;
             }
 
             // 1.B) subruta al pedido
-            ArrayList<Nodo> traj2 = PathFinder.findPath(start, p.getDestino(), bloqueos, t);
-            LocalDateTime t2 = avanzarTiempo(t, traj2);
-            plan.addSubRuta(new SubRuta(start, p.getDestino(), p, traj2, t, t2));
-            // actualizar estado
+            ArrayList<Nodo> trajEnt = PathFinder.findPath(start, p.getDestino(), bloqueos, t);
+            LocalDateTime tEnt = avanzarTiempo(t, trajEnt);
+
+            // Saltar si supera el plazo máximo
+            if (tEnt.isAfter(p.getPlazoMaximoEntrega())) {
+                // no asignamos esta subruta en la solución inicial
+                idx++;
+                continue;
+            }
+
+            plan.addSubRuta(new SubRuta(start, p.getDestino(), p, trajEnt, t, tEnt));
             c.setGlpActual(c.getGlpActual() - neededGLP);
             c.setUbicacionActual(p.getDestino());
             idx++;
@@ -195,14 +207,21 @@ public class SimulatedAnnealing {
         Nodo prev = c.getUbicacionActual();
         ArrayList<SubRuta> newSubs = new ArrayList<>();
 
-        // 1) Recalcular entregas con recarga intermedia si falta GLP
         for (SubRuta sr : plan.getSubRutas()) {
+            Pedido p = sr.getPedido();
             Nodo dest = sr.getFin();
+
+            // Espera mínima si es entrega real
+            if (p != null) {
+                LocalDateTime earliest = p.getHoraPedido().plusHours(4);
+                if (t.isBefore(earliest))
+                    t = earliest;
+            }
+
+            // Recarga si falta GLP
             double distToDest = distance(prev, dest);
             double neededGLP = distToDest * (c.getCapacidadMaxima() / 180.0);
-            // 1.A) Inserta recarga si no hay GLP suficiente
             if (c.getGlpActual() < neededGLP) {
-                // elige planta más cercana sin usar lambdas
                 Planta mejor = null;
                 double bestDist = Double.MAX_VALUE;
                 for (Planta pl : plantas) {
@@ -215,22 +234,23 @@ public class SimulatedAnnealing {
                 ArrayList<Nodo> trajRec = PathFinder.findPath(prev, mejor.getUbicacion(), bloqueos, t);
                 LocalDateTime tRec = avanzarTiempo(t, trajRec);
                 newSubs.add(new SubRuta(prev, mejor.getUbicacion(), null, trajRec, t, tRec));
-                // recarga completa
                 c.setGlpActual(c.getCapacidadMaxima());
                 prev = mejor.getUbicacion();
                 t = tRec;
             }
-            // 1.B) Subruta de entrega al destino original
+
+            // Subruta al destino (salta si incumple deadline)
             ArrayList<Nodo> trajEnt = PathFinder.findPath(prev, dest, bloqueos, t);
             LocalDateTime tEnt = avanzarTiempo(t, trajEnt);
-            newSubs.add(new SubRuta(prev, dest, sr.getPedido(), trajEnt, t, tEnt));
-            // descontar GLP y actualizar posición
-            c.setGlpActual(c.getGlpActual() - neededGLP);
-            prev = dest;
-            t = tEnt;
+            if (p == null || !tEnt.isAfter(p.getPlazoMaximoEntrega())) {
+                newSubs.add(new SubRuta(prev, dest, p, trajEnt, t, tEnt));
+                c.setGlpActual(c.getGlpActual() - neededGLP);
+                prev = dest;
+                t = tEnt;
+            }
         }
 
-        // 2) Al terminar, retorno a la planta principal si es necesario
+        // Retorno a base
         if (!prev.equals(base)) {
             ArrayList<Nodo> trajBack = PathFinder.findPath(prev, base, bloqueos, t);
             LocalDateTime tBack = avanzarTiempo(t, trajBack);
@@ -244,7 +264,7 @@ public class SimulatedAnnealing {
      * Calcula el costo total de la solución: distancia + penalización por retrasos
      * y consumo
      */
-    private double cost(Solucion sol) {
+    public double cost(Solucion sol) {
         double totalCost = 0.0;
         for (PlanCamion plan : sol.getPlanesCamion()) {
             Camion c = plan.getCamion();
@@ -304,8 +324,9 @@ public class SimulatedAnnealing {
 
     private LocalDateTime avanzarTiempo(LocalDateTime t, List<Nodo> traj) {
         double dist = 0;
-        for (int i = 1; i < traj.size(); i++)
+        for (int i = 1; i < traj.size(); i++) {
             dist += distance(traj.get(i - 1), traj.get(i));
+        }
         double horas = dist / SPEED_KMH;
         long H = (long) horas;
         long M = (long) ((horas - H) * 60);
@@ -322,5 +343,10 @@ public class SimulatedAnnealing {
         double dx = a.getPosX() - b.getPosX();
         double dy = a.getPosY() - b.getPosY();
         return Math.hypot(dx, dy);
+    }
+
+    private double fitness(Solucion sol) {
+        double c = cost(sol);
+        return 1.0 / (1.0 + c);
     }
 }
