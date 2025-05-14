@@ -1,206 +1,196 @@
-package Algoritmos.SA;
+package Algoritmos.SA2;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.io.*;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.awt.Point;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.stream.Collectors;
 
-public class main {
+public class Main {
+    // private static Nodo ubicacionInicial = new Nodo(0,0);
     public static void main(String[] args) throws IOException {
-        List<Pedido> pedidos = cargarPedido("data/pedidos.txt");
-        List<Camion> camiones = cargarCamione("data/camiones.txt");
-        Set<Bloqueo> bloqueos = cargarBloqueo("data/bloqueos.txt");
-        // Crear el objeto de Simulated Annealing sin bloqueos
-        System.out.println("Iniciando Simulated Annealing...");
-        SimulatedAnnealing SA = new SimulatedAnnealing(pedidos, camiones, bloqueos);
-        SA.ejecutar();
+
+        LocalDateTime ahora = LocalDateTime.now();
+
+        ArrayList<Pedido> pedidos = cargarPedidos("data/pedidos.txt");
+        ArrayList<Camion> camiones = cargarCamiones("data/camiones.txt");
+        ArrayList<Bloqueo> bloqueos = cargarBloqueos("data/bloqueos.txt");
+        ArrayList<Mantenimiento> mantenimientos = cargarMantenimientos("data/mantenimiento.txt");
+
+        ArrayList<Planta> plantas = new ArrayList<>();
+
+        Planta plantaPrincipal = new Planta("PRINCIPAL", new Nodo(0, 0));
+        Planta plantaSecundaria1 = new Planta("SECUNDARIA", new Nodo(5, 5));
+        Planta plantaSecundaria2 = new Planta("SECUNDARIA", new Nodo(10, 10));
+
+        plantas.add(plantaPrincipal);
+        plantas.add(plantaSecundaria1);
+        plantas.add(plantaSecundaria2);
+
+        SimulatedAnnealing sa = new SimulatedAnnealing(
+                10, 0.003, 3,
+                plantas, bloqueos, mantenimientos);
+        Solucion mejor = sa.optimize(pedidos, camiones, plantas, bloqueos, mantenimientos, ahora);
+        System.out.println("Se llegó a dar solución\n");
+        mejor.imprimirRutas();
 
     }
 
-
-    // Métodos de carga de datos
-    static List<Pedido> cargarPedido(String archivo) throws IOException {
-        List<Pedido> pedidos = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader(archivo));
-        String linea;
-
-        while ((linea = br.readLine()) != null) {
-            // Omitir líneas vacías o comentarios (líneas que no empiezan con número)
-            if (linea.trim().isEmpty() || !Character.isDigit(linea.trim().charAt(0))) {
+    public static ArrayList<Pedido> cargarPedidos(String filePath) throws IOException {
+        ArrayList<Pedido> pedidos = new ArrayList<>();
+        Path path = Paths.get(filePath);
+        // Base del mes de simulación: primer día a las 00:00
+        LocalDateTime base = LocalDateTime.now()
+                .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        for (String line : Files.readAllLines(path)) {
+            if (line.isBlank())
                 continue;
-            }
-
-            String[] partes = linea.split(":");
-            String tiempo = partes[0];
-            String datos = partes[1];
-
-            // Parsear tiempo (ej. 01d12h25m)
-            int dia = Integer.parseInt(tiempo.substring(0, 2));
-            int hora = Integer.parseInt(tiempo.substring(3, 5));
-            int minuto = Integer.parseInt(tiempo.substring(6, 8));
-            int tiempoEnMinutos = hora + minuto * 60; // redondeo de minutos si deseas
-
-            // Parsear datos después de los dos puntos
-            String[] valores = datos.split(",");
-            int ubicacionX = Integer.parseInt(valores[0]);
-            int ubicacionY = Integer.parseInt(valores[1]);
-            String idCliente = valores[2]; // quitar el 'c-'
-            Cliente cliente = new Cliente(1, idCliente); // Asumiendo que tienes este constructor
-
-            String cantidadStr = valores[3].replace("m3", "");
-            int cantidad = Integer.parseInt(cantidadStr);
-
-            String horaStr = valores[4].replace("h", "");
-            int plazo = Integer.parseInt(horaStr);
-
-            // Crear el pedido
-            Pedido pedido = new Pedido();
-            pedido.setId(pedidos.size() + 1); // Generar ID incremental
-            pedido.setDia(dia);
-            pedido.setCantidad(cantidad);
-            pedido.setUbicacionX(ubicacionX);
-            pedido.setUbicacionY(ubicacionY);
-            pedido.setHora(tiempoEnMinutos); // Asignas el plazo (4h) a hora, o si prefieres usa otro campo
-            pedido.setCliente(cliente);
-            pedido.setEstado("pendiente"); // o lo que corresponda
-            pedido.setTiempoMaximo(plazo);
-            pedidos.add(pedido);
+            String[] parts = line.split(":");
+            // Tiempo de llegada
+            String[] ts = parts[0].split("[dhm]");
+            int d = Integer.parseInt(ts[0]);
+            int h = Integer.parseInt(ts[1]);
+            int m = Integer.parseInt(ts[2]);
+            LocalDateTime horaPedido = base.plusDays(d).plusHours(h).plusMinutes(m);
+            // Datos restantes
+            String[] vals = parts[1].split(",");
+            int x = Integer.parseInt(vals[0]);
+            int y = Integer.parseInt(vals[1]);
+            String id = vals[2];
+            int m3 = Integer.parseInt(vals[3].replace("m3", ""));
+            int hLim = Integer.parseInt(vals[4].replace("h", ""));
+            LocalDateTime plazoMax = horaPedido.plusHours(hLim);
+            Pedido p = new Pedido(new Nodo(x, y), id, m3, horaPedido, plazoMax);
+            pedidos.add(p);
         }
-
-        br.close();
         return pedidos;
     }
 
-    static List<Camion> cargarCamione(String archivo) throws IOException {
-        List<Camion> camiones = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader(archivo));
-        String linea;
-
-        int[] contadorTipo = new int[Camion.TipoCamion.values().length]; // Para generar códigos únicos por tipo
-
-        while ((linea = br.readLine()) != null) {
-            if (linea.trim().isEmpty() || linea.trim().startsWith("#"))
+    /**
+     * Carga camiones desde archivo con formato:
+     * TT,tara,capacidadGLP,_,_
+     * Genera códigos TTNN según apariciones.
+     */
+    public static ArrayList<Camion> cargarCamiones(String filePath) throws IOException {
+        ArrayList<Camion> camiones = new ArrayList<>();
+        Map<String, Integer> count = new HashMap<>();
+        Path path = Paths.get(filePath);
+        LocalDateTime now = LocalDateTime.now();
+        for (String line : Files.readAllLines(path)) {
+            if (line.isBlank())
                 continue;
-
-            String[] partes = linea.split(",");
-            if (partes.length != 5) {
-                System.err.println("Línea inválida (esperados 5 valores): " + linea);
-                continue;
-            }
-
-            try {
-                Camion.TipoCamion tipo = Camion.TipoCamion.valueOf(partes[0].trim());
-                double pesoVacio = Double.parseDouble(partes[1].trim());
-                int capacidadEfectiva = Integer.parseInt(partes[2].trim());
-                double pesoMaximoCarga = Double.parseDouble(partes[3].trim());
-                double _ = Double.parseDouble(partes[4].trim()); // este valor no se usa en la clase, pero lo ignoramos
-
-                // Crear un código del tipo TA01, TB02, etc.
-                int indice = tipo.ordinal();
-                contadorTipo[indice]++;
-                String codigo = String.format("%s%02d", tipo.name(), contadorTipo[indice]);
-
-                Camion camion = new Camion(codigo, tipo, pesoVacio, capacidadEfectiva, pesoMaximoCarga);
-                camiones.add(camion);
-            } catch (Exception e) {
-                System.err.println("Error al parsear línea: " + linea);
-                e.printStackTrace();
-            }
+            String[] parts = line.split(",");
+            String tipo = parts[0];
+            double capacidadGLP = Double.parseDouble(parts[2]);
+            // Contador para código
+            int idx = count.getOrDefault(tipo, 0) + 1;
+            count.put(tipo, idx);
+            String codigo = String.format("%s%02d", tipo, idx);
+            // Ubicación por defecto (0,0)
+            Nodo ubic = new Nodo(0, 0);
+            Camion c = new Camion(codigo, ubic, capacidadGLP, capacidadGLP,
+                    false, now);
+            camiones.add(c);
         }
-
-        br.close();
         return camiones;
     }
 
-    static Set<Bloqueo> cargarBloqueo(String archivo) throws IOException {
-        Set<Bloqueo> bloqueos = new HashSet<>();
-        BufferedReader br = new BufferedReader(new FileReader(archivo));
-        String linea;
-
-        while ((linea = br.readLine()) != null) {
-            // Omitir líneas vacías o comentarios
-            if (linea.trim().isEmpty() || linea.trim().startsWith("#")) {
+    /**
+     * Carga bloqueos desde archivo con formato:
+     * dd'd'HH'h'MM'm'-dd'd'HH'h'MM'm':x1,y1,x2,y2,...
+     * Nombre de archivo: yyyyMM.bloqueadas para determinar año y mes.
+     */
+    public static ArrayList<Bloqueo> cargarBloqueos(String filePath) throws IOException {
+        ArrayList<Bloqueo> bloqueos = new ArrayList<>();
+        Path path = Paths.get(filePath);
+        // Base temporal: primer día del mes actual a las 00:00
+        LocalDateTime base = LocalDateTime.now()
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
+        for (String line : Files.readAllLines(path)) {
+            if (line.isBlank())
                 continue;
+            String[] parts = line.split(":");
+            // Cada rango es "dd'd'HH'h'MM'm'-dd'd'HH'h'MM'm'"
+            String[] span = parts[0].split("-");
+            LocalDateTime start = parsearFechaHora(span[0]);
+            LocalDateTime end = parsearFechaHora(span[1]);
+            String[] coords = parts[1].split(",");
+            ArrayList<Nodo> nodos = new ArrayList<>();
+            for (int i = 0; i < coords.length; i += 2) {
+                int x = Integer.parseInt(coords[i]);
+                int y = Integer.parseInt(coords[i + 1]);
+                nodos.add(new Nodo(x, y));
             }
-
-            // Dividir la línea en partes: tiempo y coordenadas
-            String[] partes = linea.split(":");
-            if (partes.length != 2) {
-                System.err.println("Formato inválido en línea: " + linea);
-                continue;
-            }
-
-            // Procesar el rango de tiempo
-            String[] tiempos = partes[0].split("-");
-            if (tiempos.length != 2) {
-                System.err.println("Formato de tiempo inválido en línea: " + linea);
-                continue;
-            }
-
-            // Parsear fecha/hora de inicio
-            LocalDateTime inicio = parsearFechaHora(tiempos[0]);
-            // Parsear fecha/hora de fin
-            LocalDateTime fin = parsearFechaHora(tiempos[1]);
-
-            // Procesar las coordenadas de los nodos bloqueados
-            String[] coordenadas = partes[1].split(",");
-            if (coordenadas.length % 2 != 0) {
-                System.err.println("Número impar de coordenadas en línea: " + linea);
-                continue;
-            }
-
-            List<Point> nodosBloqueados = new ArrayList<>();
-            for (int i = 0; i < coordenadas.length; i += 2) {
-                try {
-                    int x = Integer.parseInt(coordenadas[i].trim());
-                    int y = Integer.parseInt(coordenadas[i + 1].trim());
-                    nodosBloqueados.add(new Point(x, y));
-                } catch (NumberFormatException e) {
-                    System.err.println("Coordenada inválida en línea: " + linea);
-                }
-            }
-
-            // Crear el bloqueo y agregarlo al conjunto
-            bloqueos.add(new Bloqueo(inicio, fin, nodosBloqueados));
+            bloqueos.add(new Bloqueo(nodos, start, end));
         }
-
-        br.close();
         return bloqueos;
+    }
 
+    private static LocalDateTime parseOffset(String ym, String offset) {
+        int year = Integer.parseInt(ym.substring(0, 4));
+        int month = Integer.parseInt(ym.substring(4, 6));
+        // offset "dd'd'HH'h'MM'm'"
+        String[] ts = offset.split("[dhm]");
+        int d = Integer.parseInt(ts[0]);
+        int h = Integer.parseInt(ts[1]);
+        int m = Integer.parseInt(ts[2]);
+        return LocalDateTime.of(year, month, d, h, m);
+    }
+
+    /**
+     * Carga mantenimientos desde archivo con formato:
+     * yyyyMMdd:TTNN
+     * Ventana de 24h.
+     */
+    public static ArrayList<Mantenimiento> cargarMantenimientos(String filePath) throws IOException {
+        ArrayList<Mantenimiento> list = new ArrayList<>();
+        Path path = Paths.get(filePath);
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyyMMdd");
+        for (String line : Files.readAllLines(path)) {
+            if (line.isBlank())
+                continue;
+            String[] parts = line.split(":");
+            LocalDate date = LocalDate.parse(parts[0], fmt);
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = start.plusHours(24);
+            String codigo = parts[1];
+            Mantenimiento m = new Mantenimiento(start, end, codigo, "preventivo");
+            list.add(m);
+        }
+        return list;
     }
 
     private static LocalDateTime parsearFechaHora(String texto) {
-        // Eliminar posibles espacios
         texto = texto.trim();
 
-        // Dividir en días, horas, minutos
         String[] partes = texto.split("[dhm]");
         if (partes.length < 3) {
             throw new IllegalArgumentException("Formato de fecha inválido: " + texto);
         }
 
-        // Obtener valores numéricos
         int dia = Integer.parseInt(partes[0]);
         int hora = Integer.parseInt(partes[1]);
         int minuto = Integer.parseInt(partes[2]);
-        // Crear objeto LocalDateTime (asumiendo mes actual y año actual)
-        return LocalDateTime.of(2025, Month.JANUARY, dia, hora, minuto, 0, 0);
 
+        return LocalDateTime.of(2025, Month.MAY, dia, hora, minuto, 0, 0);
     }
-}
 
+}
