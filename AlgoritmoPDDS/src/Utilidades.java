@@ -1,8 +1,50 @@
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Utilidades {
+
+   public static LocalDateTime fechaMaximaTrayectoria(List<SubRuta> subRutas, SubRuta subRutaEntrada) {
+    // Fecha por defecto (podría ser LocalDateTime.MAX si prefieres)
+    LocalDateTime fechaMaxima = LocalDateTime.of(2026, Month.MAY, 5, 0, 30);
+    
+    // Validaciones básicas
+    if (subRutas == null || subRutas.isEmpty() || subRutaEntrada == null) {
+        return fechaMaxima;
+    }
+
+    try {
+        // Caso cuando es la última subruta
+        if (subRutaEntrada.equals(subRutas.get(subRutas.size() - 1))) {
+            return fechaMaxima;
+        }
+
+        // Buscar la subruta en la lista
+        int index = subRutas.indexOf(subRutaEntrada);
+        if (index == -1) {
+            return fechaMaxima; // No encontrada
+        }
+
+        // Si tiene pedido, usar su fecha máxima
+        if (subRutaEntrada.getPedido() != null) {
+            LocalDateTime fechaPedido = subRutaEntrada.getPedido().getFechaMaximaEntrega();
+            return fechaPedido != null ? fechaPedido : fechaMaxima;
+        }
+
+        // Si no tiene pedido, usar la fecha de llegada de la siguiente subruta
+        if (index + 1 < subRutas.size()) {
+            SubRuta siguiente = subRutas.get(index + 1);
+            return siguiente.getFechaLlegada() != null ? siguiente.getFechaLlegada() : fechaMaxima;
+        }
+
+        return fechaMaxima;
+    } catch (Exception e) {
+        // Loggear el error si es necesario
+        return fechaMaxima;
+    }
+}
+
     public static int contarPedidosEnRuta(List<SubRuta> subRutas, List<Pedido> pedidos) {
         // Implementar según tu lógica de identificación de pedidos
         int num_pedidos = 0;

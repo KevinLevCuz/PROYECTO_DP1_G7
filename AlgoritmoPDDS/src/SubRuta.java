@@ -62,9 +62,7 @@ public class SubRuta {
             }
 
             closedSet.add(actual);
-
-
-
+            
             for (Nodo vecino : grid.getNeighbors(actual)) {
 
                 int pasosHastaVecino = (int) actual.g + 1;
