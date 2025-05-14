@@ -72,7 +72,7 @@ public class SubRuta {
                 //System.out.println("Estoy en el nodo: "+actual.detallarEnString()+" y el pasos hasta vecino es: "+pasosHastaVecino);
 
                 if (tiempoLlegadaVecino.isAfter(fechaMaxima)) {
-                    System.out.println("No se alcanza llegar a tiempo al nodo final. Tiempo de llegada: " + tiempoLlegadaVecino + ", fecha máxima: " + fechaMaxima);
+                    //System.out.println("No se alcanza llegar a tiempo al nodo final. Tiempo de llegada: " + tiempoLlegadaVecino + ", fecha máxima: " + fechaMaxima);
                     return new AbstractMap.SimpleEntry<>(new ArrayList<>(), 14401);
                 }
 
