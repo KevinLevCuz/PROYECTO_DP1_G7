@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 public class Main {
-    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 1, 4, 0); 
+    static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 1, 1, 0); 
     static LocalDateTime fechaMinima = LocalDateTime.of(2025, Month.JANUARY, 1, 0, 0); 
-    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 2, 23, 59); 
+    static LocalDateTime fechaHoraLimite = LocalDateTime.of(2025, Month.MAY, 10, 23, 59); 
 
     //static LocalDateTime fechaSimulada = LocalDateTime.of(2025, Month.MAY, 5, 0, 1); 
     static Grid grid = new Grid(71,51);
@@ -42,9 +42,9 @@ public class Main {
             cargarBloqueos("..\\data\\bloqueos.txt", grid);
             cargaMantenimientos("..\\data\\mantenimiento.txt",camiones);
             List<Asignacion> asignaciones = new ArrayList<>();
-            int tiempoSalto = 240;
+            int tiempoSalto = 210;
 
-          // while(fechaSimulada.isBefore(fechaHoraLimite)){
+            while(fechaSimulada.isBefore(fechaHoraLimite)){
                 System.out.println("\n\n\n======= INICIO DE ASIGNACION CON ALGORITMO GENETICO =================================");
                 System.out.println("Ingreso: La fecha Simulada es: "+fechaSimulada);
                 List<Pedido> pedidosParaAsignar = new ArrayList<>();
@@ -81,14 +81,14 @@ public class Main {
                 }                
                 if(!pedidosParaAsignar.isEmpty()){
                     long t0 = System.nanoTime();
-                    asignaciones = main.AlgoritmoGenetico(pedidosParaAsignar, camiones, plantas, fechaSimulada);
+                    asignaciones = main.generarSolucionInicial(pedidosParaAsignar, camiones, plantas, fechaSimulada);
                     long t1 = System.nanoTime();
 
                     double elapsedSec = (t1 - t0) / 1e9;
                     System.out.printf("Optimize() tardó %.3f segundos%n", elapsedSec);
 
                     
-                    double costeTotal = (1.0 / SolucionGA.calcularFitness(asignaciones, pedidos)) - 1.0;
+                    double costeTotal = (1.0 / SolucionGA.calcularFitness(asignaciones,pedidosParaAsignar)) - 1.0;
         
                     System.out.printf("Función objetivo (coste total): %.3f%n", costeTotal);
                     
@@ -105,7 +105,7 @@ public class Main {
                     // Coste medio por pedido
                     double costeMedio = (totalPedidos > 0 ? costeTotal / totalPedidos : 0);
                     System.out.printf("Coste medio por pedido: %.3f%n", costeMedio);
-
+                    System.out.println("Y el total de pedidos es:"+totalPedidos);
 
                     double sumaFitness = 0;
                     for (Asignacion asignacion : asignaciones) {
@@ -152,11 +152,11 @@ public class Main {
                 if(asignaciones.isEmpty()){
                     asignaciones = new ArrayList<>();
                 }
-                /* 
-                // Visualización
-                VisualizadorAsignaciones.mostrarResumenAsignaciones(asignaciones,grid, fechaSimulada, pedidos, plantas);
+                
+                //Visualización
+                /*VisualizadorAsignaciones.mostrarResumenAsignaciones(asignaciones,grid, fechaSimulada, pedidos, plantas);
 
-                //  Mostrar detalle del primer camión (ejemplo)
+                //Mostrar detalle del primer camión (ejemplo)
                 if (!asignaciones.isEmpty()) {
                     for(Asignacion asignacion: asignaciones){
                         VisualizadorAsignaciones.mostrarDetalleCamion(asignacion, grid, fechaSimulada, pedidos, plantas);                        
@@ -164,7 +164,7 @@ public class Main {
                 }*/
 
                 fechaSimulada=fechaSimulada.plusMinutes(tiempoSalto);
-           //}
+            }
 
             
             // Mostrar pedidos no asignados
@@ -234,6 +234,7 @@ public class Main {
                     asignacion.getCamion().setGlpTanqueRest(asignacion.getCamion().getGlpTanqueRest()-glpConsumida);
                     if(subRuta.getPedido()!=null){
                         subRuta.getPedido().setEntregado(true);
+                        System.out.println("El pedido con id: "+ subRuta.getPedido().getId()+" ha sido entregado");
                         asignacion.getCamion().setGlpCargaRest(asignacion.getCamion().getGlpCargaRest()-subRuta.getPedido().getCantidadGlp());
                     }
                     if(Utilidades.esPlanta(subRuta.getUbicacionFin(), plantas)){
@@ -253,6 +254,7 @@ public class Main {
                     asignacion.getCamion().setGlpTanqueRest(asignacion.getCamion().getGlpTanqueRest()-glpConsumida);
                     if(subRuta.getPedido()!=null){
                         subRuta.getPedido().setEntregado(true);
+                        System.out.println("El pedido con id: "+ subRuta.getPedido().getId()+" ha sido entregado");
                         asignacion.getCamion().setGlpCargaRest(asignacion.getCamion().getGlpCargaRest()-subRuta.getPedido().getCantidadGlp());
                     }
                     if(Utilidades.esPlanta(subRuta.getUbicacionFin(), plantas)){

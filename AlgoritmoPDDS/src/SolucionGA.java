@@ -27,12 +27,12 @@ public class SolucionGA {
         this.fechaSimulada = fechaSimulada;
     }
     
-    public List<Asignacion> ejecutarAlgoritmoGenetico(List<Pedido> pedidosTodos) {
+    public List<Asignacion> ejecutarAlgoritmoGenetico(List<Pedido> pedidosParaAsignar) {
         // 1. Generar población inicial
         List<Solucion> poblacion = generarPoblacionInicial();
         
         // 2. Evaluar población inicial
-        evaluarPoblacion(poblacion,pedidosTodos);
+        evaluarPoblacion(poblacion,pedidosParaAsignar);
         
         // 3. Evolución
         for (int generacion = 0; generacion < NUM_GENERACIONES; generacion++) {
@@ -58,7 +58,7 @@ public class SolucionGA {
             }
             
             poblacion = nuevaPoblacion;
-            evaluarPoblacion(poblacion,pedidosTodos);
+            evaluarPoblacion(poblacion,pedidosParaAsignar);
         }
         
         // Devolver la mejor solución
@@ -109,9 +109,9 @@ public class SolucionGA {
         return new Solucion(asignaciones);
     }
     
-    private void evaluarPoblacion(List<Solucion> poblacion,List<Pedido> pedidosTodos) {
+    private void evaluarPoblacion(List<Solucion> poblacion,List<Pedido> pedidosParaAsignar) {
         for (Solucion solucion : poblacion) {
-            solucion.setFitness(calcularFitness(solucion.getSolucion(),pedidosTodos));
+            solucion.setFitness(calcularFitness(solucion.getSolucion(),pedidosParaAsignar));
         }
     }
     /* 
@@ -155,7 +155,7 @@ public class SolucionGA {
                (distanciaTotal * 0.01) - 
                penalizacionNoAtendidos;
     }*/
-    public static double calcularFitness(List<Asignacion> asignaciones,List<Pedido> pedidosTodos) {
+    public static double calcularFitness(List<Asignacion> asignaciones, List<Pedido> pedidosPaAsignar) {
         // Constantes de penalización (deberían definirse como constantes de clase)
         final double EARLY_PENALTY = 10; // Penalización por entrega temprana
         final double DEADLINE_PENALTY = 10000; // Penalización por entrega tardía
@@ -168,7 +168,9 @@ public class SolucionGA {
         // 1. Calcular costos de las asignaciones existentes
         for (Asignacion asignacion : asignaciones) {
             Camion camion = asignacion.getCamion();
-            
+            double distancia = Utilidades.calcularDistanciaTotal(asignacion);
+            double consumo = camion.calcularConsumo(distancia);
+            totalCost += distancia+consumo;
             for (SubRuta subRuta : asignacion.getSubRutas()) {
                 LocalDateTime t = subRuta.getFechaPartida();
                 Pedido p = subRuta.getPedido();
@@ -176,7 +178,9 @@ public class SolucionGA {
                 // Penalización por entrega temprana (antes de 4 horas)
                 if (p != null) {
                     LocalDateTime earliest = p.getFechaRegistro().plusHours(4);
-                    if (t.isBefore(earliest)) {
+                    if (subRuta.getFechaLlegada().isBefore(earliest)) {
+                        System.out.println("Esta ingresando con: "+subRuta.getFechaLlegada()+" y el earlist es: "+earliest);
+                        System.out.println("Entro a penalizacion por entrega temprana.");
                         totalCost += EARLY_PENALTY;
                     }
                 }
@@ -185,6 +189,7 @@ public class SolucionGA {
                 for (TimeRange mantenimiento : camion.getMantenimientos()) {
                     if (!t.isBefore(mantenimiento.getStart()) && 
                         t.isBefore(mantenimiento.getEnd())) {
+                        System.out.println("Ingreso a MAINT_PENALTY");
                         totalCost += MAINT_PENALTY;
                     }
                 }
@@ -192,28 +197,9 @@ public class SolucionGA {
                 // Costo por distancia, consumo y bloqueos
                 double glp = camion.getGlpTanqueRest();
                 LocalDateTime tiempoActual = t;
-                
-                for (int k = 1; k < subRuta.getTrayectoria().size(); k++) {
-                    Nodo a = subRuta.getTrayectoria().get(k - 1);
-                    Nodo b = subRuta.getTrayectoria().get(k);
-                    double d = 1; // Cada paso en la trayectoria representa 1 unidad de distancia
-                    
-                    // Costo por distancia y consumo
-                    double consumo = camion.calcularConsumo(d);
-                    totalCost += d + consumo;
-                    glp -= consumo;
-                    
-                    // Actualizar tiempo de llegada al nodo
-                    tiempoActual = tiempoActual.plusSeconds(72); // 72 segundos por unidad de distancia
-                    
-                    // Penalización por bloqueos
-                    if (b.isBlockedAt(tiempoActual)) {
-                        totalCost += BLOCK_PENALTY;
-                    }
-                }
-                
                 // Penalización por entrega tardía
-                if (p != null && tiempoActual.isAfter(p.getFechaMaximaEntrega())) {
+                if (p != null && subRuta.getFechaLlegada().isAfter(p.getFechaMaximaEntrega())) {
+                    System.out.println("Ingreso a entrega tardia.");
                     totalCost += DEADLINE_PENALTY;
                 }
             }
@@ -226,11 +212,12 @@ public class SolucionGA {
             .map(SubRuta::getPedido)
             .collect(Collectors.toList());
         
-        long pedidosNoAsignados = pedidosTodos.stream()
-            .filter(p -> !pedidosAsignados.contains(p))
-            .count();
+        long pedidosNoAsignados = asignaciones.stream()
+            .flatMap(a -> a.getSubRutas().stream())
+            .filter(sr -> sr.getPedido() == null).count();
         
-        totalCost += pedidosNoAsignados * NO_ASSIGN_PENALTY;
+        System.out.println("El numero de pedidos no asignados es: "+(pedidosPaAsignar.size()-pedidosNoAsignados));
+        //totalCost += (pedidosPaAsignar.size()-pedidosNoAsignados) * NO_ASSIGN_PENALTY;
         
         // Convertir el costo a fitness (a mayor costo, menor fitness)
         return 1.0 / (1.0 + totalCost);
