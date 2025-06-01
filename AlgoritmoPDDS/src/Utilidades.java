@@ -16,7 +16,7 @@ public class Utilidades {
 
     try {
         // Caso cuando es la última subruta
-        if (subRutaEntrada.equals(subRutas.get(subRutas.size() - 1))) {
+        if (subRutaEntrada.equals(subRutas.getLast())) {
             return fechaMaxima;
         }
 
@@ -35,7 +35,7 @@ public class Utilidades {
         // Si no tiene pedido, usar la fecha de llegada de la siguiente subruta
         if (index + 1 < subRutas.size()) {
             SubRuta siguiente = subRutas.get(index + 1);
-            return siguiente.getFechaLlegada() != null ? siguiente.getFechaLlegada() : fechaMaxima;
+            return siguiente.getPedido().getFechaMaximaEntrega() != null ? siguiente.getPedido().getFechaMaximaEntrega() : fechaMaxima;
         }
 
         return fechaMaxima;
@@ -88,6 +88,11 @@ public class Utilidades {
             .filter(p -> p.getTipo().equals("PRINCIPAL"))
             .anyMatch(p -> p.getUbicacion().equals(nodo));
     }
+    public static boolean esPlantaSecundaria(Nodo nodo, List<Planta> plantas) {
+        return plantas.stream()
+            .filter(p -> p.getTipo().equals("SECUNDARIA"))
+            .anyMatch(p -> p.getUbicacion().equals(nodo));
+    }
 
     public static Planta obtenerPlanta(Nodo nodo, List<Planta> plantas) {
         return plantas.stream()
@@ -100,14 +105,6 @@ public class Utilidades {
         .filter(p ->p.getUbicacion().equals(nodo))
         .findFirst()
         .orElse(null);
-    }
-    public static int calcularDistanciaDeTrayectoria(List<Nodo> trayectoria) {
-        /* 
-        System.out.println("La trayectoria a utilizar es: ");
-        for(Nodo n: trayectoria){
-            System.out.println("("+n.getPosX()+","+n.getPosY()+")");
-        } */
-        return trayectoria.size()-1;
     }
     public static List<Nodo> obtenerNodosIntermedios(int x1, int y1, int x2, int y2, Grid grid) {
         List<Nodo> nodos = new ArrayList<>();
@@ -146,7 +143,7 @@ public class Utilidades {
     public static int obtenerGlpACargar(Asignacion asignacion, int numero){
         int carga = 0;
         while(numero<=asignacion.getSubRutas().size() ){
-            Pedido pedido = asignacion.getSubRutas().get(numero).getPedido();
+            Pedido pedido = asignacion.getSubRutas().get(numero-1).getPedido();
             if(pedido!=null){
                 carga+=pedido.getCantidadGlp();
             } else {

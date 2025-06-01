@@ -1,7 +1,7 @@
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class Asignacion {
+public class Asignacion{
     private Camion camion;
     private List<SubRuta> subRutas;
     private LocalDateTime fechaPartida;

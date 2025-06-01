@@ -11,8 +11,8 @@ public class SolucionGA {
     private static final Random rand = new Random();
     private static final double PROBABILIDAD_CRUCE = 0.8;
     private static final double PROBABILIDAD_MUTACION = 0.1;
-    private static final int TAMANIO_POBLACION = 30;
-    private static final int NUM_GENERACIONES = 5;
+    private static final int TAMANIO_POBLACION = 7;
+    private static final int NUM_GENERACIONES = 3;
     private static final int TAMANIO_TORNEO = 3;
     
     private List<Pedido> pedidos;
@@ -28,28 +28,25 @@ public class SolucionGA {
     }
     
     public List<Asignacion> ejecutarAlgoritmoGenetico(List<Pedido> pedidosParaAsignar) {
-        // 1. Generar población inicial
+
         List<Solucion> poblacion = generarPoblacionInicial();
-        
-        // 2. Evaluar población inicial
+
         evaluarPoblacion(poblacion,pedidosParaAsignar);
         
-        // 3. Evolución
         for (int generacion = 0; generacion < NUM_GENERACIONES; generacion++) {
             List<Solucion> nuevaPoblacion = new ArrayList<>();
             
-            // Elitismo: mantener la mejor solución
             nuevaPoblacion.add(Collections.max(poblacion, Comparator.comparingDouble(Solucion::getFitness)));
             
             while (nuevaPoblacion.size() < TAMANIO_POBLACION) {
-                // Selección
+                // Generamos la selección, en este caso por torneo.
                 Solucion padre1 = seleccionarPorTorneo(poblacion);
                 Solucion padre2 = seleccionarPorTorneo(poblacion);
                 
-                // Cruce
+                // Hacemos el cruce
                 Solucion hijo = cruzar(padre1, padre2);
                 
-                // Mutación
+                // Hacemos la mutación
                 if (rand.nextDouble() < PROBABILIDAD_MUTACION) {
                     mutar(hijo);
                 }
@@ -61,7 +58,6 @@ public class SolucionGA {
             evaluarPoblacion(poblacion,pedidosParaAsignar);
         }
         
-        // Devolver la mejor solución
         return Collections.max(poblacion, Comparator.comparingDouble(Solucion::getFitness)).getSolucion();
     }
     
@@ -86,25 +82,39 @@ public class SolucionGA {
         List<Camion> camionesDisponibles = new ArrayList<>(camiones);
         List<Pedido> pedidosPendientes = new ArrayList<>(pedidos);
         
+        // Reseteamos a los camiones con su asignación simulada a false
+        for (Camion camion : camionesDisponibles) {
+            camion.setAsignacionSimulada(false);
+            camion.resetSimulacion();
+        }
+
         Collections.shuffle(pedidosPendientes);
         Collections.shuffle(camionesDisponibles);
+
         
         Main main = new Main();
         for (Pedido pedido : pedidosPendientes) {
             for (Camion camion : camionesDisponibles) {
                 if (camion.isDisponible(fechaSimulada)) {
-                    List<SubRuta> subRutas = main.intentarAsignarPedidoSimple(
-                        camion, pedido, plantas, pedidos);
+                    
+                    if(camion.isAsignacionSimulada()){
+                        continue;   
+                    }
+                    List<SubRuta> subRutas = main.intentarAsignarPedidoSimple(camion, pedido, plantas, pedidos, fechaSimulada);
                     
                     if (subRutas != null) {
+                        camion.setAsignacionSimulada(true);
+                        
                         Asignacion asignacion = new Asignacion(
                             camion, subRutas, subRutas.getFirst().getFechaPartida());
+
+                        main.confirmarAsignacionSimulada(asignacion, pedido, plantas);
                         asignaciones.add(asignacion);
                         break;
                     }
                 }
             }
-        }
+        } 
         
         return new Solucion(asignaciones);
     }
@@ -158,10 +168,10 @@ public class SolucionGA {
     public static double calcularFitness(List<Asignacion> asignaciones, List<Pedido> pedidosPaAsignar) {
         // Constantes de penalización (deberían definirse como constantes de clase)
         final double EARLY_PENALTY = 10; // Penalización por entrega temprana
-        final double DEADLINE_PENALTY = 10000; // Penalización por entrega tardía
-        final double MAINT_PENALTY = 10000; // Penalización por conflicto con mantenimiento
-        final double BLOCK_PENALTY = 10000; // Penalización por bloqueos
-        final double NO_ASSIGN_PENALTY = 3000; // Penalización por pedido no asignado
+        final double DEADLINE_PENALTY = 100000; // Penalización por entrega tardía
+        final double MAINT_PENALTY = 100000; // Penalización por conflicto con mantenimiento
+        final double BLOCK_PENALTY = 100000; // Penalización por bloqueos
+        final double NO_ASSIGN_PENALTY = 10000; // Penalización por pedido no asignado
         
         double totalCost = 0.0;
         
@@ -216,16 +226,13 @@ public class SolucionGA {
             .flatMap(a -> a.getSubRutas().stream())
             .filter(sr -> sr.getPedido() == null).count();
         
-        System.out.println("El numero de pedidos no asignados es: "+(pedidosPaAsignar.size()-pedidosNoAsignados));
-        //totalCost += (pedidosPaAsignar.size()-pedidosNoAsignados) * NO_ASSIGN_PENALTY;
-        
-        // Convertir el costo a fitness (a mayor costo, menor fitness)
         return 1.0 / (1.0 + totalCost);
     }
     
     private Solucion seleccionarPorTorneo(List<Solucion> poblacion) {
         List<Solucion> torneo = new ArrayList<>();
-        for (int i = 0; i < TAMANIO_TORNEO; i++) {
+        torneo.add(poblacion.get(0));
+        for (int i = 0; i < TAMANIO_TORNEO-1; i++) {
             torneo.add(poblacion.get(rand.nextInt(poblacion.size())));
         }
         return Collections.max(torneo, Comparator.comparingDouble(Solucion::getFitness));
@@ -266,7 +273,7 @@ public class SolucionGA {
             for (Camion camion : camionesDisponibles) {
                 if (camion.isDisponible(fechaSimulada)) {
                     List<SubRuta> subRutas = main.intentarAsignarPedidoSimple(
-                        camion, pedido, plantas, pedidos);
+                        camion, pedido, plantas, pedidos, fechaSimulada);
                     
                     if (subRutas != null) {
                         Asignacion asignacion = new Asignacion(
@@ -308,7 +315,7 @@ public class SolucionGA {
                         for (SubRuta sr : aMutada.getSubRutas()) {
                             if (sr.getPedido() != null) {
                                 List<SubRuta> nuevasSubRutas = main.intentarAsignarPedidoSimple(
-                                    nuevoCamion, sr.getPedido(), plantas, pedidos);
+                                    nuevoCamion, sr.getPedido(), plantas, pedidos, fechaSimulada);
                                 
                                 if (nuevasSubRutas != null) {
                                     asignaciones.remove(aMutada);
@@ -340,7 +347,7 @@ public class SolucionGA {
                     for (Camion camion : camiones) {
                         if (camion.isDisponible(fechaSimulada)) {
                             List<SubRuta> subRutas = main.intentarAsignarPedidoSimple(
-                                camion, pedido, plantas, pedidos);
+                                camion, pedido, plantas, pedidos, fechaSimulada);
                             
                             if (subRutas != null) {
                                 asignaciones.add(new Asignacion(

@@ -1,0 +1,49 @@
+El tiempo total es: 7.965186  
+Función objetivo (coste total): 10115.741666666667  
+Coste medio por pedido: 101.15741666666666  
+Fitness promedio por pedido: 0.010595025786902756  
+
+El tiempo total es: 6.736007  
+Función objetivo (coste total): 9823.475000000000  
+Coste medio por pedido: 98.23475000000000  
+Fitness promedio por pedido: 0.01078829415208464  
+
+El tiempo total es: 6.145976  
+Función objetivo (coste total): 10643.892000000001  
+Coste medio por pedido: 106.43892000000001  
+Fitness promedio por pedido: 0.009396253239273697  
+
+El tiempo total es: 6.915902  
+Función objetivo (coste total): 9974.204166666666  
+Coste medio por pedido: 99.74204166666666  
+Fitness promedio por pedido: 0.010630146038217978  
+
+El tiempo total es: 8.277764  
+Función objetivo (coste total): 10438.681944444445  
+Coste medio por pedido: 104.38681944444445  
+Fitness promedio por pedido: 0.009752467918854921  
+
+El tiempo total es: 7.82048  
+Función objetivo (coste total): 10057.221527777777  
+Coste medio por pedido: 100.57221527777777  
+Fitness promedio por pedido: 0.010431127383849823  
+
+El tiempo total es: 6.799521  
+Función objetivo (coste total): 9536.319444444445  
+Coste medio por pedido: 95.36319444444445  
+Fitness promedio por pedido: 0.010930084190146882  
+
+El tiempo total es: 8.573302  
+Función objetivo (coste total): 10871.448611111111  
+Coste medio por pedido: 108.71448611111111  
+Fitness promedio por pedido: 0.009198280034260519  
+
+El tiempo total es: 7.933958  
+Función objetivo (coste total): 10234.594444444443  
+Coste medio por pedido: 102.34594444444443  
+Fitness promedio por pedido: 0.010288563554230653  
+
+El tiempo total es: 7.319223  
+Función objetivo (coste total): 9762.381250000000  
+Coste medio por pedido: 97.62381250000000  
+Fitness promedio por pedido: 0.010743968174423656  
