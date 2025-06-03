@@ -9,7 +9,7 @@ import java.util.Random;
 
 public class SimulatedAnnealing {
     private static final double EARLY_PENALTY = 10.0;
-    private static final double SPEED_KMH = 50.0;
+    public static final double SPEED_KMH = 50.0;
     private static final double MAINT_PENALTY = 10_000.0;
     private static final double BLOCK_PENALTY = 10_000.0;
     private static final double DEADLINE_PENALTY = 10_000.0;
@@ -50,15 +50,20 @@ public class SimulatedAnnealing {
             ArrayList<Bloqueo> bloqueos,
             ArrayList<Mantenimiento> mantenimientos,
             LocalDateTime now) {
-        Solucion current = initialSolution(pedidos, camiones, now);
+            Solucion current = simularPedidosEnTiempoReal(pedidos, camiones, now);
+
+            return current;
+        /*Solucion current = initialSolution(pedidos, camiones, now);
         Solucion best = current;
         double temp = initialTemp;
 
         for (int i = 0; i < maxIterations; i++) {
             Solucion neighbor = neighborSolution(current, now);
-            /*double costC = cost(current);
-            double costN = cost(neighbor);*/
-            double fitC = fitness(current);
+            /*
+             * double costC = cost(current);
+             * double costN = cost(neighbor);
+             */
+            /*double fitC = fitness(current);
             double fitN = fitness(neighbor);
             if (fitN > fitC || Math.exp((fitN - fitC) / temp) > random.nextDouble()) {
                 current = neighbor;
@@ -69,7 +74,7 @@ public class SimulatedAnnealing {
             }
             temp *= (1 - coolingRate);
         }
-        return best;
+        return best;*/
     }
 
     /**
@@ -322,10 +327,25 @@ public class SimulatedAnnealing {
         return totalCost;
     }
 
-    private LocalDateTime avanzarTiempo(LocalDateTime t, List<Nodo> traj) {
+    /*
+     * private LocalDateTime avanzarTiempo(LocalDateTime t, List<Nodo> traj) {
+     * double dist = 0;
+     * for (int i = 1; i < traj.size(); i++) {
+     * dist += distance(traj.get(i - 1), traj.get(i));
+     * }
+     * double horas = dist / SPEED_KMH;
+     * long H = (long) horas;
+     * long M = (long) ((horas - H) * 60);
+     * return t.plusHours(H).plusMinutes(M);
+     * }
+     */
+    // Dentro de la clase SimulatedAnnealing
+    private LocalDateTime avanzarTiempo(LocalDateTime t, List<Nodo> trayectoria) {
         double dist = 0;
-        for (int i = 1; i < traj.size(); i++) {
-            dist += distance(traj.get(i - 1), traj.get(i));
+        for (int i = 1; i < trayectoria.size(); i++) {
+            Nodo a = trayectoria.get(i - 1);
+            Nodo b = trayectoria.get(i);
+            dist += distance(a, b);
         }
         double horas = dist / SPEED_KMH;
         long H = (long) horas;
@@ -349,4 +369,337 @@ public class SimulatedAnnealing {
         double c = cost(sol);
         return 1.0 / (1.0 + c);
     }
+
+    /*************************** NUEVAS FUNCIONES ***************************/
+    /**
+     * Recorre todas las subrutas de 'plan' (que ya contienen tiemposPorNodo)
+     * y sitúa al camión en la posición apropiada para el relojObjetivo.
+     */
+    /**
+     * Actualiza la posición y el GLP de un camión hasta el instante
+     * 'relojObjetivo'.
+     * Recorre cada SubRuta de su Plan, calcula los tiempos de llegada a cada Nodo y
+     * resta el GLP consumido en cada tramo. Si el camión ya completó todas sus
+     * SubRutas,
+     * regresa a la base. Finalmente, asigna a c.ubicacionActual el Nodo
+     * correspondiente
+     * al instante 'relojObjetivo'.
+     */
+    public void actualizarCamionHasta(PlanCamion plan, LocalDateTime relojObjetivo) {
+        Camion c = plan.getCamion();
+        // 1) Determinar la base (planta principal)
+        Nodo base = plantas.get(0).getUbicacion();
+
+        // 2) Partimos del tanque actual de GLP del camión
+        double glp = c.getGlpActual();
+
+        // 3) Por defecto, la posición inicial es la base
+        Nodo posicionActual = base;
+
+        // 4) Si ya existen SubRutas, el "reloj" arranca en la hora de inicio de la
+        // primera SubRuta;
+        // si no, arrancamos directamente en el instante que nos piden (queda en base).
+        LocalDateTime t = plan.getSubRutas().isEmpty()
+                ? relojObjetivo
+                : plan.getSubRutas().get(0).getHoraInicio();
+
+        // 5) Recorremos cada SubRuta asignada al camión en orden
+        for (SubRuta sr : plan.getSubRutas()) {
+            List<Nodo> trayectoria = sr.getTrayectoria();
+            LocalDateTime inicioSR = sr.getHoraInicio();
+
+            // 5.A) Si aún no hemos llegado al inicio de esta SubRuta, el camión permanece
+            // en la posiciónActual
+            if (relojObjetivo.isBefore(inicioSR)) {
+                c.setUbicacionActual(posicionActual);
+                c.setGlpActual(glp);
+                return;
+            }
+
+            // 5.B) Si ya superamos la hora de inicio, avanzamos tramo a tramo
+            LocalDateTime tiempoNodo = inicioSR;
+            // La primera posición de la trayectoria suele coincidir con el punto de partida
+            // de la SubRuta
+            posicionActual = trayectoria.get(0);
+
+            for (int i = 1; i < trayectoria.size(); i++) {
+                Nodo prev = trayectoria.get(i - 1);
+                Nodo next = trayectoria.get(i);
+
+                // 5.B.i) Calculamos la distancia Euclidiana entre prev y next
+                double dist = distance(prev, next);
+
+                // 5.B.ii) Transformamos esa distancia en horas de viaje
+                double horas = dist / SPEED_KMH;
+                long H = (long) horas;
+                long M = (long) ((horas - H) * 60);
+
+                // 5.B.iii) Avanzamos el reloj hasta la hora de llegada a 'next'
+                tiempoNodo = tiempoNodo.plusHours(H).plusMinutes(M);
+
+                // 5.B.iv) Calculamos el GLP consumido en este tramo
+                double consumo = dist * (c.getCapacidadMaxima() / 180.0);
+
+                // 5.B.v) Si 'tiempoNodo' ya es posterior o igual a 'relojObjetivo', estamos
+                // entre prev y next,
+                // por lo que el camión se queda en 'prev'
+                if (tiempoNodo.isAfter(relojObjetivo)) {
+                    posicionActual = prev;
+                    c.setUbicacionActual(posicionActual);
+                    c.setGlpActual(glp);
+                    return;
+                }
+
+                // 5.B.vi) Si aún no llegó al instante deseado, completa ese tramo:
+                posicionActual = next;
+                glp -= consumo;
+            }
+
+            // 5.C) Si completó toda la SubRuta antes del 'relojObjetivo', entonces queda al
+            // final de la SubRuta
+            posicionActual = sr.getFin();
+            // (el GLP ya se fue descontando tramo a tramo dentro del for anterior)
+        }
+
+        // 6) Si ya terminó todas sus SubRutas y aún no llegó el instante
+        // 'relojObjetivo',
+        // debe regresar a la base:
+        if (!posicionActual.equals(base)) {
+            List<Nodo> trajBack = PathFinder.findPath(posicionActual, base, bloqueos, t);
+            LocalDateTime tiempoNodo = t;
+
+            for (int i = 1; i < trajBack.size(); i++) {
+                Nodo prev = trajBack.get(i - 1);
+                Nodo next = trajBack.get(i);
+
+                double dist = distance(prev, next);
+                double horas = dist / SPEED_KMH;
+                long H = (long) horas;
+                long M = (long) ((horas - H) * 60);
+
+                tiempoNodo = tiempoNodo.plusHours(H).plusMinutes(M);
+                double consumo = dist * (c.getCapacidadMaxima() / 180.0);
+
+                if (tiempoNodo.isAfter(relojObjetivo)) {
+                    posicionActual = prev;
+                    c.setUbicacionActual(posicionActual);
+                    c.setGlpActual(glp);
+                    return;
+                }
+
+                // Si aún no llegamos al instante, completamos ese tramo de regreso a base
+                posicionActual = next;
+                glp -= consumo;
+            }
+
+            // Cuando finalmente completa la vuelta a la base:
+            posicionActual = base;
+        }
+
+        // 7) Asignamos al camión su última posición y su GLP remanente (si es negativo,
+        // lo fijamos en 0)
+        c.setUbicacionActual(posicionActual);
+        c.setGlpActual(glp < 0 ? 0 : glp);
+    }
+
+    /**
+     * Reemplaza la antigua initialSolution(...).
+     * - Recorre los pedidos en orden de llegada
+     * - Actualiza todos los camiones hasta la hora de cada pedido
+     * - Asigna el pedido al camión más conveniente
+     * - Al final hace que cada camión regrese a la base si queda lejos
+     */
+    public Solucion simularPedidosEnTiempoReal(
+            ArrayList<Pedido> pedidos,
+            ArrayList<Camion> camiones,
+            LocalDateTime ahora) {
+
+        Nodo base = plantas.get(0).getUbicacion();
+        // 1) Inicializar cada camión en base con tanque lleno
+        ArrayList<PlanCamion> planes = new ArrayList<>();
+        for (Camion c : camiones) {
+            c.setUbicacionActual(base);
+            c.setGlpActual(c.getCapacidadMaxima());
+            planes.add(new PlanCamion(c, new ArrayList<>()));
+        }
+
+        // 2) Ordenar pedidos por horaPedido ascendente
+        pedidos.sort(Comparator.comparing(Pedido::getHoraPedido));
+
+        LocalDateTime tiempoActual = ahora;
+
+        // 3) Para cada pedido en orden de llegada:
+        for (Pedido p : pedidos) {
+            tiempoActual = p.getHoraPedido();
+
+            LocalDateTime reloj = tiempoActual;
+
+            // 3.A) Antes de asignar este pedido, “adelantamos” cada camión a 'reloj'
+            for (PlanCamion plan : planes) {
+                actualizarCamionHasta(plan, reloj);
+            }
+
+            // 3.B) Seleccionar el camión disponible más cercano (o lógica que ya usabas)
+            PlanCamion mejorPlan = null;
+            double mejorDist = Double.MAX_VALUE;
+            for (PlanCamion plan : planes) {
+                Camion c = plan.getCamion();
+                // Solo consideramos camiones que, al terminar su última subruta, queden libres
+                // (es decir, cuyo relojLocal ≤ reloj) y no estén en mantenimiento en 'reloj'
+                boolean enMant = mantenimientos.stream().anyMatch(m -> m.getCodigoCamion().equals(c.getCodigo()) &&
+                        !reloj.isBefore(m.getInicio()) &&
+                        reloj.isBefore(m.getFin()));
+                if (enMant)
+                    continue;
+
+                LocalDateTime tCam = plan.getSubRutas().isEmpty()
+                        ? reloj
+                        : plan.getSubRutas().get(plan.getSubRutas().size() - 1).getHoraFin();
+                if (tCam.isAfter(reloj))
+                    continue; // aún en ruta, no disponible
+
+                // Ubicación actual ya fue actualizada por actualizarCamionHasta
+                Nodo ubic = c.getUbicacionActual();
+                double dist = distance(ubic, p.getDestino());
+                if (dist < mejorDist) {
+                    mejorDist = dist;
+                    mejorPlan = plan;
+                }
+            }
+
+            // 3.C) Si no hay camión disponible, saltamos el pedido
+            if (mejorPlan == null)
+                continue;
+
+            // 3.D) Generar subrutas para llevar del camión → pedido:
+            Camion elegido = mejorPlan.getCamion();
+            Nodo inicio = elegido.getUbicacionActual();
+            LocalDateTime tInicio = reloj;
+
+            // 3.D.a) Espera mínima de 4 h:
+            LocalDateTime earliest = p.getHoraPedido().plusHours(4);
+            if (tInicio.isBefore(earliest))
+                tInicio = earliest;
+
+            // 3.D.b) Verificar si necesita recarga antes de ir al pedido
+            double distHastaPedido = distance(inicio, p.getDestino());
+            double neededGLP = distHastaPedido * (elegido.getCapacidadMaxima() / 180.0);
+            if (elegido.getGlpActual() < neededGLP) {
+                // elegimos planta más cercana para recargar
+                Planta mejor = null;
+                double bestDist2 = Double.MAX_VALUE;
+                for (Planta pl : plantas) {
+                    double d2 = distance(inicio, pl.getUbicacion());
+                    if (d2 < bestDist2) {
+                        bestDist2 = d2;
+                        mejor = pl;
+                    }
+                }
+                // Crear subruta recarga
+                ArrayList<Nodo> trajRec = PathFinder.findPath(inicio, mejor.getUbicacion(), bloqueos, tInicio);
+                // Calcular tiemposPorNodo
+                ArrayList<LocalDateTime> tiemposRec = new ArrayList<>();
+                LocalDateTime t0 = tInicio;
+                tiemposRec.add(t0);
+                for (int i = 1; i < trajRec.size(); i++) {
+                    double d = distance(trajRec.get(i - 1), trajRec.get(i));
+                    double horas = d / SPEED_KMH;
+                    long H = (long) horas;
+                    long M = (long) ((horas - H) * 60);
+                    t0 = t0.plusHours(H).plusMinutes(M);
+                    tiemposRec.add(t0);
+                }
+                LocalDateTime tFinRec = tiemposRec.get(tiemposRec.size() - 1);
+                mejorPlan.addSubRuta(new SubRuta(
+                        inicio,
+                        mejor.getUbicacion(),
+                        null, // null = solo recarga
+                        trajRec,
+                        tiemposRec,
+                        tInicio,
+                        tFinRec));
+                elegido.setGlpActual(elegido.getCapacidadMaxima());
+                inicio = mejor.getUbicacion();
+                tInicio = tFinRec;
+            }
+
+            // 3.D.c) Ahora sí, ruta hasta el nodo del pedido
+            ArrayList<Nodo> trajEnt = PathFinder.findPath(inicio, p.getDestino(), bloqueos, tInicio);
+            ArrayList<LocalDateTime> tiemposEnt = new ArrayList<>();
+            LocalDateTime t1 = tInicio;
+            tiemposEnt.add(t1);
+            for (int i = 1; i < trajEnt.size(); i++) {
+                double d = distance(trajEnt.get(i - 1), trajEnt.get(i));
+                double horas = d / SPEED_KMH;
+                long H = (long) horas;
+                long M = (long) ((horas - H) * 60);
+                t1 = t1.plusHours(H).plusMinutes(M);
+                tiemposEnt.add(t1);
+            }
+            LocalDateTime tFinEnt = tiemposEnt.get(tiemposEnt.size() - 1);
+
+            // 3.D.d) Si supera el plazo máximo, descartamos la subruta (no lo añadimos)
+            if (tFinEnt.isAfter(p.getPlazoMaximoEntrega())) {
+                continue;
+            }
+
+            // 3.D.e) Añadimos la subruta de entrega
+            mejorPlan.addSubRuta(new SubRuta(
+                    inicio,
+                    p.getDestino(),
+                    p,
+                    trajEnt,
+                    tiemposEnt,
+                    tInicio,
+                    tFinEnt));
+            // descontar GLP del trayecto al pedido
+            elegido.setGlpActual(elegido.getGlpActual() - neededGLP);
+            elegido.setUbicacionActual(p.getDestino());
+        }
+
+        // 4) Una vez asignados todos los pedidos, cada camión regresa a base si está
+        // lejos
+        for (PlanCamion plan : planes) {
+            Camion c = plan.getCamion();
+            Nodo pos = c.getUbicacionActual();
+            LocalDateTime tUlt = plan.getSubRutas().isEmpty()
+                    ? tiempoActual
+                    : plan.getSubRutas().get(plan.getSubRutas().size() - 1).getHoraFin();
+            if (!pos.equals(base)) {
+                ArrayList<Nodo> trajBack = PathFinder.findPath(pos, base, bloqueos, tUlt);
+                ArrayList<LocalDateTime> tiemposBack = new ArrayList<>();
+                LocalDateTime t0 = tUlt;
+                tiemposBack.add(t0);
+                for (int i = 1; i < trajBack.size(); i++) {
+                    double d = distance(trajBack.get(i - 1), trajBack.get(i));
+                    double horas = d / SPEED_KMH;
+                    long H = (long) horas;
+                    long M = (long) ((horas - H) * 60);
+                    t0 = t0.plusHours(H).plusMinutes(M);
+                    tiemposBack.add(t0);
+                }
+                LocalDateTime tFinBack = tiemposBack.get(tiemposBack.size() - 1);
+                plan.addSubRuta(new SubRuta(
+                        pos,
+                        base,
+                        null,
+                        trajBack,
+                        tiemposBack,
+                        tUlt,
+                        tFinBack));
+                // descontar GLP del regreso
+                double totalDist = 0;
+                for (int i = 1; i < trajBack.size(); i++) {
+                    totalDist += distance(trajBack.get(i - 1), trajBack.get(i));
+                }
+                c.setGlpActual(Math.max(0, c.getGlpActual() - totalDist * (c.getCapacidadMaxima() / 180.0)));
+                c.setUbicacionActual(base);
+            }
+        }
+
+        Solucion sol = new Solucion(planes, 0);
+        sol.setCosto(cost(sol));
+        return sol;
+    }
+
 }

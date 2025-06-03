@@ -1,6 +1,7 @@
 package com.dp1code.routing.Model;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Camion {
     private String codigo;
@@ -9,6 +10,8 @@ public class Camion {
     private double glpActual;
     private boolean enRuta;
     private LocalDateTime disponibleDesde;
+    private LocalDateTime horaLibre;   // instante en que terminará la subruta en curso
+    private List<SubRuta> subRutasExistentes;
 
     public Camion() {}
 
@@ -39,4 +42,10 @@ public class Camion {
 
     public LocalDateTime getDisponibleDesde() { return disponibleDesde; }
     public void setDisponibleDesde(LocalDateTime disponibleDesde) { this.disponibleDesde = disponibleDesde; }
+
+    public LocalDateTime getHoraLibre() { return horaLibre; }
+    public void setHoraLibre(LocalDateTime h) { this.horaLibre = h; }
+
+    public List<SubRuta> getSubRutasExistentes() { return subRutasExistentes; }
+    public void setSubRutasExistentes(List<SubRuta> s) { this.subRutasExistentes = s; }
 }

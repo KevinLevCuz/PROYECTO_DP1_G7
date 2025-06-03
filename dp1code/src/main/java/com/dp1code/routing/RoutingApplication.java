@@ -37,7 +37,8 @@ import com.dp1code.routing.Model.SubRuta;
 public class RoutingApplication {
     // private static Nodo ubicacionInicial = new Nodo(0,0);
     public static void main(String[] args) throws IOException {
-
+        //SpringApplication.run(RoutingApplication.class, args);
+        
         LocalDateTime ahora = LocalDateTime.now()
                 .withDayOfMonth(1)
                 .withHour(0)
@@ -68,6 +69,7 @@ public class RoutingApplication {
         long t1 = System.nanoTime();
 
         double elapsedSec = (t1 - t0) / 1e9;
+        
         System.out.printf("Optimize() tardó %.3f segundos%n", elapsedSec);
 
         double costeTotal = sa.cost(mejor);
@@ -107,7 +109,6 @@ public class RoutingApplication {
 
         //System.out.println("Se llegó a dar solución\n");
         //mejor.imprimirRutas();
-
     }
 
     public static ArrayList<Pedido> cargarPedidos(String filePath) throws IOException {

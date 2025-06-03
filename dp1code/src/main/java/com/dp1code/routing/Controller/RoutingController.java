@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/routing")
@@ -23,13 +26,16 @@ public class RoutingController {
     public RoutingController(RoutingService routingService) {
         this.routingService = routingService;
     }
-
-    @PostMapping("/optimize")
+    @GetMapping("path")
+    //@PostMapping("/optimize")
     public Solucion optimize(
         @RequestBody OptimizeRequest req
     ) {
         LocalDateTime now = LocalDateTime.parse(req.getAhora());
-        return routingService.optimize();//chequea esto
+        Solucion solu1 = new Solucion();
+        //return routingService.optimize();//REVISAR
+        
+        return solu1;
     }
 
     // DTO para recibir el POST
