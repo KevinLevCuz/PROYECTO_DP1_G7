@@ -26,7 +26,7 @@ public class RoutingController {
     public RoutingController(RoutingService routingService) {
         this.routingService = routingService;
     }
-    @GetMapping("path")
+    @PostMapping("/path")
     //@PostMapping("/optimize")
     public Solucion optimize(
         @RequestBody OptimizeRequest req
