@@ -1,8 +1,9 @@
 import SimulationMap from "@/components/SimulationMap";
-import OrderList from "@/components/OrderList";
 import Sidebar from "@/components/Sidebar";
 import StatusBar from "@/components/StatusBar";
 import Legend from "@/components/Legend";
+
+import TransportPanel from "@/components/TransportPanel";
 
 export default function Home() {
   return (
@@ -14,7 +15,7 @@ export default function Home() {
         
         <div className="flex-1 relative overflow-hidden">
           <SimulationMap />
-          <OrderList />
+          <TransportPanel />
           <Legend />
         </div>
       </div>
