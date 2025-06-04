@@ -60,23 +60,29 @@ public class RoutingService {
     /**
      * Ejecuta el SA con los datos ya cargados y los pedidos/camiones de la petición.
      */
-    public Solucion optimize(LocalDateTime ahora) throws IOException {
-    
-    ArrayList<Pedido> pedidos = cargarPedidos("data/pedidos.txt");
-    ArrayList<Camion> camiones = cargarCamiones("data/camiones.txt");
-    ArrayList<Bloqueo> bloqueos = cargarBloqueos("data/bloqueos.txt");
-    ArrayList<Mantenimiento> mantenimientos = cargarMantenimientos("data/mantenimiento.txt");
+    public Solucion optimize() throws IOException{
+        LocalDateTime ahora = LocalDateTime.now()
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
 
-    ArrayList<Planta> plantas = obtenerPlantas();
+        ArrayList<Pedido> pedidos = cargarPedidos("data/pedidos.txt");
+        ArrayList<Camion> camiones = cargarCamiones("data/camiones.txt");
+        ArrayList<Bloqueo> bloqueos = cargarBloqueos("data/bloqueos.txt");
+        ArrayList<Mantenimiento> mantenimientos = cargarMantenimientos("data/mantenimiento.txt");
 
-    SimulatedAnnealing sa = new SimulatedAnnealing(
-            5000, 0.005, 100,
-            plantas, bloqueos, mantenimientos);
-    long t0 = System.nanoTime();
-    Solucion mejor = sa.optimize(pedidos, camiones, plantas, bloqueos, mantenimientos, ahora);
-    long t1 = System.nanoTime();
-    return mejor;
-}
+        ArrayList<Planta> plantas = obtenerPlantas();
+
+        SimulatedAnnealing sa = new SimulatedAnnealing(
+                5000, 0.005, 100,
+                plantas, bloqueos, mantenimientos);
+        long t0 = System.nanoTime();
+        Solucion mejor = sa.optimize(pedidos, camiones, plantas, bloqueos, mantenimientos, ahora);
+        long t1 = System.nanoTime();
+        return mejor;
+    }
 
     public ArrayList<Pedido> cargarPedidos(String filePath) throws IOException {
         ArrayList<Pedido> pedidos = new ArrayList<>();
@@ -144,7 +150,7 @@ public class RoutingService {
             count.put(tipo, idx);
             String codigo = String.format("%s%02d", tipo, idx);
             // Ubicación por defecto (0,0)
-            Nodo ubic = new Nodo(12, 8);
+            Nodo ubic = new Nodo(0, 0);
             Camion c = new Camion(codigo, ubic, capacidadGLP, capacidadGLP,
                     false, now);
             camiones.add(c);

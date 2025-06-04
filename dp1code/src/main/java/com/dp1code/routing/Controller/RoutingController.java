@@ -14,11 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -33,14 +30,8 @@ public class RoutingController {
         this.routingService = routingService;
     }
     @PostMapping("/optimize")
-    public Solucion optimize(@RequestBody Map<String, String> requestBody) throws IOException {
-        String fechaInicioStr = requestBody.get("fechaInicio");
-        
-        // Formato esperado: "yyyy-MM-dd'T'HH:mm"
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
-        LocalDateTime ahora = LocalDateTime.parse(fechaInicioStr, formatter);
-
-        return routingService.optimize(ahora);
+    public Solucion optimize() throws IOException {
+        return routingService.optimize(); // o con parámetros, según corresponda
     }
 
     @PostMapping("/obtenerPedidos")
@@ -51,11 +42,6 @@ public class RoutingController {
     @PostMapping("/obtenerPlantas")
     public ArrayList<Planta> obtenerPlantas() throws IOException {
         return routingService.obtenerPlantas(); 
-    }
-
-    @PostMapping("/obtenerCamiones")
-    public ArrayList<Camion> obtenerCamiones() throws IOException {
-        return routingService.cargarCamiones("data/camiones.txt"); 
     }
 
 
