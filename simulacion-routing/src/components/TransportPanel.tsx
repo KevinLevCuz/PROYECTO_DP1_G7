@@ -2,8 +2,8 @@
 "use client";
 import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import { useEffect, useState } from "react";
-import type { Pedido, Camion, RutaCamion } from '../lib/api';
-import { obtenerPedidos, obtenerRutasOptimizadas } from "../lib/api";
+import type { Pedido, Camion } from '../lib/api';
+import { obtenerPedidos, obtenerCamiones } from "../lib/api";
 
 
 export default function TransportPanel() {
@@ -19,8 +19,8 @@ export default function TransportPanel() {
   });
   const [clienteSearch, setClienteSearch] = useState('');
   
-  // Estado para vehículos
-  const [rutasCamiones, setRutasCamiones] = useState<RutaCamion[]>([]);
+    // Estado para vehículos (ahora usando Camion[] directamente)
+  const [camiones, setCamiones] = useState<Camion[]>([]);
   const [vehiculoFilter, setVehiculoFilter] = useState({
     enRuta: true,
     disponible: true
@@ -35,12 +35,12 @@ export default function TransportPanel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pedidosData, rutasData] = await Promise.all([
+        const [pedidosData, camionesData] = await Promise.all([
           obtenerPedidos(),
-          obtenerRutasOptimizadas()
+          obtenerCamiones()
         ]);
         setPedidos(pedidosData);
-        setRutasCamiones(rutasData);
+        setCamiones(camionesData);
       } catch (err) {
         console.error(err);
       }
@@ -62,18 +62,17 @@ export default function TransportPanel() {
   });
 
   // Filtrado de vehículos
-  const filteredCamiones = rutasCamiones
-    .map(ruta => ruta.camion)
-    .filter(camion => {
-      if (camion.enRuta && !vehiculoFilter.enRuta) return false;
-      if (!camion.enRuta && !vehiculoFilter.disponible) return false;
+  // Filtrado de vehículos (simplificado)
+  const filteredCamiones = camiones.filter(camion => {
+    if (camion.enRuta && !vehiculoFilter.enRuta) return false;
+    if (!camion.enRuta && !vehiculoFilter.disponible) return false;
 
-      if (codigoSearch.trim() !== '' && !camion.codigo.toLowerCase().includes(codigoSearch.toLowerCase())) {
-        return false;
-      }
+    if (codigoSearch.trim() !== '' && !camion.codigo.toLowerCase().includes(codigoSearch.toLowerCase())) {
+      return false;
+    }
 
-      return true;
-    });
+    return true;
+  });
 
   // Calcular items para la página actual
   const indexOfLastItem = currentPage * itemsPerPage;

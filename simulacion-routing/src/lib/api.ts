@@ -103,3 +103,19 @@ export async function obtenerPlantas(): Promise<Planta[]> {
     throw error;
   }
 }
+
+export async function obtenerCamiones(): Promise<Camion[]> {
+  try {
+    const response = await fetch('http://localhost:8080/api/routing/obtenerCamiones', { method: 'POST' });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching optimized routes:', error);
+    throw error;
+  }
+}

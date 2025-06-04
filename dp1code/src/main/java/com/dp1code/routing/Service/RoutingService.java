@@ -134,7 +134,7 @@ public class RoutingService {
      * TT,tara,capacidadGLP,_,_
      * Genera códigos TTNN según apariciones.
      */
-    public static ArrayList<Camion> cargarCamiones(String filePath) throws IOException {
+    public ArrayList<Camion> cargarCamiones(String filePath) throws IOException {
         ArrayList<Camion> camiones = new ArrayList<>();
         Map<String, Integer> count = new HashMap<>();
         Path path = Paths.get(filePath);
@@ -150,7 +150,7 @@ public class RoutingService {
             count.put(tipo, idx);
             String codigo = String.format("%s%02d", tipo, idx);
             // Ubicación por defecto (0,0)
-            Nodo ubic = new Nodo(0, 0);
+            Nodo ubic = new Nodo(12, 8);
             Camion c = new Camion(codigo, ubic, capacidadGLP, capacidadGLP,
                     false, now);
             camiones.add(c);

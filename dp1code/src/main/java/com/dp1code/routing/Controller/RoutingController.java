@@ -44,6 +44,10 @@ public class RoutingController {
         return routingService.obtenerPlantas(); 
     }
 
+    @PostMapping("/obtenerCamiones")
+    public ArrayList<Camion> obtenerCamiones() throws IOException {
+        return routingService.cargarCamiones("data/camiones.txt"); 
+    }
 
     // DTO para recibir el POST
     public static class OptimizeRequest {
