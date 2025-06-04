@@ -13,6 +13,9 @@ export default function SimulationMap() {
   const plantSecundariaImgRef = useRef<HTMLImageElement | null>(null);
   const orderImgRef = useRef<HTMLImageElement | null>(null);
   
+  const [selectedDateTime, setSelectedDateTime] = useState<string>(
+    new Date().toISOString().slice(0, 16) // Formato YYYY-MM-DDTHH:MM
+  );
 
   const [hoveredPlant, setHoveredPlant] = useState<Planta | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -34,6 +37,8 @@ export default function SimulationMap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
   const trucksProgressRef = useRef(
     routes.map(() => ({
       currentStep: 0,
@@ -45,33 +50,36 @@ export default function SimulationMap() {
 
   // Cargar datos del backend
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [rutasOptimizadas, pedidos, plantas] = await Promise.all([
-          obtenerRutasOptimizadas(),
-          obtenerPedidos(),
-          obtenerPlantas()
-        ]);
+  const fetchData = async () => {
+    try {
+      const [rutasOptimizadas, pedidos, plantas] = await Promise.all([
+        obtenerRutasOptimizadas(new Date().toISOString().slice(0, 16)), // Fecha actual por defecto
+        obtenerPedidos(),
+        obtenerPlantas()
+      ]);
 
-        // Procesar camiones y rutas
-        const camiones = rutasOptimizadas.map(r => r.camion);
-        const subRutas = rutasOptimizadas.map(r => r.subRutas);
+      // Procesar camiones y rutas
+      const camiones = rutasOptimizadas.map(r => r.camion);
+      const subRutas = rutasOptimizadas.map(r => r.subRutas);
 
+      setTrucks(camiones);
+      setRoutes(subRutas);
+      setOrders(pedidos);
+      setPlants(plantas);
+      setLoading(false);
+      setInitialLoadDone(true);
+    } catch (err) {
+      setError('Error al cargar los datos de rutas');
+      setLoading(false);
+      console.error(err);
+    }
+  };
 
-        setTrucks(camiones);
-        setRoutes(subRutas);
-        setOrders(pedidos);
-        setPlants(plantas);
-        setLoading(false);
-      } catch (err) {
-        setError('Error al cargar los datos de rutas');
-        setLoading(false);
-        console.error(err);
-      }
-    };
-
+  if (!initialLoadDone) {
     fetchData();
-  }, []);
+  }
+}, [initialLoadDone]);
+
 
   // Cargar imágenes
   useEffect(() => {
@@ -494,11 +502,37 @@ export default function SimulationMap() {
     });
   }, [imagesLoaded, trucks, plants, orders, drawGrid, drawTruck, drawPlant, drawOrder]);
 
-  const startAnimation = useCallback(() => {
+  const startAnimation = useCallback(async () => {
+  try {
+    setLoading(true);
+    
+    // Llamar a la optimización con la fecha seleccionada
+    const [rutasOptimizadas, pedidos, plantas] = await Promise.all([
+      obtenerRutasOptimizadas(selectedDateTime),
+      obtenerPedidos(),
+      obtenerPlantas()
+    ]);
+
+    // Actualizar el estado con los nuevos datos
+    const camiones = rutasOptimizadas.map(r => r.camion);
+    const subRutas = rutasOptimizadas.map(r => r.subRutas);
+
+    setTrucks(camiones);
+    setRoutes(subRutas);
+    setOrders(pedidos);
+    setPlants(plantas);
+    setLoading(false);
+    
+    // Iniciar animación
     cancelAnimationFrame(animationFrameRef.current);
     lastTimeRef.current = 0;
     animationFrameRef.current = requestAnimationFrame(animate);
-  }, [animate]);
+  } catch (err) {
+    setError('Error al optimizar rutas');
+    setLoading(false);
+    console.error(err);
+  }
+}, [animate, selectedDateTime]);
 
   const stopAnimation = useCallback(() => {
     cancelAnimationFrame(animationFrameRef.current);
@@ -598,7 +632,8 @@ export default function SimulationMap() {
               <input
                 type="datetime-local"
                 className="text-sm outline-none border-none bg-transparent"
-                placeholder="dd:mm:aaaa hh:mm"
+                value={selectedDateTime}
+                onChange={(e) => setSelectedDateTime(e.target.value)}
               />
               <span className="text-gray-400 ml-2">📅</span>
             </div>

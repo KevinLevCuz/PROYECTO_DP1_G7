@@ -2,9 +2,8 @@
 "use client";
 import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import { useEffect, useState } from "react";
-import type { Pedido, Camion, RutaCamion } from '../lib/api';
-import { obtenerPedidos, obtenerRutasOptimizadas } from "../lib/api";
-
+import type { Pedido, Camion } from '../lib/api';
+import { obtenerPedidos, obtenerCamiones } from "../lib/api";
 
 export default function TransportPanel() {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,8 +18,8 @@ export default function TransportPanel() {
   });
   const [clienteSearch, setClienteSearch] = useState('');
   
-  // Estado para vehículos
-  const [rutasCamiones, setRutasCamiones] = useState<RutaCamion[]>([]);
+  // Estado para vehículos (ahora usando Camion[] directamente)
+  const [camiones, setCamiones] = useState<Camion[]>([]);
   const [vehiculoFilter, setVehiculoFilter] = useState({
     enRuta: true,
     disponible: true
@@ -35,12 +34,12 @@ export default function TransportPanel() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [pedidosData, rutasData] = await Promise.all([
+        const [pedidosData, camionesData] = await Promise.all([
           obtenerPedidos(),
-          obtenerRutasOptimizadas()
+          obtenerCamiones() // Nuevo método para obtener camiones
         ]);
         setPedidos(pedidosData);
-        setRutasCamiones(rutasData);
+        setCamiones(camionesData);
       } catch (err) {
         console.error(err);
       }
@@ -48,7 +47,7 @@ export default function TransportPanel() {
     fetchData();
   }, []);
 
-  // Filtrado de pedidos
+  // Filtrado de pedidos (sin cambios)
   const filteredPedidos = pedidos.filter(pedido => {
     if (pedido.estado === 'Entregado' && !pedidoFilter.entregado) return false;
     if (pedido.estado === 'Ruteando' && !pedidoFilter.ruta) return false;
@@ -61,19 +60,17 @@ export default function TransportPanel() {
     return true;
   });
 
-  // Filtrado de vehículos
-  const filteredCamiones = rutasCamiones
-    .map(ruta => ruta.camion)
-    .filter(camion => {
-      if (camion.enRuta && !vehiculoFilter.enRuta) return false;
-      if (!camion.enRuta && !vehiculoFilter.disponible) return false;
+  // Filtrado de vehículos (simplificado)
+  const filteredCamiones = camiones.filter(camion => {
+    if (camion.enRuta && !vehiculoFilter.enRuta) return false;
+    if (!camion.enRuta && !vehiculoFilter.disponible) return false;
 
-      if (codigoSearch.trim() !== '' && !camion.codigo.toLowerCase().includes(codigoSearch.toLowerCase())) {
-        return false;
-      }
+    if (codigoSearch.trim() !== '' && !camion.codigo.toLowerCase().includes(codigoSearch.toLowerCase())) {
+      return false;
+    }
 
-      return true;
-    });
+    return true;
+  });
 
   // Calcular items para la página actual
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -86,7 +83,7 @@ export default function TransportPanel() {
   const totalItems = showVehicles ? filteredCamiones.length : filteredPedidos.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // Funciones comunes
+  // Funciones comunes (sin cambios)
   const resetPagination = () => setCurrentPage(1);
   
   const goToNextPage = () => {
@@ -99,7 +96,7 @@ export default function TransportPanel() {
 
   return (
     <>
-      {/* Botón para abrir/cerrar */}
+      {/* Botón para abrir/cerrar (sin cambios) */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
@@ -109,11 +106,11 @@ export default function TransportPanel() {
         </button>
       )}
 
-      {/* Panel principal */}
+      {/* Panel principal (sin cambios estructurales) */}
       <div className={`fixed right-0 top-12 h-150 bg-white border-l shadow-lg transition-transform duration-300 z-20 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
            style={{ width: '550px' }}>
         <div className="h-full flex flex-col">
-          {/* Header */}
+          {/* Header (sin cambios) */}
           <div className={`${showVehicles ? 'bg-red-500' : 'bg-red-500'} text-white p-2 flex justify-between items-center`}>
             <h3 className="font-semibold">{showVehicles ? 'Lista de Vehículos' : 'Lista de Pedidos'}</h3>
             <button 
@@ -124,7 +121,7 @@ export default function TransportPanel() {
             </button>
           </div>
 
-          {/* Contenido */}
+          {/* Contenido (sin cambios estructurales) */}
           <div className="p-4 flex-1 overflow-y-auto">
             <div className="flex flex-col items-center mb-4">
               <div className="flex mb-2">
@@ -148,7 +145,7 @@ export default function TransportPanel() {
                 </button>
               </div>
 
-              {/* Filtros según la vista */}
+              {/* Filtros según la vista (sin cambios) */}
               {showVehicles ? (
                 <div className="flex space-x-3 text-xs">
                   <label className="flex items-center">
@@ -213,7 +210,7 @@ export default function TransportPanel() {
               )}
             </div>
 
-            {/* Barra de búsqueda */}
+            {/* Barra de búsqueda (sin cambios) */}
             <input
               type="text"
               placeholder={showVehicles ? "Buscar por Código" : "Buscar por Cliente"}
@@ -227,7 +224,7 @@ export default function TransportPanel() {
               }}
             />
 
-            {/* Tabla de contenido */}
+            {/* Tabla de contenido (con ajustes para usar Camion directamente) */}
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -301,7 +298,7 @@ export default function TransportPanel() {
               </table>
             </div>
 
-            {/* Paginación */}
+            {/* Paginación (sin cambios) */}
             <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
               <div>
                 {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, totalItems)} de {totalItems}

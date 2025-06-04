@@ -56,9 +56,15 @@ export interface RutaCamion {
 
 
 
-export async function obtenerRutasOptimizadas(): Promise<RutaCamion[]> {
+export async function obtenerRutasOptimizadas(fechaInicio: string): Promise<RutaCamion[]> {
   try {
-    const response = await fetch('http://localhost:8080/api/routing/optimize', { method: 'POST' });
+    const response = await fetch('http://localhost:8080/api/routing/optimize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fechaInicio }),
+    });
     
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
@@ -91,6 +97,22 @@ export async function obtenerPedidos(): Promise<Pedido[]> {
 export async function obtenerPlantas(): Promise<Planta[]> {
   try {
     const response = await fetch('http://localhost:8080/api/routing/obtenerPlantas', { method: 'POST' });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching optimized routes:', error);
+    throw error;
+  }
+}
+
+export async function obtenerCamiones(): Promise<Camion[]> {
+  try {
+    const response = await fetch('http://localhost:8080/api/routing/obtenerCamiones', { method: 'POST' });
     
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);
