@@ -1,33 +1,30 @@
 "use client";
 import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import { useEffect, useRef, useState, useCallback } from "react";
-import type { Pedido } from '../lib/api';
+import type { Camion, RutaCamion } from '../lib/api';
+import { obtenerRutasOptimizadas } from "../lib/api";
 
-import { obtenerPedidos } from "../lib/api";
-
-export default function OrderList() {
+export default function VehicleList() {
   const [isOpen, setIsOpen] = useState(true);
   const [filter, setFilter] = useState({
-    entregado: true,
-    ruta: true,
-    pendiente: true
+    enRuta: true,
+    disponible: true
   });
 
-  const [clienteSearch, setClienteSearch] = useState('');
+  const [codigoSearch, setCodigoSearch] = useState('');
   useEffect(() => {
-  setCurrentPage(1);
-}, [filter, clienteSearch]);
+    setCurrentPage(1);
+  }, [filter, codigoSearch]);
 
-
-  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [rutasCamiones, setRutasCamiones] = useState<RutaCamion[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiData = await obtenerPedidos();
-        setPedidos(apiData);
+        const apiData = await obtenerRutasOptimizadas();
+        setRutasCamiones(apiData);
       } catch (err) {
         console.error(err);
       }
@@ -35,27 +32,27 @@ export default function OrderList() {
     fetchData();
   }, []);
 
-  const filteredPedidos = pedidos.filter(pedido => {
-    if (pedido.estado === 'Entregado' && !filter.entregado) return false;
-    if (pedido.estado === 'Ruteando' && !filter.ruta) return false;
-    if (pedido.estado === 'Pendiente' && !filter.pendiente) return false;
+  const filteredCamiones = rutasCamiones
+    .map(ruta => ruta.camion)
+    .filter(camion => {
+      if (camion.enRuta && !filter.enRuta) return false;
+      if (!camion.enRuta && !filter.disponible) return false;
 
-    if (clienteSearch.trim() !== '' && !pedido.idCliente.toString().toLowerCase().includes(clienteSearch.toLowerCase())) {
-      return false;
-    }
+      if (codigoSearch.trim() !== '' && !camion.codigo.toLowerCase().includes(codigoSearch.toLowerCase())) {
+        return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
 
-  // Calcular los pedidos para la página actual
+  // Calcular los camiones para la página actual
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentPedidos = filteredPedidos.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredPedidos.length / itemsPerPage);
+  const currentCamiones = filteredCamiones.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredCamiones.length / itemsPerPage);
 
   const toggleFilter = (key: keyof typeof filter) => {
     setFilter(prev => ({ ...prev, [key]: !prev[key] }));
-    // Resetear a la primera página cuando cambian los filtros
     setCurrentPage(1);
   };
 
@@ -77,7 +74,7 @@ export default function OrderList() {
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
-          className="fixed right-0 top-1/2 transform -translate-y-1/2 bg-red-500 text-white p-2 rounded-l-lg shadow-lg z-30"
+          className="fixed right-0 top-1/2 transform -translate-y-1/2 bg-blue-500 text-white p-2 rounded-l-lg shadow-lg z-30"
         >
           <FiChevronLeft size={20} />
         </button>
@@ -88,8 +85,8 @@ export default function OrderList() {
            style={{ width: '550px' }}>
         <div className="h-full flex flex-col">
           {/* Header */}
-          <div className="bg-red-500 text-white p-2 flex justify-between items-center">
-            <h3 className="font-semibold">Lista de Pedidos</h3>
+          <div className="bg-blue-500 text-white p-2 flex justify-between items-center">
+            <h3 className="font-semibold">Lista de Vehículos</h3>
             <button 
               onClick={() => setIsOpen(false)}
               className="text-white hover:text-gray-200"
@@ -102,75 +99,65 @@ export default function OrderList() {
           <div className="p-4 flex-1 overflow-y-auto">
             <div className="flex flex-col items-center mb-4">
               <div className="flex mb-2">
-                <button className="bg-red-500 text-white px-4 py-1 w-40 text-sm">Pedidos</button>
-                <button className="bg-red-300 text-white px-4 py-1 w-40 text-sm">Vehículos</button>
+                <button className="bg-blue-300 text-white px-4 py-1 w-40 text-sm">Pedidos</button>
+                <button className="bg-blue-500 text-white px-4 py-1 w-40 text-sm">Vehículos</button>
               </div>
               <div className="flex space-x-3 text-xs">
                 <label className="flex items-center">
                   <input 
                     type="checkbox" 
-                    checked={filter.entregado} 
-                    onChange={() => toggleFilter('entregado')} 
+                    checked={filter.enRuta} 
+                    onChange={() => toggleFilter('enRuta')} 
                     className="mr-1"
-                  /> Entregado
+                  /> En Ruta
                 </label>
                 <label className="flex items-center">
                   <input 
                     type="checkbox" 
-                    checked={filter.ruta} 
-                    onChange={() => toggleFilter('ruta')} 
+                    checked={filter.disponible} 
+                    onChange={() => toggleFilter('disponible')} 
                     className="mr-1"
-                  /> Ruteando
-                </label>
-                <label className="flex items-center">
-                  <input 
-                    type="checkbox" 
-                    checked={filter.pendiente} 
-                    onChange={() => toggleFilter('pendiente')} 
-                    className="mr-1"
-                  /> Pendiente
+                  /> Disponible
                 </label>
               </div>
             </div>
 
             <input
               type="text"
-              placeholder="Buscar por Cliente"
+              placeholder="Buscar por Código"
               className="border p-2 rounded w-full mb-4 text-sm"
-              value={clienteSearch}
-              onChange={(e) => setClienteSearch(e.target.value)}
+              value={codigoSearch}
+              onChange={(e) => setCodigoSearch(e.target.value)}
             />
 
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="text-left border-b text-gray-700">
-                    <th className="p-2">ID</th>
-                    <th className="p-2">Cliente</th>
-                    <th className="p-2">Paquete</th>
-                    <th className="p-2">L. Entrega</th>
-                    <th className="p-2">F.H. Entrega</th>
+                    <th className="p-2">Código</th>
+                    <th className="p-2">Ubicación</th>
+                    <th className="p-2">Capacidad</th>
+                    <th className="p-2">GLP Actual</th>
                     <th className="p-2">Estado</th>
+                    <th className="p-2">Disponible desde</th>
                     <th className="p-2">Ubicar</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentPedidos.map((pedido) => (
-                    <tr key={pedido.id} className="border-b hover:bg-gray-50">
-                      <td className="p-2">{pedido.id}</td>
-                      <td className="p-2">{pedido.idCliente}</td>
-                      <td className="p-2">{pedido.cantidadGlp}</td>
-                      <td className="p-2">({pedido.destino.posX} , {pedido.destino.posY})</td>
-                      <td className="p-2">{pedido.plazoMaximoEntrega}</td>
+                  {currentCamiones.map((camion) => (
+                    <tr key={camion.codigo} className="border-b hover:bg-gray-50">
+                      <td className="p-2">{camion.codigo}</td>
+                      <td className="p-2">({camion.ubicacionActual.posX}, {camion.ubicacionActual.posY})</td>
+                      <td className="p-2">{camion.capacidadMaxima}</td>
+                      <td className="p-2">{camion.glpActual}</td>
                       <td className="p-2">
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                          pedido.estado === 'Entregado' ? 'bg-green-100 text-green-800' :
-                          pedido.estado === 'Ruteando' ? 'bg-blue-100 text-blue-800' :
-                          'bg-yellow-100 text-yellow-800'
+                          camion.enRuta ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
                         }`}>
-                          {pedido.estado}
+                          {camion.enRuta ? 'En Ruta' : 'Disponible'}
                         </span>
                       </td>
+                      <td className="p-2">{camion.disponibleDesde}</td>
                       <td className="p-2">
                         <button className="text-gray-500 hover:text-gray-700">📍</button>
                       </td>
@@ -182,7 +169,7 @@ export default function OrderList() {
 
             <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
               <div>
-                {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredPedidos.length)} de {filteredPedidos.length}
+                {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredCamiones.length)} de {filteredCamiones.length}
               </div>
               <div className="flex space-x-2">
                 <button 

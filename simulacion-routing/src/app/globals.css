@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* En tu archivo CSS global */
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600&display=swap');
 
 :root {
   --background: #ffffff;

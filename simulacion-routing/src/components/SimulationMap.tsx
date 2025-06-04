@@ -13,6 +13,10 @@ export default function SimulationMap() {
   const plantSecundariaImgRef = useRef<HTMLImageElement | null>(null);
   const orderImgRef = useRef<HTMLImageElement | null>(null);
   
+
+  const [hoveredPlant, setHoveredPlant] = useState<Planta | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
   const [imagesLoaded, setImagesLoaded] = useState({
     truck: false,
     plantPrincipal: false,
@@ -153,20 +157,81 @@ export default function SimulationMap() {
     plant: Planta, 
     spacing: number
   ) => {
-    // Asumimos que podemos distinguir por id o capacidad
-    const isPrincipal = plant.id === "1"; // Ajusta esta lógica según tu API
+    const isPrincipal = plant.id == "1"; // Ajusta esta lógica según tu API
     const img = isPrincipal ? plantPrincipalImgRef.current : plantSecundariaImgRef.current;
     
     if (!img) return;
 
     const imgSize = isPrincipal ? 30 : 25;
+    const canvasX = x * spacing;
+    const canvasY = y * spacing;
+    
+    // Guardar posición para el hover
+    plant.canvasPosition = { x: canvasX, y: canvasY, size: imgSize };
     
     ctx.save();
-    ctx.translate(x * spacing, y * spacing);
+    ctx.translate(canvasX, canvasY);
     ctx.rotate(Math.PI);
     ctx.drawImage(img, -imgSize / 2, -imgSize / 2, imgSize, imgSize);
     ctx.restore();
-  }, []);
+
+    // Dibujar tooltip si esta planta está siendo hovered
+    if (hoveredPlant?.id === plant.id) {
+      drawPlantTooltip(ctx, plant, tooltipPosition.x, tooltipPosition.y);
+    }
+  }, [hoveredPlant, tooltipPosition]);
+
+  const drawPlantTooltip = (
+  ctx: CanvasRenderingContext2D,
+  plant: Planta,
+  x: number,
+  y: number
+) => {
+  ctx.save();
+  ctx.scale(1, -1); // Invertir el eje Y para dibujar correctamente
+
+  const tooltipWidth = 160;
+  const tooltipHeight = 55;
+  const padding = 10;
+
+  // Ajuste para que no se salga del canvas
+  const adjustedX = x + 20 > ctx.canvas.width ? x - tooltipWidth - 10 : x + 12;
+  const adjustedY = -y + tooltipHeight > ctx.canvas.height ? -y - 12 : -y + 20;
+
+  // Estilo de fondo con sombra
+  ctx.shadowColor = 'rgba(225, 16, 16, 0.3)';
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(adjustedX, adjustedY, tooltipWidth, tooltipHeight, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  // Quitar sombra para texto
+  ctx.shadowColor = 'transparent';
+
+  // Texto principal
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 13px Arial';
+  ctx.fillText(`Planta ${plant.id}`, adjustedX + padding, adjustedY + 20);
+
+  // Texto de capacidad
+  ctx.fillStyle = '#555';
+  ctx.font = '12px Arial';
+  ctx.fillText(
+    `Capacidad: ${plant.glpDisponible}/${plant.capacidadMaxima}`,
+    adjustedX + padding,
+    adjustedY + 38
+  );
+
+  ctx.restore();
+};
+
 
   const drawOrder = useCallback((
     ctx: CanvasRenderingContext2D, 
@@ -287,7 +352,9 @@ export default function SimulationMap() {
     if (!lastTimeRef.current) {
       lastTimeRef.current = timestamp;
     }
-    
+    if (hoveredPlant && ctx) {
+      drawPlantTooltip(ctx, hoveredPlant, tooltipPosition.x, tooltipPosition.y);
+    }
     const deltaTime = timestamp - lastTimeRef.current;
     lastTimeRef.current = timestamp;
     
@@ -482,6 +549,28 @@ export default function SimulationMap() {
       );
     });
   }, [imagesLoaded, trucks, plants, orders, drawGrid, drawTruck, drawPlant, drawOrder]);
+  const handleCanvasHover = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  if (!canvasRef.current) return;
+  
+  const canvas = canvasRef.current;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = rect.bottom - e.clientY; // Invertir Y para coincidir con el sistema de coordenadas del canvas
+  
+  setTooltipPosition({ x, y });
+  
+  // Verificar si el mouse está sobre alguna planta
+  const hovered = plants.find(plant => {
+    if (!plant.canvasPosition) return false;
+    const { x: plantX, y: plantY, size } = plant.canvasPosition;
+    return x >= plantX - size/2 && 
+           x <= plantX + size/2 && 
+           y >= plantY - size/2 && 
+           y <= plantY + size/2;
+  });
+  
+  setHoveredPlant(hovered || null);
+};
 
   if (loading) {
     return (
@@ -530,7 +619,12 @@ export default function SimulationMap() {
       </div>
 
       <div className="absolute inset-0 flex items-center justify-center overflow-auto">
-        <canvas ref={canvasRef} className="bg-white border border-gray-400" />
+        <canvas 
+  ref={canvasRef} 
+  className="bg-white border border-gray-400"
+  onMouseMove={handleCanvasHover}
+  onMouseOut={() => setHoveredPlant(null)}
+/>
       </div>
     </div>
   );

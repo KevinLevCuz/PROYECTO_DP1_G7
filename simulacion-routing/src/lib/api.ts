@@ -12,6 +12,7 @@ export interface Planta{
   glpDisponible: number;
   siguienteRecarga: string;
   intervaloRecarga: string;
+  canvasPosition?: { x: number; y: number; size: number }; 
 }
 
 export interface Pedido {
