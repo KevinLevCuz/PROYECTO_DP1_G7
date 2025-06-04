@@ -3,6 +3,10 @@ package com.dp1code.routing;
 //import java.io.BufferedReader;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,7 +41,7 @@ import com.dp1code.routing.Model.SubRuta;
 public class RoutingApplication {
     // private static Nodo ubicacionInicial = new Nodo(0,0);
     public static void main(String[] args) throws IOException {
-        //SpringApplication.run(RoutingApplication.class, args);
+        SpringApplication.run(RoutingApplication.class, args);
         
         LocalDateTime ahora = LocalDateTime.now()
                 .withDayOfMonth(1)
@@ -53,9 +57,9 @@ public class RoutingApplication {
 
         ArrayList<Planta> plantas = new ArrayList<>();
 
-        Planta plantaPrincipal = new Planta("PRINCIPAL", new Nodo(0, 0));
-        Planta plantaSecundaria1 = new Planta("SECUNDARIA", new Nodo(5, 5));
-        Planta plantaSecundaria2 = new Planta("SECUNDARIA", new Nodo(10, 10));
+        Planta plantaPrincipal = new Planta("PRINCIPAL", new Nodo(12, 8));
+        Planta plantaSecundaria1 = new Planta("SECUNDARIA", new Nodo(42, 42));
+        Planta plantaSecundaria2 = new Planta("SECUNDARIA", new Nodo(63, 3));
 
         plantas.add(plantaPrincipal);
         plantas.add(plantaSecundaria1);
@@ -117,10 +121,12 @@ public class RoutingApplication {
         // Base del mes de simulación: primer día a las 00:00
         LocalDateTime base = LocalDateTime.now()
                 .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        int i=0;
         for (String line : Files.readAllLines(path)) {
+            i++;
             if (line.isBlank())
                 continue;
-            String[] parts = line.split(":");
+            String[] parts = line.trim().split(":");
             // Tiempo de llegada
             String[] ts = parts[0].split("[dhm]");
             int d = Integer.parseInt(ts[0]);
@@ -128,14 +134,14 @@ public class RoutingApplication {
             int m = Integer.parseInt(ts[2]);
             LocalDateTime horaPedido = base.plusDays(d).plusHours(h).plusMinutes(m);
             // Datos restantes
-            String[] vals = parts[1].split(",");
+            String[] vals = parts[1].trim().split(",");
             int x = Integer.parseInt(vals[0]);
             int y = Integer.parseInt(vals[1]);
-            String id = vals[2];
+            String idCliente = vals[2].trim();
             int m3 = Integer.parseInt(vals[3].replace("m3", ""));
             int hLim = Integer.parseInt(vals[4].replace("h", ""));
             LocalDateTime plazoMax = horaPedido.plusHours(hLim);
-            Pedido p = new Pedido(new Nodo(x, y), id, m3, horaPedido, plazoMax);
+            Pedido p = new Pedido(String.valueOf(i),new Nodo(x, y), idCliente, m3, horaPedido, plazoMax);
             pedidos.add(p);
         }
         return pedidos;
@@ -253,5 +259,6 @@ public class RoutingApplication {
 
         return LocalDateTime.of(2025, Month.MAY, dia, hora, minuto, 0, 0);
     }
+
 
 }

@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,17 +28,16 @@ public class RoutingController {
     public RoutingController(RoutingService routingService) {
         this.routingService = routingService;
     }
-    @PostMapping("/path")
-    //@PostMapping("/optimize")
-    public Solucion optimize(
-        @RequestBody OptimizeRequest req
-    ) {
-        LocalDateTime now = LocalDateTime.parse(req.getAhora());
-        Solucion solu1 = new Solucion();
-        //return routingService.optimize();//REVISAR
-        
-        return solu1;
+    @PostMapping("/optimize")
+    public Solucion optimize() throws IOException {
+        return routingService.optimize(); // o con parámetros, según corresponda
     }
+
+    @PostMapping("/obtenerPedidos")
+    public ArrayList<Pedido> obtenerPedidos() throws IOException {
+        return routingService.cargarPedidos("data/pedidos.txt"); 
+    }
+
 
     // DTO para recibir el POST
     public static class OptimizeRequest {

@@ -75,9 +75,9 @@ public class RoutingService {
 
         ArrayList<Planta> plantas = new ArrayList<>();
 
-        Planta plantaPrincipal = new Planta("PRINCIPAL", new Nodo(0, 0));
-        Planta plantaSecundaria1 = new Planta("SECUNDARIA", new Nodo(5, 5));
-        Planta plantaSecundaria2 = new Planta("SECUNDARIA", new Nodo(10, 10));
+        Planta plantaPrincipal = new Planta("PRINCIPAL", new Nodo(12, 8));
+        Planta plantaSecundaria1 = new Planta("SECUNDARIA", new Nodo(42, 42));
+        Planta plantaSecundaria2 = new Planta("SECUNDARIA", new Nodo(63, 3));
 
         plantas.add(plantaPrincipal);
         plantas.add(plantaSecundaria1);
@@ -92,13 +92,15 @@ public class RoutingService {
         return mejor;
     }
 
-    public static ArrayList<Pedido> cargarPedidos(String filePath) throws IOException {
+    public ArrayList<Pedido> cargarPedidos(String filePath) throws IOException {
         ArrayList<Pedido> pedidos = new ArrayList<>();
         Path path = Paths.get(filePath);
         // Base del mes de simulación: primer día a las 00:00
         LocalDateTime base = LocalDateTime.now()
                 .withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
+        int i=0;
         for (String line : Files.readAllLines(path)) {
+            i++;
             if (line.isBlank())
                 continue;
             String[] parts = line.split(":");
@@ -116,7 +118,7 @@ public class RoutingService {
             int m3 = Integer.parseInt(vals[3].replace("m3", ""));
             int hLim = Integer.parseInt(vals[4].replace("h", ""));
             LocalDateTime plazoMax = horaPedido.plusHours(hLim);
-            Pedido p = new Pedido(new Nodo(x, y), id, m3, horaPedido, plazoMax);
+            Pedido p = new Pedido(String.valueOf(i),new Nodo(x, y), id, m3, horaPedido, plazoMax);
             pedidos.add(p);
         }
         return pedidos;

@@ -1,36 +1,79 @@
-export interface Pedido {
-  // completa según tu modelo
-  id: number;
-  nodoDestino: number;
-  cantidad: number;
-  tiempoLimite: string;
+// lib/api.ts
+export interface Ubicacion {
+  posX: number;
+  posY: number;
+  bloqueado: boolean;
 }
+
+export interface Pedido {
+  id: string | null;
+  destino: Ubicacion;
+  cantidadGlp: number;
+  horaPedido: string;
+  plazoMaximoEntrega: string;
+  tiempoDescarga: number | null;
+  idCliente: string;
+  estado?: string;  // Opcional si lo agregas después
+};
+
+
+export interface SubRuta {
+  inicio: Ubicacion;
+  fin: Ubicacion;
+  pedido: Pedido | null;
+  trayectoria: Ubicacion[];
+  horaInicio: string;
+  horaFin: string;
+  tiemposNodo: String[];
+}
+
 
 export interface Camion {
-  // completa según tu modelo
-  id: number;
-  tipo: string;
-  capacidad: number;
+  codigo: string;
+  ubicacionActual: Ubicacion;
+  capacidadMaxima: number;
+  glpActual: number;
+  enRuta: boolean;
+  disponibleDesde: string;
+  horaLibre?: String;
+  SubRutasExistentes?: String;
 }
 
-export interface OptimizeRequest {
-  pedidos: Pedido[];
-  camiones: Camion[];
-  ahora: string;
+export interface RutaCamion {
+  camion: Camion;
+  subRutas: SubRuta[];
 }
 
-export async function fetchSolucion(data: OptimizeRequest) {
-  const res = await fetch('http://localhost:8080/api/routing/path', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
 
-  if (!res.ok) {
-    throw new Error('Error en la llamada al backend');
+
+export async function obtenerRutasOptimizadas(): Promise<RutaCamion[]> {
+  try {
+    const response = await fetch('http://localhost:8080/api/routing/optimize', { method: 'POST' });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.planesCamion;
+  } catch (error) {
+    console.error('Error fetching optimized routes:', error);
+    throw error;
   }
+}
 
-  return res.json(); // Aquí llega la `Solucion` del backend
+export async function obtenerPedidos(): Promise<Pedido[]> {
+  try {
+    const response = await fetch('http://localhost:8080/api/routing/obtenerPedidos', { method: 'POST' });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching optimized routes:', error);
+    throw error;
+  }
 }

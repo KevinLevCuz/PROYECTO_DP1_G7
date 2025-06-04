@@ -13,6 +13,14 @@ public class Pedido {
     private LocalDateTime tiempoDescarga;
     private String idCliente;
 
+    public String getIdCliente() {
+        return idCliente;
+    }
+
+    public void setIdCliente(String idCliente) {
+        this.idCliente = idCliente;
+    }
+
     public Pedido() {}
 
     public Pedido(String id, Nodo destino, double cantidadGlp,
@@ -26,7 +34,8 @@ public class Pedido {
         this.tiempoDescarga = tiempoDescarga;
     }
 
-    public Pedido(Nodo destino, String idCliente, double cantidadGlp, LocalDateTime horaPedido, LocalDateTime plazoMaximoEntrega) {
+    public Pedido(String id, Nodo destino, String idCliente, double cantidadGlp, LocalDateTime horaPedido, LocalDateTime plazoMaximoEntrega) {
+        this.id=id;
         this.destino = destino;
         this.idCliente = idCliente;
         this.cantidadGlp = cantidadGlp;
