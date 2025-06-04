@@ -3,9 +3,8 @@
 
 import { BsPlayFill, BsStopFill } from "react-icons/bs";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { obtenerRutasOptimizadas } from "../lib/api";
-import { transformRouteData } from "../utils/transformData";
-import type { Truck, Plant, Order } from '../types/simulation';
+import { obtenerRutasOptimizadas, obtenerPedidos, obtenerPlantas } from "../lib/api";
+import type {Camion, SubRuta, Ubicacion, Planta, Pedido } from '../lib/api';
 
 export default function SimulationMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,14 +23,15 @@ export default function SimulationMap() {
   const animationFrameRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
   
-  const [trucks, setTrucks] = useState<Truck[]>([]);
-  const [plants, setPlants] = useState<Plant[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [trucks, setTrucks] = useState<Camion[]>([]);
+  const [plants, setPlants] = useState<Planta[]>([]);
+  const [orders, setOrders] = useState<Pedido[]>([]);
+  const [routes, setRoutes] = useState<SubRuta[][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const trucksProgressRef = useRef(
-    trucks.map(() => ({
+    routes.map(() => ({
       currentStep: 0,
       progress: 0,
       currentPos: [0, 0] as [number, number],
@@ -43,12 +43,21 @@ export default function SimulationMap() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const apiData = await obtenerRutasOptimizadas();
-        const { trucks, plants, orders } = transformRouteData(apiData);
-        
-        setTrucks(trucks);
-        setPlants(plants);
-        setOrders(orders);
+        const [rutasOptimizadas, pedidos, plantas] = await Promise.all([
+          obtenerRutasOptimizadas(),
+          obtenerPedidos(),
+          obtenerPlantas()
+        ]);
+
+        // Procesar camiones y rutas
+        const camiones = rutasOptimizadas.map(r => r.camion);
+        const subRutas = rutasOptimizadas.map(r => r.subRutas);
+
+
+        setTrucks(camiones);
+        setRoutes(subRutas);
+        setOrders(pedidos);
+        setPlants(plantas);
         setLoading(false);
       } catch (err) {
         setError('Error al cargar los datos de rutas');
@@ -101,18 +110,23 @@ export default function SimulationMap() {
   useEffect(() => {
     if (!Object.values(imagesLoaded).every(Boolean) || loading) return;
 
-    trucksProgressRef.current = trucks.map((truck) => ({
-      currentStep: 0,
-      progress: 0,
-      currentPos: [...truck.initialPosition] as [number, number],
-      targetPos: truck.route.length > 1 
-        ? [...truck.route[1]] as [number, number] 
-        : [...truck.initialPosition] as [number, number]
-    }));
+    trucksProgressRef.current = routes.map((subRutas, index) => {
+      const initialPos = trucks[index]?.ubicacionActual || { posX: 0, posY: 0 };
+      const firstRoute = subRutas[0]?.trayectoria || [];
+      
+      return {
+        currentStep: 0,
+        progress: 0,
+        currentPos: [initialPos.posX, initialPos.posY] as [number, number],
+        targetPos: firstRoute.length > 0 
+          ? [firstRoute[0].posX, firstRoute[0].posY] as [number, number] 
+          : [initialPos.posX, initialPos.posY] as [number, number]
+      };
+    });
 
     // Dibujar estado inicial
     drawInitialState();
-  }, [imagesLoaded, loading, trucks, plants, orders]);
+  }, [imagesLoaded, loading, trucks, plants, orders, routes]);
 
   const drawGrid = useCallback((ctx: CanvasRenderingContext2D, cols: number, rows: number, spacing: number) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -136,16 +150,16 @@ export default function SimulationMap() {
     ctx: CanvasRenderingContext2D, 
     x: number, 
     y: number, 
-    plant: Plant, 
+    plant: Planta, 
     spacing: number
   ) => {
-    const img = plant.type === 'PRINCIPAL' 
-      ? plantPrincipalImgRef.current 
-      : plantSecundariaImgRef.current;
+    // Asumimos que podemos distinguir por id o capacidad
+    const isPrincipal = plant.id === "1"; // Ajusta esta lógica según tu API
+    const img = isPrincipal ? plantPrincipalImgRef.current : plantSecundariaImgRef.current;
     
     if (!img) return;
 
-    const imgSize = plant.type === 'PRINCIPAL' ? 30 : 25;
+    const imgSize = isPrincipal ? 30 : 25;
     
     ctx.save();
     ctx.translate(x * spacing, y * spacing);
@@ -158,7 +172,7 @@ export default function SimulationMap() {
     ctx: CanvasRenderingContext2D, 
     x: number, 
     y: number, 
-    order: Order, 
+    order: Pedido, 
     spacing: number
   ) => {
     if (!orderImgRef.current) return;
@@ -174,19 +188,21 @@ export default function SimulationMap() {
 
   const drawRoute = useCallback((
     ctx: CanvasRenderingContext2D,
-    route: [number, number][],
+    route: Ubicacion[],
     color: string,
     spacing: number
   ) => {
+    if (!route || route.length === 0) return;
+
     ctx.save();
-    ctx.strokeStyle = color;
+    ctx.strokeStyle = color || '#888888';
     ctx.lineWidth = 2;
     ctx.beginPath();
     
     // Dibujar línea entre los puntos de la ruta
     for (let i = 0; i < route.length - 1; i++) {
-      const [x1, y1] = route[i];
-      const [x2, y2] = route[i + 1];
+      const { posX: x1, posY: y1 } = route[i];
+      const { posX: x2, posY: y2 } = route[i + 1];
       
       if (i === 0) {
         ctx.moveTo(x1 * spacing, y1 * spacing);
@@ -197,8 +213,8 @@ export default function SimulationMap() {
     ctx.stroke();
     
     // Dibujar puntos en cada coordenada de la ruta
-    ctx.fillStyle = color;
-    route.forEach(([x, y]) => {
+    ctx.fillStyle = color || '#888888';
+    route.forEach(({ posX: x, posY: y }) => {
       ctx.beginPath();
       ctx.arc(x * spacing, y * spacing, 3, 0, Math.PI * 2);
       ctx.fill();
@@ -211,7 +227,7 @@ export default function SimulationMap() {
     ctx: CanvasRenderingContext2D, 
     x: number, 
     y: number, 
-    truck: Truck, 
+    truck: Camion, 
     spacing: number,
     targetPos?: [number, number], 
     currentPos?: [number, number],
@@ -252,9 +268,9 @@ export default function SimulationMap() {
     // Dibujar ID
     ctx.save();
     ctx.scale(1, -1);
-    ctx.fillStyle = truck.color || '#000000';
+    ctx.fillStyle = '#000000';
     ctx.font = '10px Arial';
-    ctx.fillText(truck.id.toString(), x * spacing - 5, -y * spacing + 5);
+    ctx.fillText(truck.codigo, x * spacing - 5, -y * spacing + 5);
     ctx.restore();
   }, []);
 
@@ -279,28 +295,37 @@ export default function SimulationMap() {
 
     // Dibujar plantas
     plants.forEach(plant => {
-      drawPlant(ctx, plant.position[0], plant.position[1], plant, spacing);
+      drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
     });
 
     // Dibujar pedidos
     orders.forEach(order => {
-      drawOrder(ctx, order.position[0], order.position[1], order, spacing);
+      drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
     });
 
     // Dibujar rutas de los camiones
-    trucks.forEach(truck => {
-      drawRoute(ctx, truck.route, truck.color || '#888888', spacing);
+    routes.forEach((subRutas, index) => {
+      const color = `hsl(${(index * 30) % 360}, 70%, 50%)`;
+      subRutas.forEach(subRuta => {
+        drawRoute(ctx, subRuta.trayectoria, color, spacing);
+      });
     });
 
     let allTrucksFinished = true;
 
-    trucks.forEach((truck, index) => {
+    routes.forEach((subRutas, index) => {
       const progressData = trucksProgressRef.current[index];
-      const truckRoute = truck.route;
+      const truck = trucks[index];
       
-      if (progressData.currentStep >= truckRoute.length - 1) {
+      if (!truck || !subRutas || subRutas.length === 0) return;
+
+      // Combinar todas las trayectorias de las subrutas
+      const fullRoute = subRutas.flatMap(subRuta => subRuta.trayectoria);
+      
+      if (progressData.currentStep >= fullRoute.length - 1) {
         // Asegurarse de que la posición final sea exactamente la última de la ruta
-        progressData.currentPos = [...truckRoute[truckRoute.length - 1]] as [number, number];
+        const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
+        progressData.currentPos = [lastPos.posX, lastPos.posY];
         drawTruck(
           ctx,
           progressData.currentPos[0], 
@@ -323,13 +348,16 @@ export default function SimulationMap() {
         progressData.progress = 0;
         progressData.currentStep++;
         
-        if (progressData.currentStep < truckRoute.length - 1) {
-          progressData.currentPos = [...truckRoute[progressData.currentStep]] as [number, number];
-          progressData.targetPos = [...truckRoute[progressData.currentStep + 1]] as [number, number];
+        if (progressData.currentStep < fullRoute.length - 1) {
+          const currentStep = fullRoute[progressData.currentStep] || { posX: 0, posY: 0 };
+          const nextStep = fullRoute[progressData.currentStep + 1] || { posX: 0, posY: 0 };
+          progressData.currentPos = [currentStep.posX, currentStep.posY];
+          progressData.targetPos = [nextStep.posX, nextStep.posY];
         } else {
           // Si llegó al último paso, fijamos la posición exactamente al final
-          progressData.currentPos = [...truckRoute[truckRoute.length - 1]] as [number, number];
-          progressData.targetPos = [...truckRoute[truckRoute.length - 1]] as [number, number];
+          const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
+          progressData.currentPos = [lastPos.posX, lastPos.posY];
+          progressData.targetPos = [lastPos.posX, lastPos.posY];
         }
       }
       
@@ -352,8 +380,7 @@ export default function SimulationMap() {
     if (!allTrucksFinished) {
       animationFrameRef.current = requestAnimationFrame(animate);
     }
-  }, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, imagesLoaded]);
-
+  }, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded]);
 
   const drawInitialState = useCallback(() => {
     if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
@@ -376,12 +403,12 @@ export default function SimulationMap() {
     
     // Dibujar plantas
     plants.forEach(plant => {
-      drawPlant(ctx, plant.position[0], plant.position[1], plant, spacing);
+      drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
     });
 
     // Dibujar pedidos
     orders.forEach(order => {
-      drawOrder(ctx, order.position[0], order.position[1], order, spacing);
+      drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
     });
     
     // Dibujar camiones en posición inicial
@@ -399,8 +426,6 @@ export default function SimulationMap() {
       );
     });
   }, [imagesLoaded, trucks, plants, orders, drawGrid, drawTruck, drawPlant, drawOrder]);
-
-
 
   const startAnimation = useCallback(() => {
     cancelAnimationFrame(animationFrameRef.current);
@@ -434,12 +459,12 @@ export default function SimulationMap() {
     
     // Dibujar plantas
     plants.forEach(plant => {
-      drawPlant(ctx, plant.position[0], plant.position[1], plant, spacing);
+      drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
     });
 
     // Dibujar pedidos
     orders.forEach(order => {
-      drawOrder(ctx, order.position[0], order.position[1], order, spacing);
+      drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
     });
     
     // Dibujar camiones en posición inicial
@@ -457,6 +482,22 @@ export default function SimulationMap() {
       );
     });
   }, [imagesLoaded, trucks, plants, orders, drawGrid, drawTruck, drawPlant, drawOrder]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-xl">Cargando datos de simulación...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-xl text-red-500">{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-200 relative overflow-auto">
@@ -491,28 +532,6 @@ export default function SimulationMap() {
       <div className="absolute inset-0 flex items-center justify-center overflow-auto">
         <canvas ref={canvasRef} className="bg-white border border-gray-400" />
       </div>
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-        <div className="text-xl">Cargando datos de simulación...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
-        <div className="text-xl text-red-500">{error}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-200 relative overflow-auto">
-      {/* ... resto del JSX igual que en tu código original ... */}
     </div>
   );
 }

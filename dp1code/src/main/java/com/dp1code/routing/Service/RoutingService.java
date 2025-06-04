@@ -73,15 +73,7 @@ public class RoutingService {
         ArrayList<Bloqueo> bloqueos = cargarBloqueos("data/bloqueos.txt");
         ArrayList<Mantenimiento> mantenimientos = cargarMantenimientos("data/mantenimiento.txt");
 
-        ArrayList<Planta> plantas = new ArrayList<>();
-
-        Planta plantaPrincipal = new Planta("PRINCIPAL", new Nodo(12, 8));
-        Planta plantaSecundaria1 = new Planta("SECUNDARIA", new Nodo(42, 42));
-        Planta plantaSecundaria2 = new Planta("SECUNDARIA", new Nodo(63, 3));
-
-        plantas.add(plantaPrincipal);
-        plantas.add(plantaSecundaria1);
-        plantas.add(plantaSecundaria2);
+        ArrayList<Planta> plantas = obtenerPlantas();
 
         SimulatedAnnealing sa = new SimulatedAnnealing(
                 5000, 0.005, 100,
@@ -122,6 +114,19 @@ public class RoutingService {
             pedidos.add(p);
         }
         return pedidos;
+    }
+
+    public ArrayList<Planta> obtenerPlantas() throws IOException {
+        ArrayList<Planta> plantas = new ArrayList<>();
+
+        Planta plantaPrincipal = new Planta(1,"PRINCIPAL", new Nodo(12, 8));
+        Planta plantaSecundaria1 = new Planta(2,"SECUNDARIA", new Nodo(42, 42));
+        Planta plantaSecundaria2 = new Planta(3,"SECUNDARIA", new Nodo(63, 3));
+
+        plantas.add(plantaPrincipal);
+        plantas.add(plantaSecundaria1);
+        plantas.add(plantaSecundaria2);
+        return plantas;
     }
 
     /**

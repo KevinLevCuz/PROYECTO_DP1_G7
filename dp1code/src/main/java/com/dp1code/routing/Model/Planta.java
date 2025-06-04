@@ -5,7 +5,8 @@ import java.time.Month;
 import java.util.ArrayList;
 
 public class Planta {
-    private String id;
+    private int id;
+    private String tipo;
     private Nodo ubicacion;
     private double capacidadMaxima;
     private double glpDisponible;
@@ -14,23 +15,31 @@ public class Planta {
 
     public Planta() {}
 
-    public Planta(String id, Nodo ubicacion, double capacidadMaxima, double glpDisponible,
-                  LocalDateTime siguienteRecarga, LocalDateTime intervaloRecarga) {
+    public Planta(int id,String tipo, Nodo ubicacion) {
         this.id = id;
-        this.ubicacion = ubicacion;
-        this.capacidadMaxima = capacidadMaxima;
-        this.glpDisponible = glpDisponible;
-        this.siguienteRecarga = siguienteRecarga;
-        this.intervaloRecarga = intervaloRecarga;
-    }
-
-    public Planta(String id, Nodo ubicacion) {
-        this.id = id;
+        this.tipo = tipo;
+        AsignarGlpPorTipo(tipo);
         this.ubicacion = ubicacion;
     }
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    private void AsignarGlpPorTipo(String tipo) {
+        switch (tipo) {
+            case "PRINCIPAL":
+                this.capacidadMaxima = 10000;
+                this.glpDisponible=10000;
+                break;
+            case "SECUNDARIA":
+                this.capacidadMaxima = 60.0;
+                this.glpDisponible=60.0;
+                break;
+            default:
+                System.out.println("Ingreso mal algún tipo de Planta.");
+                break;
+        }
+    }
+
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
     public Nodo getUbicacion() { return ubicacion; }
     public void setUbicacion(Nodo ubicacion) { this.ubicacion = ubicacion; }

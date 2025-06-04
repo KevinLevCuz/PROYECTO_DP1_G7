@@ -55,15 +55,7 @@ public class RoutingApplication {
         ArrayList<Bloqueo> bloqueos = cargarBloqueos("data/bloqueos.txt");
         ArrayList<Mantenimiento> mantenimientos = cargarMantenimientos("data/mantenimiento.txt");
 
-        ArrayList<Planta> plantas = new ArrayList<>();
-
-        Planta plantaPrincipal = new Planta("PRINCIPAL", new Nodo(12, 8));
-        Planta plantaSecundaria1 = new Planta("SECUNDARIA", new Nodo(42, 42));
-        Planta plantaSecundaria2 = new Planta("SECUNDARIA", new Nodo(63, 3));
-
-        plantas.add(plantaPrincipal);
-        plantas.add(plantaSecundaria1);
-        plantas.add(plantaSecundaria2);
+        ArrayList<Planta> plantas = obtenerPlantas();
 
         SimulatedAnnealing sa = new SimulatedAnnealing(
                 5000, 0.005, 100,
@@ -113,6 +105,19 @@ public class RoutingApplication {
 
         //System.out.println("Se llegó a dar solución\n");
         //mejor.imprimirRutas();
+    }
+
+    public static ArrayList<Planta> obtenerPlantas() throws IOException {
+        ArrayList<Planta> plantas = new ArrayList<>();
+
+        Planta plantaPrincipal = new Planta(1,"PRINCIPAL", new Nodo(12, 8));
+        Planta plantaSecundaria1 = new Planta(2,"SECUNDARIA", new Nodo(42, 42));
+        Planta plantaSecundaria2 = new Planta(3,"SECUNDARIA", new Nodo(63, 3));
+
+        plantas.add(plantaPrincipal);
+        plantas.add(plantaSecundaria1);
+        plantas.add(plantaSecundaria2);
+        return plantas;
     }
 
     public static ArrayList<Pedido> cargarPedidos(String filePath) throws IOException {
@@ -168,7 +173,7 @@ public class RoutingApplication {
             count.put(tipo, idx);
             String codigo = String.format("%s%02d", tipo, idx);
             // Ubicación por defecto (0,0)
-            Nodo ubic = new Nodo(0, 0);
+            Nodo ubic = new Nodo(12, 8);
             Camion c = new Camion(codigo, ubic, capacidadGLP, capacidadGLP,
                     false, now);
             camiones.add(c);
@@ -258,6 +263,19 @@ public class RoutingApplication {
         int minuto = Integer.parseInt(partes[2]);
 
         return LocalDateTime.of(2025, Month.MAY, dia, hora, minuto, 0, 0);
+    }
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/**")
+                    .allowedOrigins("http://localhost:3000")
+                    .allowedMethods("*")
+                    .allowCredentials(true);
+            }
+        };
     }
 
 

@@ -5,6 +5,15 @@ export interface Ubicacion {
   bloqueado: boolean;
 }
 
+export interface Planta{
+  id: string;
+  ubicacion: Ubicacion;
+  capacidadMaxima: number;
+  glpDisponible: number;
+  siguienteRecarga: string;
+  intervaloRecarga: string;
+}
+
 export interface Pedido {
   id: string | null;
   destino: Ubicacion;
@@ -65,6 +74,22 @@ export async function obtenerRutasOptimizadas(): Promise<RutaCamion[]> {
 export async function obtenerPedidos(): Promise<Pedido[]> {
   try {
     const response = await fetch('http://localhost:8080/api/routing/obtenerPedidos', { method: 'POST' });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching optimized routes:', error);
+    throw error;
+  }
+}
+
+export async function obtenerPlantas(): Promise<Planta[]> {
+  try {
+    const response = await fetch('http://localhost:8080/api/routing/obtenerPlantas', { method: 'POST' });
     
     if (!response.ok) {
       throw new Error(`Error: ${response.status}`);

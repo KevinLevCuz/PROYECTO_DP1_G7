@@ -3,6 +3,7 @@ package com.dp1code.routing.Controller;
 import com.dp1code.routing.Model.Solucion;
 import com.dp1code.routing.Model.Pedido;
 import com.dp1code.routing.Model.Camion;
+import com.dp1code.routing.Model.Planta;
 import com.dp1code.routing.Service.RoutingService;
 
 // Los imports de Spring Web:
@@ -36,6 +37,11 @@ public class RoutingController {
     @PostMapping("/obtenerPedidos")
     public ArrayList<Pedido> obtenerPedidos() throws IOException {
         return routingService.cargarPedidos("data/pedidos.txt"); 
+    }
+
+    @PostMapping("/obtenerPlantas")
+    public ArrayList<Planta> obtenerPlantas() throws IOException {
+        return routingService.obtenerPlantas(); 
     }
 
 
