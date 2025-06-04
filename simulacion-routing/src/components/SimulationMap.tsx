@@ -41,40 +41,61 @@ export default function SimulationMap() {
   const lastTimeRef = useRef<number>(0);
   
   const [trucks, setTrucks] = useState<Truck[]>([
-    {
-      id: 1,
-      initialPosition: [3, 3],
-      route: [
-        [3, 3],[3, 2],[3, 1],[3, 0],[2, 0],[1, 0],[0, 0]
-      ],
-      color: '#FF0000'
-    },
-    {
-      id: 2,
-      initialPosition: [10, 5],
-      route: [
-        [10, 5],[10, 6],[11, 6],[12, 6],[12, 7],[12, 8]
-      ],
-      color: '#00FF00'
-    }
-  ]);
+  {
+    id: 1,
+    initialPosition: [12, 8],
+    route: [
+      [12, 8],[13, 8],[14, 8],[15, 8],[16, 8],[17, 8],[18, 8],[19, 8],
+      [20, 8],[21, 8],[22, 8],[23, 8],[24, 8],[25, 8],[26, 8],[27, 8],
+      [28, 8],[29, 8],[30, 8],[31, 8],[32, 8],[33, 8],[34, 8],[35, 8],
+      [36, 8],[37, 8],[38, 8],[39, 8],[40, 8],[41, 8],[42, 8],[43, 8],
+      [44, 8],[45, 8],[46, 8],[47, 8],[48, 8],[49, 8],[50, 8],[51, 8],
+      [52, 8],[53, 8],[54, 8],[55, 8],[56, 8],[57, 8],[57, 7]
+    ],
+    color: '#FF0000'
+  },
+  {
+    id: 2,
+    initialPosition: [12, 8],
+    route: [
+      [12, 8],[12, 9],[12, 10],[12, 11],[12, 12],[12, 13],[12, 14],
+      [12, 15],[12, 16],[12, 17],[12, 18]
+    ],
+    color: '#00FF00'
+  },
+  {
+    id: 3,
+    initialPosition: [12, 8],
+    route: [
+      [12, 8],[13, 8],[14, 8],[15, 8],[16, 8],[17, 8],[18, 8],
+      [18, 9],[18, 10],[18, 11],[18, 12],[18, 13],[18, 14],[18, 15],
+      [18, 16],[18, 17],[18, 18],[18, 19],[18, 20],[18, 21],[18, 22],
+      [18, 23],[18, 24],[18, 25],[18, 26],[18, 27],[18, 28],[18, 29],
+      [18, 30],[18, 31],[18, 32],[18, 33],[18, 34],[18, 35],[18, 36],
+      [18, 37],[18, 38],[18, 39],[18, 40],[18, 41],[18, 42],[18, 43],
+      [18, 44],[18, 45]
+    ],
+    color: '#0000FF'
+  }
+]);
+
 
   const [plants, setPlants] = useState<Plant[]>([
     {
       id: 1,
-      position: [5, 5],
+      position: [12, 8],
       type: 'PRINCIPAL',
       name: 'Planta Central'
     },
     {
       id: 2,
-      position: [15, 10],
+      position: [42, 42],
       type: 'SECUNDARIA',
       name: 'Planta Norte'
     },
     {
       id: 3,
-      position: [8, 15],
+      position: [63, 3],
       type: 'SECUNDARIA',
       name: 'Planta Este'
     }
@@ -83,17 +104,17 @@ export default function SimulationMap() {
   const [orders, setOrders] = useState<Order[]>([
     {
       id: 1,
-      position: [7, 7],
+      position: [57, 7],
       name: 'Pedido 1'
     },
     {
       id: 2,
-      position: [12, 12],
+      position: [12, 18],
       name: 'Pedido 2'
     },
     {
       id: 3,
-      position: [18, 5],
+      position: [18, 45],
       name: 'Pedido 3'
     }
   ]);
@@ -425,21 +446,6 @@ export default function SimulationMap() {
     cancelAnimationFrame(animationFrameRef.current);
   }, []);
 
-  const addTruck = useCallback(() => {
-    const newId = trucks.length > 0 ? Math.max(...trucks.map(t => t.id)) + 1 : 1;
-    const newTruck: Truck = {
-      id: newId,
-      initialPosition: [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)],
-      route: [
-        [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)],
-        [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)],
-        [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)]
-      ],
-      color: `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`
-    };
-    setTrucks([...trucks, newTruck]);
-  }, [trucks]);
-
   // Configuración inicial del canvas
   useEffect(() => {
     if (!Object.values(imagesLoaded).every(Boolean) || !canvasRef.current) return;
@@ -512,12 +518,6 @@ export default function SimulationMap() {
             className="w-8 h-8 rounded-full border-2 border-red-500 text-red-500 flex items-center justify-center"
             onClick={stopAnimation}>
             <BsStopFill className="w-4 h-4" />
-          </button>
-
-          <button 
-            className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center"
-            onClick={addTruck}>
-            +
           </button>
         </div>
       </div>
