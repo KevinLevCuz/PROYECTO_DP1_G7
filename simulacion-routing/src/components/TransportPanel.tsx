@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import type { Pedido, Camion, RutaCamion } from '../lib/api';
 import { obtenerPedidos, obtenerRutasOptimizadas } from "../lib/api";
 
+
 export default function TransportPanel() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [showVehicles, setShowVehicles] = useState(false);
   
   // Estado para pedidos
@@ -102,7 +103,7 @@ export default function TransportPanel() {
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
-          className={`fixed right-0 top-1/2 transform -translate-y-1/2 ${showVehicles ? 'bg-blue-500' : 'bg-red-500'} text-white p-2 rounded-l-lg shadow-lg z-30`}
+          className={`fixed right-0 top-1/2 transform -translate-y-1/2 ${showVehicles ? 'bg-red-500' : 'bg-red-500'} text-white p-2 rounded-l-lg shadow-lg z-30`}
         >
           <FiChevronLeft size={20} />
         </button>
