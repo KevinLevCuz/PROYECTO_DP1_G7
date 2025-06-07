@@ -1,9 +1,9 @@
-// components/TransportPanel.tsx
+// components/daily/TransportPanel.tsx
 "use client";
 import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import { useEffect, useState } from "react";
-import type { Pedido, Camion } from '../lib/api';
-import { obtenerPedidos, obtenerCamiones } from "../lib/api";
+import type { Pedido, Camion } from '../../lib/api';
+import { obtenerPedidos, obtenerCamiones } from "../../lib/api";
 
 
 export default function TransportPanel() {

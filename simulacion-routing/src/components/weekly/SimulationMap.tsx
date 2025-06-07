@@ -3,8 +3,8 @@
 
 import { BsPlayFill, BsStopFill } from "react-icons/bs";
 import { useEffect, useRef, useState, useCallback } from "react";
-import { obtenerRutasOptimizadas, obtenerPedidos, obtenerPlantas } from "../lib/api";
-import type {Camion, SubRuta, Ubicacion, Planta, Pedido } from '../lib/api';
+import { obtenerRutasOptimizadas, obtenerPedidos, obtenerPlantas } from "../../lib/api";
+import type {Camion, SubRuta, Ubicacion, Planta, Pedido } from '../../lib/api';
 
 export default function SimulationMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -1,3 +1,4 @@
+// components/common/Legend.tsx
 'use client';
 import { useState } from "react";
 import { FiChevronDown, FiChevronUp, FiX } from "react-icons/fi";

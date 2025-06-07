@@ -14,11 +14,12 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/", icon: <FiHome size={20} />, label: "Inicio" }
+    { href: "/", icon: <FiHome size={20} />, label: "Semanal" },
+    { href: "/daily", icon: <FiMap size={20} />, label: "Diario" }
   ];
 
   return (
-    <div className="bg-white text-white w-16 h-full fixed left-0 top-0 flex flex-col items-center py-6 z-40 shadow-lg">
+    <div className="bg-white text-red w-16 h-full fixed left-0 top-0 flex flex-col items-center py-6 z-40 shadow-lg">
       <div className="space-y-6 flex flex-col items-center">
         {navItems.map((item) => (
           <Link
