@@ -35,7 +35,7 @@ export default function SimulationMap() {
   const [routes, setRoutes] = useState<SubRuta[][]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { setStartTime, start, stop } = useSimTime();
+  const { setStartTime, startSimulation, stopSimulation } = useSimTime();
   const [fechaInicio, setFechaInicio] = useState("");
 
   const trucksProgressRef = useRef(
@@ -76,6 +76,11 @@ export default function SimulationMap() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    console.log("SimTime:", simTime.toISOString());
+  }, [simTime]);
+
 
   // Cargar imágenes
   useEffect(() => {
@@ -454,113 +459,229 @@ export default function SimulationMap() {
       animationFrameRef.current = requestAnimationFrame(animate);
     }
   }, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded]);*/
-  const animate = useCallback((timestamp: number) => {
-  if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
+  /*const animate = useCallback((timestamp: number) => {
+    //console.log("SimTime:", simTime.toISOString());
 
-  const ctx = canvasRef.current.getContext("2d");
-  if (!ctx) return;
+    if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
 
-  const cols = 70;
-  const rows = 50;
-  const spacing = 13;
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
 
-  if (!lastTimeRef.current) {
-    lastTimeRef.current = timestamp;
-  }
+    const cols = 70;
+    const rows = 50;
+    const spacing = 13;
 
-  const deltaTime = timestamp - lastTimeRef.current;
-  lastTimeRef.current = timestamp;
-
-  drawGrid(ctx, cols, rows, spacing);
-
-  if (hoveredPlant && ctx) {
-    drawPlantTooltip(ctx, hoveredPlant, tooltipPosition.x, tooltipPosition.y);
-  }
-
-  // Dibujar plantas
-  plants.forEach(plant => {
-    drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
-  });
-
-  // Dibujar pedidos
-  orders.forEach(order => {
-    drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
-  });
-
-  let allTrucksFinished = true;
-
-  routes.forEach((subRutas, index) => {
-    const progressData = trucksProgressRef.current[index];
-    const truck = trucks[index];
-    if (!truck || !subRutas || subRutas.length === 0) return;
-
-    // Obtener solo las subrutas cuya horaInicio ya ha llegado
-    const rutasVisibles = subRutas.filter(
-      subRuta => new Date(subRuta.horaInicio) <= simTime
-    );
-    if (rutasVisibles.length === 0) return;
-
-    // Combinar todas las trayectorias visibles
-    const fullRoute = rutasVisibles.flatMap(subRuta => subRuta.trayectoria);
-    if (fullRoute.length === 0) return;
-
-    if (progressData.currentStep >= fullRoute.length - 1) {
-      const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
-      progressData.currentPos = [lastPos.posX, lastPos.posY];
-      drawTruck(
-        ctx,
-        progressData.currentPos[0],
-        progressData.currentPos[1],
-        truck,
-        spacing,
-        progressData.currentPos,
-        progressData.currentPos,
-        true
-      );
-      return;
+    if (!lastTimeRef.current) {
+      lastTimeRef.current = timestamp;
     }
 
-    allTrucksFinished = false;
+    const deltaTime = timestamp - lastTimeRef.current;
+    lastTimeRef.current = timestamp;
 
-    progressData.progress += deltaTime / 1000;
-    const transitionDuration = 0.5;
+    drawGrid(ctx, cols, rows, spacing);
 
-    if (progressData.progress >= transitionDuration) {
-      progressData.progress = 0;
-      progressData.currentStep++;
+    if (hoveredPlant && ctx) {
+      drawPlantTooltip(ctx, hoveredPlant, tooltipPosition.x, tooltipPosition.y);
+    }
 
-      if (progressData.currentStep < fullRoute.length - 1) {
-        const currentStep = fullRoute[progressData.currentStep] || { posX: 0, posY: 0 };
-        const nextStep = fullRoute[progressData.currentStep + 1] || { posX: 0, posY: 0 };
-        progressData.currentPos = [currentStep.posX, currentStep.posY];
-        progressData.targetPos = [nextStep.posX, nextStep.posY];
-      } else {
+    // Dibujar plantas
+    plants.forEach(plant => {
+      drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
+    });
+
+    // Dibujar pedidos
+    orders.forEach(order => {
+      drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
+    });
+
+    let allTrucksFinished = true;
+
+    routes.forEach((subRutas, index) => {
+      const progressData = trucksProgressRef.current[index];
+      const truck = trucks[index];
+      if (!truck || !subRutas || subRutas.length === 0) return;
+
+      // Obtener solo las subrutas cuya horaInicio ya ha llegado
+      const rutasVisibles = subRutas.filter(
+        subRuta => new Date(subRuta.horaInicio) <= simTime
+      );
+      if (rutasVisibles.length === 0) return;
+
+      // Combinar todas las trayectorias visibles
+      const fullRoute = rutasVisibles.flatMap(subRuta => subRuta.trayectoria);
+      if (fullRoute.length === 0) return;
+
+      if (progressData.currentStep >= fullRoute.length - 1) {
         const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
         progressData.currentPos = [lastPos.posX, lastPos.posY];
-        progressData.targetPos = [lastPos.posX, lastPos.posY];
+        drawTruck(
+          ctx,
+          progressData.currentPos[0],
+          progressData.currentPos[1],
+          truck,
+          spacing,
+          progressData.currentPos,
+          progressData.currentPos,
+          true
+        );
+        return;
       }
+
+      allTrucksFinished = false;
+
+      progressData.progress += deltaTime / 1000;
+      const transitionDuration = 0.5;
+
+      if (progressData.progress >= transitionDuration) {
+        progressData.progress = 0;
+        progressData.currentStep++;
+
+        if (progressData.currentStep < fullRoute.length - 1) {
+          const currentStep = fullRoute[progressData.currentStep] || { posX: 0, posY: 0 };
+          const nextStep = fullRoute[progressData.currentStep + 1] || { posX: 0, posY: 0 };
+          progressData.currentPos = [currentStep.posX, currentStep.posY];
+          progressData.targetPos = [nextStep.posX, nextStep.posY];
+        } else {
+          const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
+          progressData.currentPos = [lastPos.posX, lastPos.posY];
+          progressData.targetPos = [lastPos.posX, lastPos.posY];
+        }
+      }
+
+      const t = Math.min(progressData.progress / transitionDuration, 1);
+      const interpolatedX = progressData.currentPos[0] + (progressData.targetPos[0] - progressData.currentPos[0]) * t;
+      const interpolatedY = progressData.currentPos[1] + (progressData.targetPos[1] - progressData.currentPos[1]) * t;
+
+      drawTruck(
+        ctx,
+        interpolatedX,
+        interpolatedY,
+        truck,
+        spacing,
+        progressData.targetPos,
+        progressData.currentPos,
+        false
+      );
+    });
+
+    if (!allTrucksFinished) {
+      animationFrameRef.current = requestAnimationFrame(animate);
+    }
+  }, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded, simTime, hoveredPlant, tooltipPosition]);
+*/
+  const animate = useCallback((timestamp: number) => {
+    if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
+
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
+
+    const cols = 70;
+    const rows = 50;
+    const spacing = 13;
+
+    if (!lastTimeRef.current) {
+      lastTimeRef.current = timestamp;
     }
 
-    const t = Math.min(progressData.progress / transitionDuration, 1);
-    const interpolatedX = progressData.currentPos[0] + (progressData.targetPos[0] - progressData.currentPos[0]) * t;
-    const interpolatedY = progressData.currentPos[1] + (progressData.targetPos[1] - progressData.currentPos[1]) * t;
+    const deltaTime = timestamp - lastTimeRef.current;
+    lastTimeRef.current = timestamp;
 
-    drawTruck(
-      ctx,
-      interpolatedX,
-      interpolatedY,
-      truck,
-      spacing,
-      progressData.targetPos,
-      progressData.currentPos,
-      false
-    );
-  });
+    drawGrid(ctx, cols, rows, spacing);
 
-  if (!allTrucksFinished) {
-    animationFrameRef.current = requestAnimationFrame(animate);
-  }
-}, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded, simTime, hoveredPlant, tooltipPosition]);
+    if (hoveredPlant && ctx) {
+      drawPlantTooltip(ctx, hoveredPlant, tooltipPosition.x, tooltipPosition.y);
+    }
+
+    // Dibujar plantas
+    plants.forEach(plant => {
+      drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
+    });
+
+    // Dibujar pedidos
+    orders.forEach(order => {
+      drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
+    });
+
+    let allTrucksFinished = true;
+
+    routes.forEach((subRutas, index) => {
+      const progressData = trucksProgressRef.current[index];
+      const truck = trucks[index];
+      if (!truck || !subRutas || subRutas.length === 0) return;
+
+      // Obtener solo las subrutas cuya horaInicio ya ha llegado
+      const rutasVisibles = subRutas.filter(subRuta => new Date(subRuta.horaInicio) <= simTime);
+
+      // 🛑 Si aún no ha iniciado ninguna subruta, reiniciar progreso y no mostrar animación
+      if (rutasVisibles.length === 0) {
+        progressData.currentStep = 0;
+        progressData.progress = 0;
+        progressData.currentPos = [truck.ubicacionActual.posX, truck.ubicacionActual.posY];
+        progressData.targetPos = [truck.ubicacionActual.posX, truck.ubicacionActual.posY];
+        return;
+      }
+
+      // Combinar todas las trayectorias visibles
+      const fullRoute = rutasVisibles.flatMap(subRuta => subRuta.trayectoria);
+      if (fullRoute.length === 0) return;
+
+      if (progressData.currentStep >= fullRoute.length - 1) {
+        const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
+        progressData.currentPos = [lastPos.posX, lastPos.posY];
+        drawTruck(
+          ctx,
+          progressData.currentPos[0],
+          progressData.currentPos[1],
+          truck,
+          spacing,
+          progressData.currentPos,
+          progressData.currentPos,
+          true
+        );
+        return;
+      }
+
+      allTrucksFinished = false;
+
+      progressData.progress += deltaTime / 1000;
+      const transitionDuration = 0.5;
+
+      if (progressData.progress >= transitionDuration) {
+        progressData.progress = 0;
+        progressData.currentStep++;
+
+        if (progressData.currentStep < fullRoute.length - 1) {
+          const currentStep = fullRoute[progressData.currentStep] || { posX: 0, posY: 0 };
+          const nextStep = fullRoute[progressData.currentStep + 1] || { posX: 0, posY: 0 };
+          progressData.currentPos = [currentStep.posX, currentStep.posY];
+          progressData.targetPos = [nextStep.posX, nextStep.posY];
+        } else {
+          const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
+          progressData.currentPos = [lastPos.posX, lastPos.posY];
+          progressData.targetPos = [lastPos.posX, lastPos.posY];
+        }
+      }
+
+      const t = Math.min(progressData.progress / transitionDuration, 1);
+      const interpolatedX = progressData.currentPos[0] + (progressData.targetPos[0] - progressData.currentPos[0]) * t;
+      const interpolatedY = progressData.currentPos[1] + (progressData.targetPos[1] - progressData.currentPos[1]) * t;
+
+      drawTruck(
+        ctx,
+        interpolatedX,
+        interpolatedY,
+        truck,
+        spacing,
+        progressData.targetPos,
+        progressData.currentPos,
+        false
+      );
+    });
+
+    if (!allTrucksFinished) {
+      animationFrameRef.current = requestAnimationFrame(animate);
+    }
+  }, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded, simTime, hoveredPlant, tooltipPosition]);
 
 
   const drawInitialState = useCallback(() => {
@@ -727,7 +848,7 @@ export default function SimulationMap() {
           <button
             className="w-8 h-8 rounded-full bg-teal-500 text-white flex items-center justify-center"
             onClick={() => {
-              start();            // ⏱ Inicia el reloj de simulación
+              startSimulation();            // ⏱ Inicia el reloj de simulación
               startAnimation();   // 🚚 Inicia la animación en el canvas
             }}
           >
@@ -737,7 +858,7 @@ export default function SimulationMap() {
           <button
             className="w-8 h-8 rounded-full border-2 border-red-500 text-red-500 flex items-center justify-center"
             onClick={() => {
-              stop();             // ⏹ Detiene el reloj de simulación
+              stopSimulation();             // ⏹ Detiene el reloj de simulación
               stopAnimation();    // ✋ Detiene la animación
             }}
           >
