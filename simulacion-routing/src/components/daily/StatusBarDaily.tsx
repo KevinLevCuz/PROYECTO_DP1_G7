@@ -17,15 +17,8 @@ export default function StatusBar() {
       setTiempoReal(new Date());
     }, 1000);
 
-    const intervalSim = setInterval(() => {
-      setTiempoSimulacion((prev) =>
-        prev ? new Date(prev.getTime() + 1000) : new Date()
-      );
-    }, 1000);
-
     return () => {
       clearInterval(intervalReal);
-      clearInterval(intervalSim);
     };
   }, []);
 
@@ -37,12 +30,9 @@ export default function StatusBar() {
   };
 
   return (
-    <div className="bg-red-500 text-white p-2 text-sm grid grid-cols-4 gap-4 justify-center">
+    <div className="bg-red-500 text-white p-2 text-sm grid grid-cols-3 gap-4 justify-center">
       <div className="text-center">
         <span className="font-semibold">Tiempo Real:</span> {formatFechaHora(tiempoReal)}
-      </div>
-      <div className="text-center">
-        <span className="font-semibold">Tiempo Simulación:</span> {formatFechaHora(tiempoSimulacion)}
       </div>
       <div className="text-center">
         <span className="font-semibold">Vehículos:</span> {vehiculos}

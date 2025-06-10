@@ -1,10 +1,10 @@
-import SimulationMap from "@/components/SimulationMap";
-import Sidebar from "@/components/Sidebar";
-import StatusBar from "@/components/StatusBar";
-import Legend from "@/components/Legend";
-import { TimeProvider } from "@/components/TimeContext";
+import SimulationMap from "@/components/weekly/SimulationMap";
+import Sidebar from "@/components/common/Sidebar";
+import StatusBar from "@/components/weekly/StatusBar";
+import Legend from "@/components/common/Legend";
+import { TimeProvider } from "@/components/weekly/TimeContext";
 
-import TransportPanel from "@/components/TransportPanel";
+import TransportPanel from "@/components/weekly/TransportPanel";
 
 export default function Home() {
   return (
