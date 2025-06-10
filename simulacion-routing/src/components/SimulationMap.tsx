@@ -14,6 +14,8 @@ export default function SimulationMap() {
   const plantSecundariaImgRef = useRef<HTMLImageElement | null>(null);
   const orderImgRef = useRef<HTMLImageElement | null>(null);
   const { simTime } = useSimTime();
+  const simTimeRef = useRef(simTime);
+
 
 
   const [hoveredPlant, setHoveredPlant] = useState<Planta | null>(null);
@@ -78,7 +80,9 @@ export default function SimulationMap() {
   }, []);
 
   useEffect(() => {
-    console.log("SimTime:", simTime.toISOString());
+    //console.log("SimTime:", simTime.toISOString());
+    //console.log(simTimeRef.current);
+    simTimeRef.current = simTime;
   }, [simTime]);
 
 
@@ -569,7 +573,7 @@ export default function SimulationMap() {
     }
   }, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded, simTime, hoveredPlant, tooltipPosition]);
 */
-  const animate = useCallback((timestamp: number) => {
+  /*const animate = useCallback((timestamp: number) => {
     if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
 
     const ctx = canvasRef.current.getContext("2d");
@@ -608,22 +612,155 @@ export default function SimulationMap() {
       const progressData = trucksProgressRef.current[index];
       const truck = trucks[index];
       if (!truck || !subRutas || subRutas.length === 0) return;
+      console.log(simTimeRef.current);
+      /*subRutas.forEach(element => { 
+        console.log('HORA A COMPARAR: ', simTimeRef.current);
+        console.log('Hora INICIO: ', new Date(element.horaInicio));
+        console.log('Diferencia horaria: ', simTimeRef.current.getTime()-new Date(element.horaInicio).getTime())
+      });*/
 
-      // Obtener solo las subrutas cuya horaInicio ya ha llegado
-      const rutasVisibles = subRutas.filter(subRuta => new Date(subRuta.horaInicio) <= simTime);
+  // Obtener solo las subrutas cuya horaInicio ya ha llegado
+  /*const rutasVisibles = subRutas.filter(subRuta => new Date(subRuta.horaInicio).getTime() <= simTimeRef.current.getTime());
 
-      // 🛑 Si aún no ha iniciado ninguna subruta, reiniciar progreso y no mostrar animación
-      if (rutasVisibles.length === 0) {
-        progressData.currentStep = 0;
-        progressData.progress = 0;
-        progressData.currentPos = [truck.ubicacionActual.posX, truck.ubicacionActual.posY];
-        progressData.targetPos = [truck.ubicacionActual.posX, truck.ubicacionActual.posY];
-        return;
-      }
+  // 🛑 Si aún no ha iniciado ninguna subruta, reiniciar progreso y no mostrar animación
+  if (rutasVisibles.length === 0) {
+    progressData.currentStep = 0;
+    progressData.progress = 0;
+    progressData.currentPos = [truck.ubicacionActual.posX, truck.ubicacionActual.posY];
+    progressData.targetPos = [truck.ubicacionActual.posX, truck.ubicacionActual.posY];
+    return;
+  }
 
-      // Combinar todas las trayectorias visibles
+  // Combinar todas las trayectorias visibles
+  const fullRoute = rutasVisibles.flatMap(subRuta => subRuta.trayectoria);
+  if (fullRoute.length === 0) return;
+
+  if (progressData.currentStep >= fullRoute.length - 1) {
+    const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
+    progressData.currentPos = [lastPos.posX, lastPos.posY];
+    drawTruck(
+      ctx,
+      progressData.currentPos[0],
+      progressData.currentPos[1],
+      truck,
+      spacing,
+      progressData.currentPos,
+      progressData.currentPos,
+      true
+    );
+    return;
+  }
+
+  allTrucksFinished = false;
+
+  progressData.progress += deltaTime / 1000;
+  const transitionDuration = 0.5;
+
+  if (progressData.progress >= transitionDuration) {
+    progressData.progress = 0;
+    progressData.currentStep++;
+
+    if (progressData.currentStep < fullRoute.length - 1) {
+      const currentStep = fullRoute[progressData.currentStep] || { posX: 0, posY: 0 };
+      const nextStep = fullRoute[progressData.currentStep + 1] || { posX: 0, posY: 0 };
+      progressData.currentPos = [currentStep.posX, currentStep.posY];
+      progressData.targetPos = [nextStep.posX, nextStep.posY];
+    } else {
+      const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
+      progressData.currentPos = [lastPos.posX, lastPos.posY];
+      progressData.targetPos = [lastPos.posX, lastPos.posY];
+    }
+  }
+
+  const t = Math.min(progressData.progress / transitionDuration, 1);
+  const interpolatedX = progressData.currentPos[0] + (progressData.targetPos[0] - progressData.currentPos[0]) * t;
+  const interpolatedY = progressData.currentPos[1] + (progressData.targetPos[1] - progressData.currentPos[1]) * t;
+
+  drawTruck(
+    ctx,
+    interpolatedX,
+    interpolatedY,
+    truck,
+    spacing,
+    progressData.targetPos,
+    progressData.currentPos,
+    false
+  );
+});
+
+if (!allTrucksFinished) {
+  animationFrameRef.current = requestAnimationFrame(animate);
+}
+}, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded, simTime, hoveredPlant, tooltipPosition]);
+*/
+
+  const animate = useCallback((timestamp: number) => {
+    if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
+
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
+
+    const cols = 70;
+    const rows = 50;
+    const spacing = 13;
+
+    if (!lastTimeRef.current) {
+      lastTimeRef.current = timestamp;
+    }
+
+    const deltaTime = timestamp - lastTimeRef.current;
+    lastTimeRef.current = timestamp;
+
+    drawGrid(ctx, cols, rows, spacing);
+
+    if (hoveredPlant && ctx) {
+      drawPlantTooltip(ctx, hoveredPlant, tooltipPosition.x, tooltipPosition.y);
+    }
+
+    // Dibujar plantas
+    plants.forEach(plant => {
+      drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
+    });
+
+    // Dibujar pedidos
+    orders.forEach(order => {
+      drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
+    });
+
+    let allTrucksFinished = true;
+
+    if (!simTimeRef.current || simTimeRef.current.getTime() < simTimeRef.current.getTime()) {
+      trucksProgressRef.current.forEach((progress, idx) => {
+        progress.currentStep = -1;
+        progress.progress = 0;
+        progress.currentPos = [trucks[idx].ubicacionActual.posX, trucks[idx].ubicacionActual.posY];
+        progress.targetPos = [trucks[idx].ubicacionActual.posX, trucks[idx].ubicacionActual.posY];
+      });
+    }
+    simTimeRef.current = new Date(simTimeRef.current);
+
+    routes.forEach((subRutas, index) => {
+      const progressData = trucksProgressRef.current[index];
+      const truck = trucks[index];
+      if (!truck || !subRutas || subRutas.length === 0) return;
+
+      const rutasVisibles = subRutas.filter(subRuta => {
+        const horaInicio = new Date(subRuta.horaInicio).getTime();
+        return horaInicio <= simTimeRef.current.getTime();
+      });
+
       const fullRoute = rutasVisibles.flatMap(subRuta => subRuta.trayectoria);
       if (fullRoute.length === 0) return;
+
+      // Inicializar si aún no ha comenzado
+      if (progressData.currentStep === -1) {
+        const firstPos = fullRoute[0];
+        const secondPos = fullRoute[1] || fullRoute[0];
+        progressData.currentStep = 0;
+        progressData.currentPos = [firstPos.posX, firstPos.posY];
+        progressData.targetPos = [secondPos.posX, secondPos.posY];
+        progressData.progress = 0;
+      }
 
       if (progressData.currentStep >= fullRoute.length - 1) {
         const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
@@ -826,6 +963,7 @@ export default function SimulationMap() {
   const handleFechaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFechaInicio(e.target.value);
     const fecha = new Date(e.target.value);
+    //console.log('FECHA ELEGIDA: ', fecha);
     setStartTime(fecha);
   };
 

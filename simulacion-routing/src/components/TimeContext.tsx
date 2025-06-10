@@ -23,14 +23,26 @@ export const TimeProvider = ({ children }: { children: ReactNode }) => {
   const [_startTime, _setStartTime] = useState(new Date("2025-06-06T00:00:00"));
   const [isRunning, setIsRunning] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
+  /*
+    const startSimulation = () => {
+      if (intervalRef.current) return; // prevenir múltiples intervalos
+      setIsRunning(true);
+      intervalRef.current = setInterval(() => {
+        setSimTime((prev) => new Date(prev.getTime() + 1000)); // avanzar 1s
+      }, 1000);
+    };*/
   const startSimulation = () => {
     if (intervalRef.current) return; // prevenir múltiples intervalos
+
+    // ✅ Reiniciar simTime al _startTime antes de comenzar
+    setSimTime(_startTime);
+
     setIsRunning(true);
     intervalRef.current = setInterval(() => {
       setSimTime((prev) => new Date(prev.getTime() + 1000)); // avanzar 1s
     }, 1000);
   };
+
 
   const stopSimulation = () => {
     if (intervalRef.current) {
@@ -42,9 +54,13 @@ export const TimeProvider = ({ children }: { children: ReactNode }) => {
 
   const setStartTime = (start: Date) => {
     const startAtMidnight = new Date(start);
-    startAtMidnight.setHours(0, 0, 0, 0);
-    _setStartTime(startAtMidnight);
-    setSimTime(startAtMidnight);
+    console.log('fecha a asignar: ', start)
+    startAtMidnight.setHours(0, 0, 0, 0);//¿ES NECESARIO?
+    //console.log('fecha a asignar: ', startAtMidnight)
+    /*_setStartTime(startAtMidnight);
+    setSimTime(startAtMidnight);*/
+    _setStartTime(start);
+    setSimTime(start);
   };
 
   return (
