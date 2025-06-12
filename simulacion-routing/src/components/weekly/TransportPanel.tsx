@@ -4,11 +4,12 @@ import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
 import { useEffect, useState } from "react";
 import type { Pedido, Camion } from '../../lib/api';
 import { obtenerPedidos, obtenerCamiones } from "../../lib/api";
-
+import { useSimTime } from "@/components/weekly/TimeContext";
 
 export default function TransportPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [showVehicles, setShowVehicles] = useState(false);
+  const { simTime } = useSimTime();
   
   // Estado para pedidos
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
@@ -50,10 +51,16 @@ export default function TransportPanel() {
 
   // Filtrado de pedidos
   const filteredPedidos = pedidos.filter(pedido => {
+    const pedidoTime = new Date(pedido.horaPedido).getTime();
+    const currentSimTime = simTime.getTime();
+    if (pedidoTime > currentSimTime) {
+      return false; // Omitir pedidos que aún no deben aparecer
+    }
+
     if (pedido.estado === 'Entregado' && !pedidoFilter.entregado) return false;
     if (pedido.estado === 'Ruteando' && !pedidoFilter.ruta) return false;
     if (pedido.estado === 'Pendiente' && !pedidoFilter.pendiente) return false;
-
+    console.log("El pedido su fecha de pedido es: "+pedido.horaPedido)
     if (clienteSearch.trim() !== '' && !pedido.idCliente.toString().toLowerCase().includes(clienteSearch.toLowerCase())) {
       return false;
     }

@@ -40,7 +40,7 @@ export const TimeProvider = ({ children }: { children: ReactNode }) => {
     setIsRunning(true);
     intervalRef.current = setInterval(() => {
       setSimTime((prev) => new Date(prev.getTime() + 1000)); // avanzar 1s
-    }, 1000);
+    }, 100);
   };
 
 
