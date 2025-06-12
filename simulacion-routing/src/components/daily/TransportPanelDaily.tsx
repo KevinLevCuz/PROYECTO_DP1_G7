@@ -1,7 +1,7 @@
 // components/daily/TransportPanel.tsx
 "use client";
 import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { Pedido, Camion } from '../../lib/api';
 import { obtenerPedidos, obtenerCamiones } from "../../lib/api";
 
@@ -49,17 +49,41 @@ export default function TransportPanel() {
   }, []);
 
   // Filtrado de pedidos
-  const filteredPedidos = pedidos.filter(pedido => {
-    if (pedido.estado === 'Entregado' && !pedidoFilter.entregado) return false;
-    if (pedido.estado === 'Ruteando' && !pedidoFilter.ruta) return false;
-    if (pedido.estado === 'Pendiente' && !pedidoFilter.pendiente) return false;
+  const filterPedidos = useCallback(() => {
+    return pedidos.filter(pedido => {
+      const pedidoTime = new Date(pedido.horaPedido).getTime();
+      const currentSimTime = Date.now();
+      if (pedidoTime > currentSimTime) {
+        return false;
+      }
 
-    if (clienteSearch.trim() !== '' && !pedido.idCliente.toString().toLowerCase().includes(clienteSearch.toLowerCase())) {
-      return false;
-    }
+      if (pedido.estado === 'Entregado' && !pedidoFilter.entregado) return false;
+      if (pedido.estado === 'Ruteando' && !pedidoFilter.ruta) return false;
+      if (pedido.estado === 'Pendiente' && !pedidoFilter.pendiente) return false;
+      
+      if (clienteSearch.trim() !== '' && !pedido.idCliente.toString().toLowerCase().includes(clienteSearch.toLowerCase())) {
+        return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [pedidos, pedidoFilter, clienteSearch]);
+
+  const [filteredPedidos, setFilteredPedidos] = useState<Pedido[]>([]);
+
+  // Configura el intervalo para actualizar los pedidos filtrados cada segundo
+  useEffect(() => {
+    // Primera ejecución
+    setFilteredPedidos(filterPedidos());
+    
+    // Configurar intervalo
+    const intervalId = setInterval(() => {
+      setFilteredPedidos(filterPedidos());
+    }, 1000);
+
+    // Limpieza al desmontar
+    return () => clearInterval(intervalId);
+  }, [filterPedidos]);
 
   // Filtrado de vehículos
   // Filtrado de vehículos (simplificado)

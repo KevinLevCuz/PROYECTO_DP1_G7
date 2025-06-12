@@ -14,6 +14,36 @@ export default function SimulationMap() {
   const plantSecundariaImgRef = useRef<HTMLImageElement | null>(null);
   const orderImgRef = useRef<HTMLImageElement | null>(null);
   
+  const [simulationTime, setSimulationTime] = useState<number>(Date.now());
+  const [isSimulating, setIsSimulating] = useState<boolean>(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isSimulating) {
+        setSimulationTime(Date.now());
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [isSimulating]);
+  // Función para verificar si un camión debe comenzar a moverse
+  const shouldTruckStart = useCallback((subRutas: SubRuta[], currentTime: number) => {
+    return subRutas.some(subRuta => {
+      const startTime = new Date(subRuta.horaInicio).getTime();
+      return startTime <= currentTime;
+    });
+  }, []);
+
+  // Función para verificar si un camión ha completado su ruta
+  const hasTruckFinished = useCallback((subRutas: SubRuta[], currentTime: number) => {
+    if (!subRutas || subRutas.length === 0) return true;
+    
+    const lastSubRuta = subRutas[subRutas.length - 1];
+    const endTime = new Date(lastSubRuta.horaFin).getTime();
+    
+    return endTime <= currentTime;
+  }, []);
+
 
   const [hoveredPlant, setHoveredPlant] = useState<Planta | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -341,115 +371,136 @@ export default function SimulationMap() {
   }, []);
 
   const animate = useCallback((timestamp: number) => {
-    if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
-    
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return;
+  if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
+  
+  const ctx = canvasRef.current.getContext("2d");
+  if (!ctx) return;
 
-    const cols = 70;
-    const rows = 50;
-    const spacing = 13;
+  const cols = 70;
+  const rows = 50;
+  const spacing = 13;
 
-    if (!lastTimeRef.current) {
-      lastTimeRef.current = timestamp;
-    }
-    if (hoveredPlant && ctx) {
-      drawPlantTooltip(ctx, hoveredPlant, tooltipPosition.x, tooltipPosition.y);
-    }
-    const deltaTime = timestamp - lastTimeRef.current;
+  if (!lastTimeRef.current) {
     lastTimeRef.current = timestamp;
+  }
+  
+  const deltaTime = timestamp - lastTimeRef.current;
+  lastTimeRef.current = timestamp;
+  
+  drawGrid(ctx, cols, rows, spacing);
+  
+  // Dibujar plantas
+  plants.forEach(plant => {
+    drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
+  });
+
+  // Dibujar pedidos
+  orders.forEach(order => {
+    drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
+  });
+
+  let anyTruckActive = false;
+
+  routes.forEach((subRutas, index) => {
+    const progressData = trucksProgressRef.current[index];
+    const truck = trucks[index];
     
-    drawGrid(ctx, cols, rows, spacing);
+    if (!truck || !subRutas || subRutas.length === 0) return;
 
-    // Dibujar plantas
-    plants.forEach(plant => {
-      drawPlant(ctx, plant.ubicacion.posX, plant.ubicacion.posY, plant, spacing);
-    });
+    // Verificar si el camión debe comenzar o ya terminó
+    const shouldStart = shouldTruckStart(subRutas, simulationTime);
+    const hasFinished = hasTruckFinished(subRutas, simulationTime);
 
-    // Dibujar pedidos
-    orders.forEach(order => {
-      drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
-    });
-
-    // Dibujar rutas de los camiones
-    routes.forEach((subRutas, index) => {
-      const color = `hsl(${(index * 30) % 360}, 70%, 50%)`;
-      subRutas.forEach(subRuta => {
-        drawRoute(ctx, subRuta.trayectoria, color, spacing);
-      });
-    });
-
-    let allTrucksFinished = true;
-
-    routes.forEach((subRutas, index) => {
-      const progressData = trucksProgressRef.current[index];
-      const truck = trucks[index];
-      
-      if (!truck || !subRutas || subRutas.length === 0) return;
-
-      // Combinar todas las trayectorias de las subrutas
-      const fullRoute = subRutas.flatMap(subRuta => subRuta.trayectoria);
-      
-      if (progressData.currentStep >= fullRoute.length - 1) {
-        // Asegurarse de que la posición final sea exactamente la última de la ruta
-        const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
-        progressData.currentPos = [lastPos.posX, lastPos.posY];
-        drawTruck(
-          ctx,
-          progressData.currentPos[0], 
-          progressData.currentPos[1], 
-          truck,
-          spacing,
-          progressData.currentPos,
-          progressData.currentPos,
-          true // Es la posición final
-        );
-        return;
-      }
-
-      allTrucksFinished = false;
-      
-      progressData.progress += deltaTime / 1000;
-      const transitionDuration = 0.5;
-      
-      if (progressData.progress >= transitionDuration) {
-        progressData.progress = 0;
-        progressData.currentStep++;
-        
-        if (progressData.currentStep < fullRoute.length - 1) {
-          const currentStep = fullRoute[progressData.currentStep] || { posX: 0, posY: 0 };
-          const nextStep = fullRoute[progressData.currentStep + 1] || { posX: 0, posY: 0 };
-          progressData.currentPos = [currentStep.posX, currentStep.posY];
-          progressData.targetPos = [nextStep.posX, nextStep.posY];
-        } else {
-          // Si llegó al último paso, fijamos la posición exactamente al final
-          const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
-          progressData.currentPos = [lastPos.posX, lastPos.posY];
-          progressData.targetPos = [lastPos.posX, lastPos.posY];
-        }
-      }
-      
-      const t = Math.min(progressData.progress / transitionDuration, 1);
-      const interpolatedX = progressData.currentPos[0] + (progressData.targetPos[0] - progressData.currentPos[0]) * t;
-      const interpolatedY = progressData.currentPos[1] + (progressData.targetPos[1] - progressData.currentPos[1]) * t;
-      
+    if (!shouldStart) {
+      // Dibujar en posición inicial si no ha comenzado
       drawTruck(
         ctx,
-        interpolatedX, 
-        interpolatedY, 
+        truck.ubicacionActual.posX, 
+        truck.ubicacionActual.posY, 
         truck,
         spacing,
-        progressData.targetPos,
-        progressData.currentPos,
-        false // No es la posición final
+        [truck.ubicacionActual.posX, truck.ubicacionActual.posY],
+        [truck.ubicacionActual.posX, truck.ubicacionActual.posY],
+        false
       );
-    });
-
-    if (!allTrucksFinished) {
-      animationFrameRef.current = requestAnimationFrame(animate);
+      return;
     }
-  }, [drawGrid, drawTruck, drawPlant, drawOrder, drawRoute, plants, orders, trucks, routes, imagesLoaded]);
 
+    if (hasFinished) {
+      // Dibujar en posición final sin animar
+      const finalPos = subRutas[subRutas.length - 1].trayectoria.slice(-1)[0];
+      drawTruck(
+        ctx,
+        finalPos.posX, 
+        finalPos.posY, 
+        truck,
+        spacing,
+        [finalPos.posX, finalPos.posY],
+        [finalPos.posX, finalPos.posY],
+        true
+      );
+      return;
+    }
+
+    anyTruckActive = true;
+    
+    // Combinar todas las trayectorias de las subrutas activas
+    const activeSubRutas = subRutas.filter(subRuta => 
+      new Date(subRuta.horaInicio).getTime() <= simulationTime
+    );
+    const fullRoute = activeSubRutas.flatMap(subRuta => subRuta.trayectoria);
+    
+    // Si es la primera vez que este camión comienza, inicializar posición
+    if (progressData.currentStep === -1) {
+      progressData.currentStep = 0;
+      progressData.currentPos = [fullRoute[0].posX, fullRoute[0].posY];
+      progressData.targetPos = fullRoute.length > 1 
+        ? [fullRoute[1].posX, fullRoute[1].posY]
+        : [fullRoute[0].posX, fullRoute[0].posY];
+    }
+
+    // Lógica de animación
+    progressData.progress += deltaTime / 1000;
+    const transitionDuration = 72; // 1 segundo por segmento
+    
+    if (progressData.progress >= transitionDuration) {
+      progressData.progress = 0;
+      progressData.currentStep++;
+      
+      if (progressData.currentStep < fullRoute.length - 1) {
+        const currentPos = fullRoute[progressData.currentStep];
+        const nextPos = fullRoute[progressData.currentStep + 1];
+        progressData.currentPos = [currentPos.posX, currentPos.posY];
+        progressData.targetPos = [nextPos.posX, nextPos.posY];
+      } else {
+        // Llegamos al final de la ruta
+        const finalPos = fullRoute[fullRoute.length - 1];
+        progressData.currentPos = [finalPos.posX, finalPos.posY];
+        progressData.targetPos = [finalPos.posX, finalPos.posY];
+      }
+    }
+    
+    const t = Math.min(progressData.progress / transitionDuration, 1);
+    const interpolatedX = progressData.currentPos[0] + (progressData.targetPos[0] - progressData.currentPos[0]) * t;
+    const interpolatedY = progressData.currentPos[1] + (progressData.targetPos[1] - progressData.currentPos[1]) * t;
+    
+    drawTruck(
+      ctx,
+      interpolatedX, 
+      interpolatedY, 
+      truck,
+      spacing,
+      progressData.targetPos,
+      progressData.currentPos,
+      false
+    );
+  });
+
+  // Continuar la animación solo si hay camiones activos
+  if (anyTruckActive) {
+    animationFrameRef.current = requestAnimationFrame(animate);
+  }
+}, [drawGrid, drawTruck, drawPlant, drawOrder, plants, orders, trucks, routes, imagesLoaded, simulationTime, shouldTruckStart, hasTruckFinished]);
   const drawInitialState = useCallback(() => {
     if (!canvasRef.current || !Object.values(imagesLoaded).every(Boolean)) return;
     
@@ -478,7 +529,15 @@ export default function SimulationMap() {
     orders.forEach(order => {
       drawOrder(ctx, order.destino.posX, order.destino.posY, order, spacing);
     });
-    
+
+    routes.forEach((subRutas, index) => {
+      const color = `hsl(${(index * 30) % 360}, 70%, 50%)`;
+      subRutas.forEach(subRuta => {
+        console.log("La hora de inicio es: "+ subRuta.horaInicio+ "y la de llegada es: "+ subRuta.horaFin+" y su nodo de llegada es: X:"+subRuta.fin.posX+" Y:"+subRuta.fin.posY);
+      });
+    });
+
+
     // Dibujar camiones en posición inicial
     trucks.forEach((truck, index) => {
       const progressData = trucksProgressRef.current[index];
@@ -572,6 +631,19 @@ export default function SimulationMap() {
   
   setHoveredPlant(hovered || null);
 };
+
+
+  useEffect(() => {
+    if (isSimulating) {
+      startAnimation();
+    } else {
+      stopAnimation();
+    }
+    
+    return () => {
+      stopAnimation();
+    };
+  }, [isSimulating, startAnimation, stopAnimation]);
 
   if (loading) {
     return (
