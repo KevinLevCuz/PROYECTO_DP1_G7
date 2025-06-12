@@ -591,34 +591,6 @@ export default function SimulationMap() {
 
   return (
     <div className="min-h-screen bg-gray-200 relative overflow-auto">
-      <div className="absolute top-4 left-16 z-10 flex gap-2">
-        <div className="flex items-end gap-2">
-          <div>
-            <label className="block text-sm font-medium mb-1">Fecha y Hora de Inicio</label>
-            <div className="flex items-center border rounded px-2 py-1 bg-white">
-              <input
-                type="datetime-local"
-                className="text-sm outline-none border-none bg-transparent"
-                placeholder="dd:mm:aaaa hh:mm"
-              />
-              <span className="text-gray-400 ml-2">📅</span>
-            </div>
-          </div>
-
-          <button 
-            className="w-8 h-8 rounded-full bg-teal-500 text-white flex items-center justify-center"
-            onClick={startAnimation}>
-            <BsPlayFill className="w-4 h-4" />
-          </button>
-
-          <button 
-            className="w-8 h-8 rounded-full border-2 border-red-500 text-red-500 flex items-center justify-center"
-            onClick={stopAnimation}>
-            <BsStopFill className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
       <div className="absolute inset-0 flex items-center justify-center overflow-auto">
         <canvas 
   ref={canvasRef} 
