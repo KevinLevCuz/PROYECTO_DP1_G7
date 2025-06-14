@@ -49,6 +49,9 @@ public class RoutingController {
         return routingService.cargarCamiones("data/camiones.txt"); 
     }
 
+    // Registrar un pedido:
+    
+
     // DTO para recibir el POST
     public static class OptimizeRequest {
         private List<Pedido> pedidos;
