@@ -7,13 +7,7 @@
 6 silly config load:file:/usr/etc/npmrc
 7 verbose title npm run start
 8 verbose argv "run" "start"
-9 verbose logfile logs-max:10 dir:/home/bmorales/.npm/_logs/2025-07-26T21_44_52_545Z-
-10 verbose logfile /home/bmorales/.npm/_logs/2025-07-26T21_44_52_545Z-debug-0.log
+9 verbose logfile logs-max:10 dir:/home/bmorales/.npm/_logs/2025-07-27T15_52_19_488Z-
+10 verbose logfile /home/bmorales/.npm/_logs/2025-07-27T15_52_19_488Z-debug-0.log
 11 silly logfile start cleaning logs, removing 1 files
 12 silly logfile done cleaning log files
-13 verbose cwd /home/bmorales/simulacion-routing
-14 verbose os Linux 6.8.0-49-generic
-15 verbose node v20.19.2
-16 verbose npm  v10.8.2
-17 verbose exit 137
-18 verbose code 137

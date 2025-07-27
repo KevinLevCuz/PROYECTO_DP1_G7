@@ -28,7 +28,7 @@ public class CamionService {
     }
 
     public boolean actualizarCamionesBatch(List<Camion> camiones, Connection conn, LocalDateTime fechaSimulada) {
-        String sql = "UPDATE prueba_camiones.Camion c SET " +
+        String sql = "UPDATE prueba_camiones_exper.Camion c SET " +
                 "glpTanque = ?, " +
                 "glpActual = ?, " +
                 "ubicacionActual_id = (SELECT id FROM prueba_camiones_diario.Nodo WHERE posX = ? AND posY = ?), " +
@@ -36,7 +36,7 @@ public class CamionService {
                 "estado = ( " +
                 "  SELECT CASE " +
                 "    WHEN EXISTS ( " +
-                "      SELECT 1 FROM prueba_camiones.Mantenimiento m " +
+                "      SELECT 1 FROM prueba_camiones_exper.Mantenimiento m " +
                 "      WHERE m.codigoCamion = c.codigo " +
                 "        AND ? BETWEEN m.inicio AND m.fin " +
                 "    ) THEN 'ND' " +
@@ -180,7 +180,7 @@ public class CamionService {
     }
 
     public boolean actualizarUbicacionCamion(int posX, int posY, String codigoCamion) {
-        String sql = "UPDATE prueba_camiones.Camion SET ubicacionActual_id = (SELECT id FROM prueba_camiones.Nodo WHERE posX= ? AND posY=?) WHERE codigo=?";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET ubicacionActual_id = (SELECT id FROM prueba_camiones_exper.Nodo WHERE posX= ? AND posY=?) WHERE codigo=?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -199,7 +199,7 @@ public class CamionService {
     }
 
     public boolean actualizarUbicacionTodosCamion() {
-        String sql = "UPDATE prueba_camiones.Camion SET ubicacionActual_id = 581";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET ubicacionActual_id = 581";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -214,7 +214,7 @@ public class CamionService {
     }
 
     public boolean actualizarGlpTanqueTodosCamion() {
-        String sql = "UPDATE prueba_camiones.Camion SET glpTanque = 25";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET glpTanque = 25";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -229,7 +229,7 @@ public class CamionService {
     }
 
     public boolean actualizarGlpCargaTodosCamion() {
-        String sql = "UPDATE prueba_camiones.Camion SET glpActual = capacidadMaxima, num_pedidos_entregados = 0, combustible_consumido = 0";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET glpActual = capacidadMaxima, num_pedidos_entregados = 0, combustible_consumido = 0";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -284,7 +284,7 @@ public class CamionService {
         String sql = """
                 SELECT c.codigo, c.tipo, c.pesoVacio, c.ubicacionActual_id, c.capacidadMaxima,
                        c.glpActual, c.glpTanque, c.enRuta, c.disponibleDesde, c.horaLibre, c.num_pedidos_entregados, c.estado, n.*
-                FROM Camion c INNER JOIN prueba_camiones.Nodo n ON c.ubicacionActual_id = n.id
+                FROM Camion c INNER JOIN prueba_camiones_exper.Nodo n ON c.ubicacionActual_id = n.id
                 """;
 
         try (Connection conn = DatabaseService.getConnection();
@@ -358,7 +358,7 @@ public class CamionService {
     }
 
     public void actualizarCamionesJson(List<Camion> camiones) {
-        String sql = "CALL prueba_camiones.actualizar_camiones_json(?)";
+        String sql = "CALL prueba_camiones_exper.actualizar_camiones_json(?)";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {

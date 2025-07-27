@@ -16,7 +16,7 @@ import { desconectarSimulacion } from "@/lib/websocketSimulacion";
 import { CamionResumen } from "../../lib/api";
 import { PedidoResumen } from "../../lib/api";
 import { obtenerResumenCamiones } from "../../lib/api";
-import { obtenerResumenPedidos } from "../../lib/api";
+import { obtenerResumenPedidos } from "../../lib/api"
 
 export default function SimulationMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null); //Referencia de canvas, es useRef porque no se renderiza si cambia algo.
@@ -24,7 +24,7 @@ export default function SimulationMap() {
   const plantPrincipalImgRef = useRef<HTMLImageElement | null>(null); //Imagenes planta Principal
   const plantSecundariaImgRef = useRef<HTMLImageElement | null>(null); // Imagenes planta Secundaria
   const orderImgRef = useRef<HTMLImageElement | null>(null); // Imagenes para el Pedido
-  const { simTime } = useSimTime(); // Obtiene el tiempo actual de simulacion de Time Context.
+  const { simTime, elapsedSimulatedTime } = useSimTime(); // Obtiene el tiempo actual de simulacion de Time Context.
   const simTimeRef = useRef(simTime); // Falta averiguar sobre esto
   const [hoveredPlant, setHoveredPlant] = useState<Planta | null>(null); // Cuando el mouse esta encima, aqui se guarda la planta en cuestión.
   const hoveredPlantRef = useRef<Planta | null>(null); // Falta averiguar sobre esto
@@ -42,7 +42,7 @@ export default function SimulationMap() {
   const [bloqueos, setBloqueos] = useState<Bloqueo[]>([]);
   const [routes, setRoutes] = useState<SubRuta[][]>([]);
 
-  const { setActiveOrders, setActiveTrucks, selectedOrder } = useTransport();
+  const { activeOrders, activeTrucks, setActiveOrders, setActiveTrucks, selectedOrder } = useTransport();
   const { selectedTruck } = useTransport();
 
   //Estado de carga.
@@ -78,9 +78,12 @@ export default function SimulationMap() {
   const [camionStats, setCamionStats] = useState<CamionStats[]>([]);
   const [pedidoStats, setPedidoStats] = useState<PedidoStats[]>([]);
   const [camionResumen, setCamionResumen] = useState<CamionResumen[]>([]);
-  const [pedidoResumen, setPedidoResumen] = useState<PedidoResumen | null>(null);
+  const [pedidoResumen, setPedidoResumen] = useState<PedidoResumen>();
   const [hoveredCamion, setHoveredCamion] = useState<Camion | null>(null);
   const hoveredCamionRef = useRef<Camion | null>(null);
+  const [fechaColapso, setFechaColapso] = useState<Date | null>(null);
+  const [duracionColapso, setDuracionColapso] = useState<string | null>(null);
+
 
 
   const trucksProgressRef = useRef(
@@ -271,9 +274,9 @@ export default function SimulationMap() {
 
         const sol = listSolucion[indiceRef.current];
         if (!sol) {
-	   	setShowErrorModal(true);
-		return;
-	}
+          setShowErrorModal(true);
+          return;
+        }
 
         console.log("✅ Actualizando índice:", indiceRef.current, "en SimTime:", simTime.toISOString());
 
@@ -285,12 +288,12 @@ export default function SimulationMap() {
             .map(subRuta => subRuta.pedido)
         ).filter(pedido => pedido) as Pedido[];
 
-       
-/*
-        setTextoPedidos(
-          simTime.toISOString() + "\n" +
-          activeOrders.map(p => `Pedido ${p.id} en (${p.destino.posX}, ${p.destino.posY}) HoraP:${p.horaPedido} y entregado: ${p.entregado}`).join("\n")
-        );*/
+
+        /*
+                setTextoPedidos(
+                  simTime.toISOString() + "\n" +
+                  activeOrders.map(p => `Pedido ${p.id} en (${p.destino.posX}, ${p.destino.posY}) HoraP:${p.horaPedido} y entregado: ${p.entregado}`).join("\n")
+                );*/
 
         setTextoSubRutas(
           activeRoutes.map((subRutas, index) => {
@@ -319,7 +322,7 @@ export default function SimulationMap() {
 
 
       }
-    }, 20); // Evaluar cada 10ms reales, pero solo ejecutar si hay cambio de bloque
+    }, 15); // Evaluar cada 10ms reales, pero solo ejecutar si hay cambio de bloque
 
     return () => clearInterval(intervalo);
   }, [listSolucion]);
@@ -407,9 +410,19 @@ export default function SimulationMap() {
             obtenerResumenCamiones(),
             obtenerResumenPedidos(fechaInicioRef.current.toISOString().replace("Z", ""), simTimeRef.current.toISOString().replace("Z", "")),
           ]);
-
+          console.log("Resumen Camiones:", camiones);
+          console.log("Resumen Pedidos:", pedidos);
           setCamionResumen(camiones);
           setPedidoResumen(pedidos);
+          setFechaColapso(simTimeRef.current);
+          const ms = elapsedSimulatedTime.getTime();
+          const dias = Math.floor(ms / (1000 * 60 * 60 * 24));
+          const horas = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutos = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+          const segundos = Math.floor((ms % (1000 * 60)) / 1000);
+
+          const duracionFormateada = `${dias}d ${horas}h ${minutos}m ${segundos}s`;
+          setDuracionColapso(duracionFormateada);
         } catch (err) {
           console.error('Error al cargar resumen:', err);
         }
@@ -438,7 +451,7 @@ export default function SimulationMap() {
         console.error('Error procesando fechas de bloqueo:', e);
         return false;
       }
-      
+
     });
 
     bloqueosActivos.forEach(bloqueo => {
@@ -576,7 +589,7 @@ export default function SimulationMap() {
     const barY = adjustedY + 60;
 
     // Fondo barra gris
-    ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+    ctx.fillStyle = 'rgba(200, 200,200, 0.5)';
     ctx.fillRect(barX, barY, barWidth, barHeight);
 
     // Barra de progreso coloreada
@@ -1099,7 +1112,7 @@ export default function SimulationMap() {
       if (progressData.currentStep >= fullRoute.length - 1) {
         const lastPos = fullRoute[fullRoute.length - 1] || { posX: 0, posY: 0 };
         progressData.currentPos = [lastPos.posX, lastPos.posY]
-        truck.enRuta=false;
+        truck.enRuta = false;
 
 
         drawTruck(ctx, progressData.currentPos[0], progressData.currentPos[1], truck, spacing, progressData.currentPos, progressData.currentPos, true);
@@ -1159,7 +1172,7 @@ export default function SimulationMap() {
         x: interpolatedX * spacing,
         y: interpolatedY * spacing
       };
-      truck.enRuta=true;
+      truck.enRuta = true;
       // console.log("Llego aqui")
       drawTruck(ctx, interpolatedX, interpolatedY, truck, spacing, progressData.targetPos, progressData.currentPos, false);
       if (hoveredCamionRef.current?.codigo === truck.codigo) {
@@ -1475,65 +1488,55 @@ export default function SimulationMap() {
           </button>
         </div>
       </div>
-      
+
 
       <div className="absolute inset-0 flex items-center justify-center overflow-auto">
         {/* AÑADIDO*/}
-        <div className="absolute top-24 left-4 z-20 bg-white p-4 rounded shadow-md w-64 text-sm space-y-4">
+        <div className="fixed top-[130px] pl-12 bottom-4 left-4 z-20 pl-4 rounded w-64 text-sm space-y-4 overflow-y-auto max-h-[calc(100vh-120px)]">
 
-          {/* CAMIONES */}
-          <details className="border p-2 rounded space-y-1">
-            <summary className="font-semibold cursor-pointer">🚚 Camiones disponibles</summary>
-            {(() => {
-              const enRuta = trucks.length - trucks.filter(c => c.estado || c.enRuta).length;
-              const total = trucks.length;
-              const percent = total === 0 ? 0 : (enRuta / total) * 100;
-              const color =
-                percent > 75 ? 'bg-green-500' :
-                  percent > 35 ? 'bg-yellow-500' :
-                    'bg-red-500';
-              return (
-                <>
-                  <p>Disponible: {enRuta} / {total} ({Math.round(percent)}%)</p>
-                  <div className="w-full bg-gray-200 h-2 rounded">
-                    <div
-                      className={`h-2 rounded ${color}`}
-                      style={{ width: `${percent}%` }}
-                    ></div>
+          {/* CAMIONES - ahora siempre visible */}
+          <div className="border p-2 rounded space-y-1">
+            <div className="font-semibold">🚚 Camiones activos</div>
+            <div className="max-h-40 overflow-y-auto pr-2 space-y-2">
+              {activeTrucks.map((truck, idx) => {
+                const percent = truck.capacidadMaxima === 0 ? 0 : (truck.glpActual / truck.capacidadMaxima) * 100;
+                const color =
+                  percent > 75 ? 'bg-green-500' :
+                    percent > 35 ? 'bg-yellow-500' :
+                      'bg-red-500';
+                return (
+                  <div key={idx} className="border rounded p-2 text-xs">
+                    <p className="font-medium">🚛 {truck.codigo}</p>
+                    <p>GLP: {truck.glpActual} / {truck.capacidadMaxima} ({Math.round(percent)}%)</p>
+                    <div className="w-full bg-gray-200 h-2 rounded">
+                      <div
+                        className={`h-2 rounded ${color}`}
+                        style={{ width: `${percent}%` }}
+                      ></div>
+                    </div>
                   </div>
-                </>
-              );
-            })()}
-          </details>
+                );
+              })}
+            </div>
+          </div>
 
-          {/* PEDIDOS */}
-          <details className="border p-2 rounded space-y-1">
-            <summary className="font-semibold cursor-pointer">📦 Pedidos</summary>
-            {(() => {
-              const entregados = orders.filter(p => p.entregado).length;
-              const total = orders.length;
-              const percent = total === 0 ? 0 : (entregados / total) * 100;
-              const color =
-                percent > 75 ? 'bg-green-500' :
-                  percent > 35 ? 'bg-yellow-500' :
-                    'bg-red-500';
-              return (
-                <>
-                  <p>Entregados: {entregados} / {total} ({Math.round(percent)}%)</p>
-                  <div className="w-full bg-gray-200 h-2 rounded">
-                    <div
-                      className={`h-2 rounded ${color}`}
-                      style={{ width: `${percent}%` }}
-                    ></div>
-                  </div>
-                </>
-              );
-            })()}
-          </details>
+          {/* PEDIDOS - ahora siempre visible */}
+          <div className="border p-2 rounded space-y-1">
+            <div className="font-semibold">📦 Pedidos activos</div>
+            <div className="max-h-40 overflow-y-auto pr-2 space-y-2">
+              {activeOrders.map((pedido, idx) => (
+                <div key={idx} className="border rounded p-2 text-xs">
+                  <p className="font-medium">🧭 Destino: ({pedido.destino.posX}, {pedido.destino.posY})</p>
+                  <p>GLP: {pedido.cantidadGlp}</p>
+                  <p>Hora Pedido: {pedido.horaPedido}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-          {/* PLANTAS */}
-          <details className="border p-2 rounded space-y-1">
-            <summary className="font-semibold cursor-pointer">🏭 Plantas</summary>
+          {/* PLANTAS - ahora siempre visible */}
+          <div className="border p-2 rounded space-y-1">
+            <div className="font-semibold">🏭 Plantas</div>
             <ul className="space-y-2">
               {plants.map(planta => {
                 const percent = planta.capacidadMaxima === 0 ? 0 : (planta.glpDisponible / planta.capacidadMaxima) * 100;
@@ -1555,14 +1558,14 @@ export default function SimulationMap() {
                 );
               })}
             </ul>
-          </details>
+          </div>
         </div>
 
 
         {/* AÑADIDO*/}
-        
+
         {<div className="absolute bottom-30 left-4 z-20 bg-white p-2 rounded shadow-md max-h-120 overflow-auto w-120 text-xs">
-           {/*<strong className="block mb-1">Pedidos Activos:</strong>
+          {/*<strong className="block mb-1">Pedidos Activos:</strong>
           <pre className="mb-2 whitespace-pre-wrap">{textoPedidos}</pre>
           
           
@@ -1588,6 +1591,11 @@ export default function SimulationMap() {
               {/* Título y Tabs */}
               <div className="p-4 border-b text-center">
                 <h2 className="text-xl font-bold text-gray-800">📊 RESUMEN DEL COLAPSO</h2>
+                {/* Fecha y duración del colapso */}
+                <div className="mt-2 text-gray-600 text-sm space-y-1">
+                  <p><strong>Fecha del colapso:</strong> {fechaColapso?.toLocaleString()}</p>
+                  <p><strong>Duración simulación semanal:</strong> {duracionColapso}</p>
+                </div>
                 <div className="mt-4 flex justify-center gap-4">
                   <button
                     className={`px-4 py-1 border-b-2 ${activeTab === 'camiones' ? 'border-blue-500 font-semibold' : 'text-gray-500'
@@ -1631,15 +1639,21 @@ export default function SimulationMap() {
                   </table>
                 )}
 
-                {activeTab === 'pedidos' && pedidoResumen && (
+                {activeTab === 'pedidos' && (
                   <div className="text-sm text-gray-700 space-y-2">
-                    <p><strong>Total de Pedidos:</strong> {pedidoResumen.totalPedidos}</p>
-                    <p><strong>Entregados:</strong> {pedidoResumen.entregados}</p>
-                    <p><strong>Pendientes:</strong> {pedidoResumen.pendientes}</p>
-                    <p><strong>Promedio GLP por Pedido:</strong> {pedidoResumen.promedioGlpPorPedido}</p>
-                    <p><strong>Porcentaje de Cumplimiento:</strong> {pedidoResumen.porcentajeCumplimiento}%</p>
-                    <p><strong>Promedio Tiempo de Entrega:</strong> {pedidoResumen.promedioTiempoEntregaMin} min</p>
-                    <p><strong>Total GLP Entregado:</strong> {pedidoResumen.totalGlpEntregado}</p>
+                    {!pedidoResumen ? (
+                      <p>Cargando datos...</p>
+                    ) : (
+                      <>
+                        <p><strong>Total de Pedidos:</strong> {pedidoResumen.totalPedidos ?? 'N/A'}</p>
+                        <p><strong>Entregados:</strong> {pedidoResumen?.entregados ?? 'N/A'}</p>
+                        <p><strong>Pendientes:</strong> {pedidoResumen?.pendientes ?? 'N/A'}</p>
+                        <p><strong>Promedio GLP por Pedido:</strong> {pedidoResumen?.promedioGlpPorPedido?.toFixed(2) ?? 'N/A'}</p>
+                        <p><strong>Porcentaje de Cumplimiento:</strong> {pedidoResumen?.porcentajeCumplimiento ?? '0'}%</p>
+                        <p><strong>Promedio Tiempo de Entrega:</strong> {pedidoResumen?.promedioTiempoEntregaMin?.toFixed(2) ?? 'N/A'} min</p>
+                        <p><strong>Total GLP Entregado:</strong> {pedidoResumen?.totalGlpEntregado ?? 'N/A'}</p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -1650,7 +1664,7 @@ export default function SimulationMap() {
                   className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
                   onClick={() => window.location.reload()}
                 >
-                  Aceptar y recargar
+                  Aceptar
                 </button>
               </div>
             </div>

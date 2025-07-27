@@ -14,27 +14,25 @@ import org.springframework.stereotype.Service;
 @Service
 public class PedidoResumenService {
 
-    public List<PedidoResumenDTO> obtenerResumenPedidos(String fechaInicio, String fechaFin) {
-        List<PedidoResumenDTO> resumen = new ArrayList<>();
+    public PedidoResumenDTO obtenerResumenPedidos(String fechaInicio, String fechaFin) {
+        PedidoResumenDTO resumen = new PedidoResumenDTO();
         String sql = "CALL sp_indicadores_pedidos(?, ?)";
 
         try (Connection conn = DatabaseService.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, fechaInicio);
             ps.setString(2, fechaFin);
 
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    PedidoResumenDTO dto = new PedidoResumenDTO();
-                    dto.setTotalPedidos(rs.getInt("TotalPedidos"));
-                    dto.setEntregados(rs.getInt("Entregados"));
-                    dto.setPendientes(rs.getInt("Pendientes"));
-                    dto.setPromedioGlpPorPedido(rs.getDouble("PromedioGlpPorPedido"));
-                    dto.setPorcentajeCumplimiento(rs.getDouble("PorcentajeCumplimiento"));
-                    dto.setPromedioTiempoEntregaMin(rs.getDouble("PromedioTiempoEntregaMin"));
-                    dto.setTotalGlpEntregado(rs.getDouble("TotalGlpEntregado"));
-                    resumen.add(dto);
+                if (rs.next()) {
+                    resumen.setTotalPedidos(rs.getInt("TotalPedidos"));
+                    resumen.setEntregados(rs.getInt("Entregados"));
+                    resumen.setPendientes(rs.getInt("Pendientes"));
+                    resumen.setPromedioGlpPorPedido(rs.getDouble("PromedioGlpPorPedido"));
+                    resumen.setPorcentajeCumplimiento(rs.getDouble("PorcentajeCumplimiento"));
+                    resumen.setPromedioTiempoEntregaMin(rs.getDouble("PromedioTiempoEntregaMin"));
+                    resumen.setTotalGlpEntregado(rs.getDouble("TotalGlpEntregado"));
                 }
             }
 

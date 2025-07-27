@@ -11,10 +11,10 @@ import org.springframework.stereotype.Service;
 public class DatabaseService {
     // JDBC URL apuntando a tu esquema SISTEMA_DE_CAMIONES en RDS
     private static final String URL =
-    "jdbc:mysql://database-dp1.cbsn5wi5j7is.us-east-1.rds.amazonaws.com:3306/prueba_camiones"
+    "jdbc:mysql://equipo7g.c0gnuf8617fk.us-east-1.rds.amazonaws.com:3306/prueba_camiones_exper"
   + "?useSSL=true&serverTimezone=America/Lima";
     private static final String USER     = "admin";
-    private static final String PASSWORD = "desarrollo973L";
+    private static final String PASSWORD = "Equipo7G*";
 
     public static Connection getConnection() throws SQLException {
         try {

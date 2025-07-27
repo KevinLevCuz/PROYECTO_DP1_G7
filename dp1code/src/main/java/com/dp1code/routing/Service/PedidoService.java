@@ -29,7 +29,7 @@ public class PedidoService {
     private DatabaseService databaseService;
 
     public boolean actualizarTodosPedidosANoEntregados() {
-        String sql = "UPDATE prueba_camiones.Pedido SET entregado=0 WHERE entregado=1";
+        String sql = "UPDATE prueba_camiones_exper.Pedido SET entregado=0 WHERE entregado=1";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -181,7 +181,7 @@ public class PedidoService {
     }
 
     public void actualizarPedidosJson(List<Pedido> pedidos) {
-        String sql = "CALL prueba_camiones.actualizar_pedidos_json(?)";
+        String sql = "CALL prueba_camiones_exper.actualizar_pedidos_json(?)";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -214,7 +214,7 @@ public class PedidoService {
         System.out.println("WAAAAAAAAAAAAA  FECHA INPUT: " + fechaInput + " FECHA FINAL: " + fin);
         ArrayList<Pedido> pedidos = new ArrayList<>();
 
-        String sql = "SELECT ped.id, ped.destino_id, ped.cantidadGlp, ped.horaPedido, ped.plazoMaximoEntrega, ped.tiempoDescarga, ped.entregado, ped.idCliente, n.id as NodoID,n.* FROM Pedido ped INNER JOIN prueba_camiones.Nodo n ON ped.destino_id = n.id WHERE horaPedido <= ? AND horaPedido >= ? AND entregado = 0";
+        String sql = "SELECT ped.id, ped.destino_id, ped.cantidadGlp, ped.horaPedido, ped.plazoMaximoEntrega, ped.tiempoDescarga, ped.entregado, ped.idCliente, n.id as NodoID,n.* FROM Pedido ped INNER JOIN prueba_camiones_exper.Nodo n ON ped.destino_id = n.id WHERE horaPedido <= ? AND horaPedido >= ? AND entregado = 0";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -260,7 +260,7 @@ public class PedidoService {
         System.out.println("WAAAAAAAAAAAAA  FECHA INPUT: " + fechaInput + " FECHA FINAL: " + fin);
         ArrayList<Pedido> pedidos = new ArrayList<>();
 
-        String sql = "SELECT ped.id, ped.destino_id, ped.cantidadGlp, ped.horaPedido, ped.plazoMaximoEntrega, ped.tiempoDescarga, ped.entregado, n.id as NodoID,n.* FROM Pedido ped INNER JOIN prueba_camiones.Nodo n ON ped.destino_id = n.id WHERE horaPedido <= ? AND horaPedido >= ?";
+        String sql = "SELECT ped.id, ped.destino_id, ped.cantidadGlp, ped.horaPedido, ped.plazoMaximoEntrega, ped.tiempoDescarga, ped.entregado, n.id as NodoID,n.* FROM Pedido ped INNER JOIN prueba_camiones_exper.Nodo n ON ped.destino_id = n.id WHERE horaPedido <= ? AND horaPedido >= ?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -350,7 +350,7 @@ public class PedidoService {
     public ArrayList<Pedido> obtenerPedidosEntreTiempos(LocalDateTime inicio, LocalDateTime fin) {
         ArrayList<Pedido> pedidos = new ArrayList<>();
 
-        String sql = "SELECT ped.id, ped.destino_id, ped.cantidadGlp, ped.horaPedido, ped.plazoMaximoEntrega, ped.tiempoDescarga, ped.entregado, n.id as NodoID,n.* FROM Pedido ped INNER JOIN prueba_camiones.Nodo n ON ped.destino_id = n.id WHERE horaPedido BETWEEN ? AND ?";
+        String sql = "SELECT ped.id, ped.destino_id, ped.cantidadGlp, ped.horaPedido, ped.plazoMaximoEntrega, ped.tiempoDescarga, ped.entregado, n.id as NodoID,n.* FROM Pedido ped INNER JOIN prueba_camiones_exper.Nodo n ON ped.destino_id = n.id WHERE horaPedido BETWEEN ? AND ?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {

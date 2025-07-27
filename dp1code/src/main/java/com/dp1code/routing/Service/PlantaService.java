@@ -117,7 +117,7 @@ public class PlantaService {
     }
 
     public boolean actualizarPlantasBatch(List<Planta> plantas, Connection conn) {
-        String sql = "UPDATE prueba_camiones.Planta SET glpDisponible = ? WHERE id = ?";
+        String sql = "UPDATE prueba_camiones_exper.Planta SET glpDisponible = ? WHERE id = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             for (Planta planta : plantas) {
@@ -144,7 +144,7 @@ public class PlantaService {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException("Error al actualizar la ubicación del camión", e);
+            throw new RuntimeException("Error al actualizar las plantas", e);
         }
     }
 
@@ -166,7 +166,7 @@ public class PlantaService {
         }
     }
     public void actualizarPlantasJson(List<Planta> plantas) {
-        String sql = "CALL prueba_camiones.actualizar_plantas_json(?)";
+        String sql = "CALL prueba_camiones_exper.actualizar_plantas_json(?)";
 
         try (Connection conn = DatabaseService.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

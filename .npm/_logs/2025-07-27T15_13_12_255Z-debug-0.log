@@ -1,0 +1,38 @@
+0 verbose cli /usr/bin/node /usr/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.2
+3 silly config load:file:/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/bmorales/simulacion-routing/.npmrc
+5 silly config load:file:/home/bmorales/.npmrc
+6 silly config load:file:/usr/etc/npmrc
+7 verbose title npm run build7
+8 verbose argv "run" "build7"
+9 verbose logfile logs-max:10 dir:/home/bmorales/.npm/_logs/2025-07-27T15_13_12_255Z-
+10 verbose logfile /home/bmorales/.npm/_logs/2025-07-27T15_13_12_255Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly logfile done cleaning log files
+13 verbose stack Error: Missing script: "build7"
+13 verbose stack
+13 verbose stack Did you mean this?
+13 verbose stack   npm run build # run the "build" package script
+13 verbose stack
+13 verbose stack To see a list of scripts, run:
+13 verbose stack   npm run
+13 verbose stack     at #run (/usr/lib/node_modules/npm/lib/commands/run-script.js:110:13)
+13 verbose stack     at async RunScript.exec (/usr/lib/node_modules/npm/lib/commands/run-script.js:39:7)
+13 verbose stack     at async Npm.exec (/usr/lib/node_modules/npm/lib/npm.js:207:9)
+13 verbose stack     at async module.exports (/usr/lib/node_modules/npm/lib/cli/entry.js:74:5)
+14 error Missing script: "build7"
+14 error
+14 error Did you mean this?
+14 error   npm run build # run the "build" package script
+14 error
+14 error To see a list of scripts, run:
+14 error   npm run
+15 verbose cwd /home/bmorales/simulacion-routing
+16 verbose os Linux 6.8.0-49-generic
+17 verbose node v20.19.2
+18 verbose npm  v10.8.2
+19 verbose exit 1
+20 verbose code 1
+21 error A complete log of this run can be found in: /home/bmorales/.npm/_logs/2025-07-27T15_13_12_255Z-debug-0.log

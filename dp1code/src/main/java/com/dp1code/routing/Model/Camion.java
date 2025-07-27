@@ -16,12 +16,28 @@ public class Camion {
 
     private double glpActual;
     private double glpActualSim;
+    private double glpActualSimBandera;
+    public double getGlpActualSimBandera() {
+        return glpActualSimBandera;
+    }
+
+    public void setGlpActualSimBandera(double glpActualSimBandera) {
+        this.glpActualSimBandera = glpActualSimBandera;
+    }
     private String estado;
     
 
     private double glpTanque;
     private double glpTanqueSim;
+    private double glpTanqueSimBandera;
 
+    public double getGlpTanqueSimBandera() {
+        return glpTanqueSimBandera;
+    }
+
+    public void setGlpTanqueSimBandera(double glpTanqueSimBandera) {
+        this.glpTanqueSimBandera = glpTanqueSimBandera;
+    }
     private boolean enRuta;
     private LocalDateTime disponibleDesde;
     private LocalDateTime horaLibre;   // instante en que terminará la subruta en curso
@@ -171,7 +187,7 @@ public class Camion {
 
     public boolean alcanzaParaRetornar(Grid grid, Camion c, Nodo ubiActualCamion, double glpActual, double glpTanque, LocalDateTime tiempo){
         Map.Entry<ArrayList<Nodo>, LocalDateTime> resultado = PathFinder.generarTrayectoria(
-                        grid, ubiActualCamion, grid.getNodoAt(12, 8), tiempo, tiempo.plusMonths(6), tiempo.plusMinutes(15), tiempo.plusMinutes(15),tiempo.plusMinutes(15), c);
+                        grid, ubiActualCamion, grid.getNodoAt(12, 8), tiempo, tiempo.plusMonths(6), tiempo.plusMinutes(15), tiempo.plusMinutes(15),tiempo.plusMinutes(15), c, tiempo.plusMinutes(15));
 
         ArrayList<Nodo> trayectoria = resultado.getKey();
         double glpAConsumir = c.calcularConsumo(trayectoria.size()-1, glpActual);

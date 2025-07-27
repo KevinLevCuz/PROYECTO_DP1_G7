@@ -1,210 +1,5 @@
 ls
 clear
-sudo nano default
-cd ..
-cd sites-enabled/
-ls
-clear
-cd /etc
-cd nginx/
-cd sites-enabled/
-clear
-sudo ls -s ../sites-available/default
-ls
-sudo nginx -t
-clear
-sudo systemctl reload nginx
-ls -l /etc/nginx/sites-enabled/
-cleear
-clear
-cd
-ls
-cd dp1code/
-clear
-./mvnw spring-boot:run
-cleear
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8000"
-clear
-[200~curl -k -X POST https://localhost/api/routing/optimize
-~clear
-clear
-curl -k -X POST https://localhost/api/routing/optimize
-clear
-sudo lsof -i :8080
-kill -9 24598
-sudo kill -9 24598
-4bupJhXACP8c
-sudo lsof -i :8080
-sudo kill -9 238150
-sudo lsof -i :8080
-sudo systemctl stop tomcat
-ps -aux | grep tomcat
-clear
-sudo systemctl stop tomcat10
-sudo lsof -i :8080
-cd /etc
-ls
-clear
-cd nginx/
-cd sites-available/
-ls
-clear
-sudo nano default
-cd
-clear
-ls
-clear
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-cd
-clear
-clear
-cd dp1code/
-ls
-cd src/
-ls
-cd main/
-ls
-cd java/
-ls
-cd com/
-ls
-cd dp1code/
-ls
-cd routing/
-ls
-cd m
-de Model/
-cd Model/
-clear
-ls
-cd ..
-ls
-cd Repository/
-ls
-cd ..
-ls
-cd
-clear
-clear
-cd /etc
-cd nginx/
-ls
-cd sites-enabled/
-clear
-ls
-sudo nano default 
-clear
-ls
-rm -rf dp1code
-ls
-rm -rf simulacion-routing
-clear
-ls
-clear
-ls
-clear
-cd dp1code/
-ls
-cd src/
-ls
-cd main/
-ls
-cd java/
-ls
-cd com/
-ls
-cd dp1code/
-ls
-cd routing/
-ls
-cd Controller/
-ls
-cd
-clear
-cd /etc
-ls
-cd nginx/
-clear
-ls
-cd modules-available/
-ls
-cd ..
-cd sites-enabled/
-ls
-sudo nano default 
-cd
-ls
-cd dp1code/
-ls
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-clear
-ls
-rm -rf simulacion-routing/
-ls
-clear
-ls
-clear
-ls
-cd simulacion-routing/
-clear
-npm install
-npm run build
-npm run dev
-clear
-ls
-rm -rf simulacion-routing/
-ls
-cd simulacion-routing/
-ls
-cd src/
-ls
-cd components/weekly/
-ls
-nano SimulationMap.tsx 
-cs ..
-clear
-cd ..
-ls
-cd collapse/
-ls
-sudo nano SimulationMap.tsx 
-cd
-clear
-ls
-clear
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-cd simulacion-routing/
-clear
-npm run dev
-npm install
-clear
-npm run dev
-clear
-ls
-sudo nano next.config.ts 
-clear
-npm run build
-clear
-npm start
-npm next start
-npm run start
-clear
-npm run build
-cd simulacion-routing/
-ls
-cd src/components/
-ls
-cd collapse/
-cd ..
-rm -rf collapse/
-ls
-clear
 cd ..
 clear
 npm run build
@@ -1998,3 +1793,208 @@ sudo kill -9 357729
 sudo kill -9 361453
 cd dp1code/
 ./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd simulacion-routing/
+clear
+npm run start
+clear
+sudo apt update
+clear
+sudo apt install git -y
+sudo yum install git -y
+sudo dnf install git -y
+git --version
+ls
+pwd
+clear
+git init
+ls
+git add .
+git commit -m "Primer commit desde el servidor"
+git config --global user.email "joseph7104@gmail.com"
+git config --global user.name "joseph7104"
+git commit -m "Primer commit desde el servidor"
+git remote add origin https://github.com/KevinLevCuz/PROYECTO_DP1_G7.git
+git push -u origin main
+git branch
+git push -u origin master
+clear
+sudo lsof -i :8080
+clear
+sudo lsof -i :8080
+sudo ss -tulnp | grep :3000
+sudo kill -9 261506
+sudo kill -9 361506
+clear
+scp -r "C:\Users\josep\OneDrive\Desktop\Nueva carpeta\PROYECTO_DP1_G7\simulacion-routing" bmorales@200.16.7.185:~/simulacion-routing
+clear
+ls
+cd simulacion-routing/
+clear
+npm install
+npm install axios
+npm install --save-dev @types/sockjs-client
+npm run build
+clear
+npm run start
+clear
+cd src/components/weekly/
+clearl
+ls
+clear
+sudo nano SimulationMap.tsx 
+cd ..
+cd lib/
+clear
+ls
+sudo nano api.ts 
+clear
+cd 
+cd simulacion-routing/
+clear
+npm run build
+clear
+npm run start
+ls
+sudo rm -rf dp1code/
+sudo rm -rf simulacion-routing/
+clear
+scp -r "C:\Users\josep\OneDrive\Desktop\Nueva carpeta\PROYECTO_DP1_G7\simulacion-routing" bmorales@200.16.7.185:~/simulacion-routing
+clear
+ls
+clear
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+chmod +x mvnw
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+sudo ss -tulnp | grep :3000
+sudo lsof -i :8080
+clear
+cd simulacion-routing/
+clear
+npm run start
+cd simulacion-routing/src/components/weekly/
+clear
+sudo nano SimulationMap.tsx 
+clear
+cd
+cd dp1code/src/main/java/com/dp1code/routing/Model/
+sudo nano SimulatedAnnealing.java
+clear
+cd
+cd dp1code/
+clear
+cd src/main/java/com/dp1code/routing/Service/
+clear
+sudo nano RoutingService.java 
+clear
+cd
+clear
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+sudo lsof -i :8080
+sudo ss -tulnp | grep :3000
+CLEAR
+clear
+cd
+cd simulacion-routing/src/components/weekly/
+clear
+sudo nano SimulationMap.tsx 
+sudo nano TimeContext.tsx 
+CD
+cd
+clear
+cd simulacion-routing/
+npm run build
+clear
+cd
+cd dp1code/src/main/java/com/dp1code/routing/Service/
+sudo nano RoutingService.java 
+clear
+cd
+clear
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src/main/java/com/dp1code/routing/Model/
+clear
+sudo nano SimulatedAnnealing.java
+clear
+cd
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+./mvnw clean package
+cd src/main/java/com/dp1code/routing/Model/
+sudo nano SimulatedAnnealing.java
+clear
+./mvnw clean package
+cd
+cd dp1code/
+clear
+./mvnw clean package
+cd src/main/java/com/dp1code/routing/Model/
+sudo nano SimulatedAnnealing.java
+cd
+cd dp1code/
+./mvnw clean package
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd simulacion-routing/
+clear
+npm run start
+CLEAR
+clear
+npm run build7
+npm run build
+clear
+npm run start
+clear}
+clear
+cd simulacion-routing/
+clear
+npm run start
+CLEAR
+clear
+cd ..
+cd dp1code/src/main/java/com/dp1code/routing/Service/
+sudo nano RoutingService.java 
+cd
+cd simulacion-routing/
+clear
+npm run start
+cd src/components/weekly/
+sudo nano SimulationMap.tsx 
+clear
+cd
+cd simulacion-routing/
+clear
+npm run start
+clear}
+clear
+cd src/lib/
+sudo nano api
+sudo nano api.ts 
+sudo nano websocketSimulacion.ts 
+cd ..
+cd lib/
+clear
+sudo nano api.ts 
+clear
+cd
+cd simulacion-routing/
+clear
+npm run start
+cd src/components/l
+cd src/lib/
+sudo nano api.ts 
+clear
+cd ..
+clear
+npm run start

@@ -51,8 +51,8 @@ public class SimulatedAnnealing {
     public Solucion optimize(LocalDateTime now) {
 
         Solucion current = initialSolution(now);
-        //return current;
-        
+        return current;
+        /* 
          Set<String> assignedIds = new HashSet<>();
          for (PlanCamion plan : current.getPlanesCamion()) {
          for (SubRuta sr : plan.getSubRutas()) {
@@ -64,13 +64,13 @@ public class SimulatedAnnealing {
          }
          
          // 2) Recorremos la lista “pedidos” original y recogemos los que no estén en
-//         assignedIds:
+         //assignedIds:
          List<Pedido> unassigned = new ArrayList<>();
          for (Pedido p : pedidos) {
          if (!assignedIds.contains(p.getId())) {
          unassigned.add(p);
          }
-         }
+          }
          
          Solucion best = current;
          double temp = initialTemp;
@@ -91,7 +91,7 @@ public class SimulatedAnnealing {
          }
          temp *= (1 - coolingRate);
          }
-         return best;
+         return best;*/
          
     }
 
@@ -106,6 +106,12 @@ public class SimulatedAnnealing {
             plans.add(new PlanCamion(c, new ArrayList<>()));
             c.setGlpActualSim(c.getGlpActual());
             c.setGlpTanqueSim(c.getGlpTanque());
+            c.setGlpTanqueSimBandera(c.getGlpTanque());
+            c.setGlpActualSimBandera(c.getGlpActual());
+        }
+        for (Planta planta : plantas) {
+            planta.setGlpDisponibleSim(planta.getGlpDisponible());
+            planta.setGlpDisponibleSimBandera(planta.getGlpDisponible());
         }
 
         List<Pedido> todosPedidos = new ArrayList<>();
@@ -139,9 +145,9 @@ public class SimulatedAnnealing {
                     System.out.println("     SKIP: pedido demasiado grande para camión");
                     continue;
                 }
-                for (Planta planta : plantas) {
-                    planta.setGlpDisponibleSim(planta.getGlpDisponible());
-                }
+                c.setGlpActualSimBandera(c.getGlpActualSim());
+                c.setGlpTanqueSimBandera(c.getGlpTanqueSim());
+                
                 LocalDateTime t = now;
 
                 Nodo start = c.getUbicacionActual();
@@ -157,9 +163,11 @@ public class SimulatedAnnealing {
                 System.out.println("     Chequeando ruta directa de " + start.getPosX() + ", " + start.getPosY() + " a "
                         + p.getDestino().getPosX() + ", " + p.getDestino().getPosY()
                         + " a partir de " + t);
+
                 Map.Entry<ArrayList<Nodo>, LocalDateTime> resultado = PathFinder.generarTrayectoria(
                         grid, start, p.getDestino(), t, p.getPlazoMaximoEntrega(),
-                        p.getHoraPedido().plusHours(horasPlazo), t, p.getPlazoMaximoEntrega(), c);
+                        p.getHoraPedido().plusHours(horasPlazo), t, p.getPlazoMaximoEntrega(), c, p.getHoraPedido().plusHours(horasPlazo));
+
                 ArrayList<Nodo> trayectoria = resultado.getKey();
                 LocalDateTime horaSalida = resultado.getValue();
                 LocalDateTime horaLlegadaAP = horaSalida.plusSeconds((trayectoria.size() - 1) * 72);
@@ -192,12 +200,25 @@ public class SimulatedAnnealing {
                             .min(Comparator.comparing(pl -> distance(finalStart, pl.getUbicacion())))
                             .orElse(null);
 
-                    if (mejor == null)
+
+
+                    if (mejor == null){
+                        System.out.println("El mejor obtuvo nul");
                         continue;
+                    }
+
+                    double faltanteAnt = p.getCantidadGlp() - c.getGlpActualSim();
+                        if (mejor.getGlpDisponibleSim() < faltanteAnt) {
+                        System.out.println("Cambie la planta, para que pruebe en la base");
+                        mejor = Utilidades.obtenerPlanta(grid.getNodoAt(12, 8), plantas);
+                    }
+
+
+                    mejor.setGlpDisponibleSimBandera(mejor.getGlpDisponibleSim());
 
                     Map.Entry<ArrayList<Nodo>, LocalDateTime> trayAPlanta = PathFinder.generarTrayectoria(
                             grid, start, mejor.getUbicacion(), t, p.getPlazoMaximoEntrega(), t, t,
-                            p.getPlazoMaximoEntrega(), c);
+                            p.getPlazoMaximoEntrega(), c, p.getHoraPedido().plusHours(horasPlazo));
                     ArrayList<Nodo> rutaPlanta = trayAPlanta.getKey();
                     LocalDateTime salidaPlanta = trayAPlanta.getValue();
                     LocalDateTime llegadaPlanta = salidaPlanta.plusSeconds((rutaPlanta.size() - 1) * 72);
@@ -207,14 +228,18 @@ public class SimulatedAnnealing {
 
                     if (rutaPlanta == null || rutaPlanta.size() < 1
                             || llegadaPlanta.isAfter(p.getPlazoMaximoEntrega())) {
+                        System.out.println("Ingreso aqui, o rutaPlanta es nul o es menor que 1 el size, o llegadaPlanta supero el plazo maximo de entrega.");
                         continue;
                     }
 
                     double consumoAPlanta = c.calcularConsumo(rutaPlanta.size() - 1, c.getGlpActualSim());
                     System.out.println("       consumoAPlanta=" + consumoAPlanta
                             + ", glpTanqueSim tras consumo=" + (c.getGlpTanqueSim() - consumoAPlanta));
-                    if (c.getGlpTanqueSim() < consumoAPlanta)
+                    if (c.getGlpTanqueSim() < consumoAPlanta){
+                        System.out.println("       SKIP: no hay GLP en tanque suficiente");
                         continue;
+                    }
+                        
 
                     c.setGlpTanqueSim(c.getGlpTanqueSim() - consumoAPlanta);
 
@@ -224,8 +249,11 @@ public class SimulatedAnnealing {
                     if (mejor.getGlpDisponibleSim() >= faltanteTotal) {
                         nuevaCarga = c.getCapacidadMaxima();
                         mejor.setGlpDisponibleSim(mejor.getGlpDisponibleSim() - (faltanteTotal));
-                    }
-                    if (mejor.getGlpDisponibleSim() < faltante) {
+                    } else if (mejor.getGlpDisponibleSim() < faltante) {
+                        c.setGlpActualSim(c.getGlpActualSimBandera());
+                        c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                        mejor.setGlpDisponibleSim(mejor.getGlpDisponibleSimBandera());
+                        System.out.println("       SKIP: no hay GLP en planta suficiente y el mejor tiene disponible: "+mejor.getGlpDisponibleSim()+ " y faltante es: +" + faltante);
                         continue;
                     } else {
                         nuevaCarga = Math.min(c.getGlpActualSim() + faltante, c.getCapacidadMaxima());
@@ -242,13 +270,13 @@ public class SimulatedAnnealing {
                             && mejor.getUbicacion().getPosY() == base.getPosY()) {
                         resultado = PathFinder.generarTrayectoria(
                                 grid, mejor.getUbicacion(), p.getDestino(), llegadaPlanta, p.getPlazoMaximoEntrega(),
-                                llegadaPlanta, llegadaPlanta.plusMinutes(15), llegadaPlanta.plusMinutes(15), c
+                                llegadaPlanta, llegadaPlanta.plusMinutes(15), llegadaPlanta.plusMinutes(15), c, p.getHoraPedido().plusHours(horasPlazo)
 
                         );
                     } else {
                         resultado = PathFinder.generarTrayectoria(
                                 grid, mejor.getUbicacion(), p.getDestino(), llegadaPlanta, p.getPlazoMaximoEntrega(),
-                                llegadaPlanta, llegadaPlanta, llegadaPlanta, c);
+                                llegadaPlanta, llegadaPlanta, llegadaPlanta, c, p.getHoraPedido().plusHours(horasPlazo));
                     }
 
                     trayectoria = resultado.getKey();
@@ -257,18 +285,31 @@ public class SimulatedAnnealing {
 
                     if (trayectoria == null || trayectoria.size() <= 1
                             || horaLlegadaAP.isAfter(p.getPlazoMaximoEntrega())) {
+                        c.setGlpActualSim(c.getGlpActualSimBandera());
+                        c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                        mejor.setGlpDisponibleSim(mejor.getGlpDisponibleSimBandera());
+                        System.out.println("       SKIP: trayectoria es nul o es menor que 1 el size, o horallegadaAP supero el plazo maximo de entrega.");
                         continue;
                     }
 
                     double consumoAPedido = c.calcularConsumo(trayectoria.size() - 1, c.getGlpActualSim());
-                    if (c.getGlpTanqueSim() < consumoAPedido)
+                    if (c.getGlpTanqueSim() < consumoAPedido){
+                        c.setGlpActualSim(c.getGlpActualSimBandera());
+                        c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                        mejor.setGlpDisponibleSim(mejor.getGlpDisponibleSimBandera());
+                        System.out.println("       SKIP: no hay GLP en tanque suficienteeeeeee");
                         continue;
+                    }
 
                     c.setGlpTanqueSim(c.getGlpTanqueSim() - consumoAPedido);
                     c.setGlpActualSim(c.getGlpActualSim() - p.getCantidadGlp());
 
                     if (!c.alcanzaParaRetornar(grid, c, p.getDestino(), c.getGlpActualSim(), c.getGlpTanqueSim(),
                             horaLlegadaAP.plusMinutes(15))) {
+                        c.setGlpActualSim(c.getGlpActualSimBandera());
+                        c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                        mejor.setGlpDisponibleSim(mejor.getGlpDisponibleSimBandera());
+                        System.out.println("       SKIP: no alcanza para retornar aquiiiiiiiiiiiiiii y la hora llegada es: "+ horaLlegadaAP+" y el glp actual Sim es: "+ c.getGlpActualSim()+ " y el del tanque es: "+ c.getGlpTanqueSim());
                         continue;
                     }
 
@@ -280,18 +321,8 @@ public class SimulatedAnnealing {
                     }
                     start = mejor.getUbicacion();
 
-                    mejor.setGlpDisponible(mejor.getGlpDisponibleSim());
-                    /*
-                     * System.out.println("       Ruta planta→pedido size=" + trayectoria.size()
-                     * + ", llegadaAP=" + horaLlegadaAP);
-                     * System.out.println("       consumoAPedido=" + consumoAPedido
-                     * + ", glpTanqueSim tras consumoAPedido=" + (c.getGlpTanqueSim() -
-                     * consumoAPedido));
-                     * System.out.println("       ¿alcanza retorno? "
-                     * + c.alcanzaParaRetornar(grid,c,p.getDestino(),
-                     * c.getGlpActualSim(), c.getGlpTanqueSim(), horaLlegadaAP.plusMinutes(15)));
-                     */
-
+                 
+                    
                 } else {
                     c.setGlpTanqueSim(c.getGlpTanqueSim() - neededGLP);
                     c.setGlpActualSim(c.getGlpActualSim() - p.getCantidadGlp());
@@ -308,6 +339,8 @@ public class SimulatedAnnealing {
                     if (!c.alcanzaParaRetornar(grid, c, p.getDestino(), c.getGlpActualSim(), c.getGlpTanqueSim(),
                             horaLlegadaAP.plusMinutes(15))) {
                         System.out.println("       SKIP: no puede retornar tras entrega");
+                        c.setGlpActualSim(c.getGlpActualSimBandera());
+                        c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
                         continue;
                     }
                 }
@@ -384,7 +417,7 @@ public class SimulatedAnnealing {
                 if (!s.equals(base)) {
                     Map.Entry<ArrayList<Nodo>, LocalDateTime> trayRegreso = PathFinder.generarTrayectoria(
                             grid, s, base, t, t.plusHours(60), t.plusMinutes(15), t.plusMinutes(15), t.plusMinutes(15),
-                            plan.getCamion());
+                            plan.getCamion(),t.plusMinutes(15));
                     ArrayList<Nodo> rutaRegreso = trayRegreso.getKey();
                     LocalDateTime salidaRegreso = trayRegreso.getValue();
                     LocalDateTime llegadaRegreso = salidaRegreso.plusSeconds((rutaRegreso.size() - 1) * 72);
@@ -395,7 +428,7 @@ public class SimulatedAnnealing {
                 Nodo ubic = plan.getCamion().getUbicacionActual();
                 if (!ubic.equals(base)) {
                     Map.Entry<ArrayList<Nodo>, LocalDateTime> trayRegreso = PathFinder.generarTrayectoria(
-                            grid, ubic, base, now, now.plusHours(60), now, now, now.plusHours(60), plan.getCamion());
+                            grid, ubic, base, now, now.plusHours(60), now, now, now.plusHours(60), plan.getCamion(), now);
                     ArrayList<Nodo> rutaRegreso = trayRegreso.getKey();
                     LocalDateTime salidaRegreso = trayRegreso.getValue();
                     LocalDateTime llegadaRegreso = salidaRegreso.plusSeconds((rutaRegreso.size() - 1) * 72);
@@ -414,12 +447,15 @@ public class SimulatedAnnealing {
     }
 
     private boolean intentarAsignarPedido(PlanCamion plan, Pedido p, LocalDateTime now) {
+        System.out.println("Ingreso a intentarAsignarPedido con pedido: " + p.getId());
         Camion c = plan.getCamion();
         if (c.getCapacidadMaxima() < p.getCantidadGlp())
             return false;
 
         c.setGlpActualSim(c.getGlpActual());
+        c.setGlpActualSimBandera(c.getGlpActual());
         c.setGlpTanqueSim(c.getGlpTanque());
+        c.setGlpTanqueSimBandera(c.getGlpTanque());
 
         Nodo base = plantas.get(0).getUbicacion();
 
@@ -442,11 +478,13 @@ public class SimulatedAnnealing {
                 .orElse(null);
         if (mejorPlanta == null)
             return false;
+        mejorPlanta.setGlpDisponibleSim(mejorPlanta.getGlpDisponible());
+        mejorPlanta.setGlpDisponibleSimBandera(mejorPlanta.getGlpDisponible());
 
         // Intentar trayectoria directa
         Map.Entry<ArrayList<Nodo>, LocalDateTime> resultado = PathFinder.generarTrayectoria(
                 grid, nodoInicio, p.getDestino(), t, p.getPlazoMaximoEntrega(), p.getHoraPedido().plusHours(horasPlazo),
-                t, p.getPlazoMaximoEntrega(), c);
+                t, p.getPlazoMaximoEntrega(), c, p.getHoraPedido());
         ArrayList<Nodo> trayectoria = resultado.getKey();
         LocalDateTime horaSalida = resultado.getValue();
         LocalDateTime horaLlegada = horaSalida.plusSeconds((trayectoria.size() - 1) * 72);
@@ -463,7 +501,7 @@ public class SimulatedAnnealing {
             // Ir primero a la planta
             Map.Entry<ArrayList<Nodo>, LocalDateTime> trayAPlanta = PathFinder.generarTrayectoria(
                     grid, nodoInicio, mejorPlanta.getUbicacion(), t, p.getPlazoMaximoEntrega(),
-                    p.getHoraPedido().plusHours(horasPlazo), t, p.getPlazoMaximoEntrega(), c);
+                    p.getHoraPedido().plusHours(horasPlazo), t, p.getPlazoMaximoEntrega(), c, p.getHoraPedido());
             ArrayList<Nodo> rutaPlanta = trayAPlanta.getKey();
             LocalDateTime salidaPlanta = trayAPlanta.getValue();
             LocalDateTime llegadaPlanta = salidaPlanta.plusSeconds((rutaPlanta.size() - 1) * 72);
@@ -496,11 +534,11 @@ public class SimulatedAnnealing {
                 resultado = PathFinder.generarTrayectoria(
                         grid, mejorPlanta.getUbicacion(), p.getDestino(),
                         llegadaPlanta, p.getPlazoMaximoEntrega(), llegadaPlanta, llegadaPlanta.plusMinutes(15),
-                        llegadaPlanta.plusMinutes(15), c);
+                        llegadaPlanta.plusMinutes(15), c, p.getHoraPedido().plusHours(horasPlazo));
             } else {
                 resultado = PathFinder.generarTrayectoria(
                         grid, mejorPlanta.getUbicacion(), p.getDestino(),
-                        llegadaPlanta, p.getPlazoMaximoEntrega(), llegadaPlanta, llegadaPlanta, llegadaPlanta, c);
+                        llegadaPlanta, p.getPlazoMaximoEntrega(), llegadaPlanta, llegadaPlanta, llegadaPlanta, c, p.getHoraPedido().plusHours(horasPlazo));
             }
             // Nueva trayectoria desde planta al pedido
 
@@ -509,18 +547,29 @@ public class SimulatedAnnealing {
             horaLlegada = horaSalida.plusSeconds((trayectoria.size() - 1) * 72);
 
             if (trayectoria == null || trayectoria.size() < 1 || horaLlegada.isAfter(p.getPlazoMaximoEntrega())) {
+                c.setGlpActualSim(c.getGlpActualSimBandera());
+                c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                mejorPlanta.setGlpDisponibleSim(mejorPlanta.getGlpDisponibleSimBandera());
                 return false;
             }
 
             double consumoAPedido = c.calcularConsumo(trayectoria.size() - 1, c.getGlpActualSim());
-            if (c.getGlpTanqueSim() < consumoAPedido)
+            if (c.getGlpTanqueSim() < consumoAPedido){
+                c.setGlpActualSim(c.getGlpActualSimBandera());
+                c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                mejorPlanta.setGlpDisponibleSim(mejorPlanta.getGlpDisponibleSimBandera());
                 return false;
+            }
+
 
             c.setGlpTanqueSim(c.getGlpTanqueSim() - consumoAPedido);
             c.setGlpActualSim(c.getGlpActualSim() - p.getCantidadGlp());
 
             if (!c.alcanzaParaRetornar(grid, c, p.getDestino(), c.getGlpActualSim(), c.getGlpTanqueSim(),
                     horaLlegada.plusMinutes(15))) {
+                c.setGlpActualSim(c.getGlpActualSimBandera());
+                c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                mejorPlanta.setGlpDisponibleSim(mejorPlanta.getGlpDisponibleSimBandera());
                 return false;
             }
 
@@ -532,6 +581,9 @@ public class SimulatedAnnealing {
 
             if (!c.alcanzaParaRetornar(grid, c, p.getDestino(), c.getGlpActualSim(), c.getGlpTanqueSim(),
                     horaLlegada)) {
+                c.setGlpActualSim(c.getGlpActualSimBandera());
+                c.setGlpTanqueSim(c.getGlpTanqueSimBandera());
+                mejorPlanta.setGlpDisponibleSim(mejorPlanta.getGlpDisponibleSimBandera());
                 return false;
             }
         }
@@ -583,11 +635,14 @@ public class SimulatedAnnealing {
     }
 
     private boolean intentarAsignarFlexible(PlanCamion plan, Pedido p, LocalDateTime now) {
+        System.out.println("Ingreso a intentar asignar flexible con pedido: " + p.getId());
         Camion c = plan.getCamion();
         if (c.getCapacidadMaxima() < p.getCantidadGlp())
             return false;
         c.setGlpActualSim(c.getGlpActual());
+        c.setGlpActualSimBandera(c.getGlpActual());
         c.setGlpTanqueSim(c.getGlpTanque());
+        c.setGlpTanqueSimBandera(c.getGlpTanque());
         LocalDateTime t = now;
 
         Nodo start = c.getUbicacionActual();
@@ -602,7 +657,7 @@ public class SimulatedAnnealing {
 
         Map.Entry<ArrayList<Nodo>, LocalDateTime> resultado = PathFinder.generarTrayectoria(
                 grid, start, p.getDestino(), t, p.getPlazoMaximoEntrega(), p.getHoraPedido().plusHours(horasPlazo), t,
-                p.getPlazoMaximoEntrega(), c);
+                p.getPlazoMaximoEntrega(), c, p.getHoraPedido().plusHours(horasPlazo));
 
         ArrayList<Nodo> trayectoria = resultado.getKey();
         LocalDateTime horaSalida = resultado.getValue();
@@ -668,7 +723,7 @@ public class SimulatedAnnealing {
         Map.Entry<ArrayList<Nodo>, LocalDateTime> res = PathFinder.generarTrayectoria(
                 grid, start, p.getDestino(), t,
                 p.getPlazoMaximoEntrega(), p.getHoraPedido().plusHours(horasPlazo), t, p.getPlazoMaximoEntrega(),
-                plan.getCamion());
+                plan.getCamion(), p.getHoraPedido().plusHours(horasPlazo));
         ArrayList<Nodo> path = res.getKey();
         LocalDateTime salida = res.getValue();
         if (path == null || path.size() <= 1) {
@@ -768,7 +823,7 @@ public class SimulatedAnnealing {
         Map.Entry<ArrayList<Nodo>, LocalDateTime> res = PathFinder.generarTrayectoria(
                 grid, start, p.getDestino(), t,
                 p.getPlazoMaximoEntrega(), p.getHoraPedido().plusHours(horasPlazo), t, p.getPlazoMaximoEntrega(),
-                plan.getCamion());
+                plan.getCamion(), p.getHoraPedido().plusHours(horasPlazo));
         ArrayList<Nodo> path = res.getKey();
         LocalDateTime salida = res.getValue();
         if (path == null || path.size() <= 1)
@@ -800,11 +855,11 @@ public class SimulatedAnnealing {
             if (sr.getPedido() != null) {
                 if (c.getGlpActual() < sr.getPedido().getCantidadGlp())
                     return false;
-                c.setGlpActual(c.getGlpActual() - sr.getPedido().getCantidadGlp());
+                c.setGlpActualSim(c.getGlpActual() - sr.getPedido().getCantidadGlp());
             }
             if (sr.getFin().equals(base) || plantas.stream().anyMatch(pl -> pl.getUbicacion().equals(sr.getFin()))) {
                 c.setGlpTanque(25);
-                c.setGlpActual(c.getCapacidadMaxima());
+                c.setGlpActualSim(c.getCapacidadMaxima());
             }
         }
         SubRuta last = plan.getSubRutas().get(plan.getSubRutas().size() - 1);
@@ -812,7 +867,7 @@ public class SimulatedAnnealing {
                 grid, last.getFin(), base,
                 last.getHoraFin().plusMinutes(15), last.getHoraFin().plusHours(60),
                 last.getHoraFin().plusMinutes(15), last.getHoraFin().plusMinutes(15), last.getHoraFin().plusHours(60),
-                c);
+                c, last.getHoraFin().plusMinutes(15));
         ArrayList<Nodo> retorno = ret.getKey();
         return retorno != null && retorno.size() > 1;
     }

@@ -7,6 +7,15 @@ import java.util.List;
 public class Solucion {
     private ArrayList<PlanCamion> planesCamion;
     private double costo;
+    private ArrayList<Planta> plantas;
+
+    public ArrayList<Planta> getPlantas() {
+        return plantas;
+    }
+
+    public void setPlantas(ArrayList<Planta> plantas) {
+        this.plantas = plantas;
+    }
 
     public Solucion() {
         this.planesCamion = new ArrayList<>();

@@ -17,8 +17,8 @@ public class EstadisticasService {
               codigo,
               SUM(num_pedidos_entregados) AS total_entregados,
               (SUM(num_pedidos_entregados) / total_filas) * 100 AS porcentaje_global
-            FROM prueba_camiones.Camion,
-              (SELECT COUNT(*) AS total_filas FROM prueba_camiones.Camion) AS total
+            FROM prueba_camiones_exper.Camion,
+              (SELECT COUNT(*) AS total_filas FROM prueba_camiones_exper.Camion) AS total
             GROUP BY codigo;
         """;
 
@@ -86,7 +86,7 @@ public class EstadisticasService {
                   TIMESTAMPDIFF(MINUTE, horaPedido, plazoMaximoEntrega)
                 ) * 100, 2
               ) AS porcentaje_utilizado
-            FROM prueba_camiones.Pedido
+            FROM prueba_camiones_exper.Pedido
             WHERE hora_entrega IS NOT NULL;
         """;
 

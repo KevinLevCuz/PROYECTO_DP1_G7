@@ -1,7 +1,9 @@
 package com.dp1code.routing.Controller;
 
 import com.dp1code.routing.dto.PedidoDTO;
+import com.dp1code.routing.dto.PedidoResumenDTO;
 import com.dp1code.routing.Model.Pedido;
+import com.dp1code.routing.Service.PedidoResumenService;
 import com.dp1code.routing.Service.PedidoService;
 
 import java.time.LocalDateTime;
@@ -11,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
 @CrossOrigin(origins = {
     "https://h982equipo7g.duckdns.org",
     "http://localhost:3000"
@@ -34,7 +35,15 @@ public class PedidoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al insertar pedido");
         }
     }
-    
+    @GetMapping("/resumenPedidos")
+    public PedidoResumenDTO obtenerResumenPedidos(
+        @RequestParam("fechaInicio") String fechaInicio,
+        @RequestParam("fechaFin") String fechaFin
+    ) {
+        PedidoResumenService pedidoResumenService = new PedidoResumenService();
+        return pedidoResumenService.obtenerResumenPedidos(fechaInicio, fechaFin);
+    }
+
 
     @GetMapping("/rango")
     public List<Pedido> obtenerPedidosEnRango() {

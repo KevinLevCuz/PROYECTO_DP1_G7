@@ -84,7 +84,7 @@ public class NodoService {
         }
     }
     public Nodo getNodoPorId(int id) {
-        String sql = "SELECT posX, posY, bloqueado FROM prueba_camiones.Nodo WHERE id = ?";
+        String sql = "SELECT posX, posY, bloqueado FROM prueba_camiones_exper.Nodo WHERE id = ?";
 
         try (
                 Connection conn = DatabaseService.getConnection();

@@ -121,4 +121,18 @@ public class Nodo {
     return (int) Duration.between(fechaSimulada, proximoCambio).toSeconds();
 }
 
+public synchronized boolean isBlockedBetween(LocalDateTime inicio, LocalDateTime fin) {
+    System.out.println("Inicio:"+ inicio+" Fin:"+fin+" y los bloqueos son: ");
+    for (TimeRange bloqueo : this.bloqueos) {
+        System.out.println("El bloqueo es: "+bloqueo.getStart()+" "+bloqueo.getEnd());
+        if(!bloqueo.getStart().isAfter(inicio) && !bloqueo.getEnd().isBefore(fin)) {
+            System.out.println("Ingreso al true");
+            return true;
+        }
+    }
+    return false;
+}
+
+
+
 }

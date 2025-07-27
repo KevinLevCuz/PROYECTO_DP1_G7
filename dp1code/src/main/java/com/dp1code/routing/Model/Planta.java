@@ -11,6 +11,15 @@ public class Planta {
     private double capacidadMaxima;
     private double glpDisponible;
     private double glpDisponibleSim;
+    private double glpDisponibleSimBandera;
+    public double getGlpDisponibleSimBandera() {
+        return glpDisponibleSimBandera;
+    }
+
+    public void setGlpDisponibleSimBandera(double glpDisponibleSimBandera) {
+        this.glpDisponibleSimBandera = glpDisponibleSimBandera;
+    }
+
     public double getGlpDisponibleSim() {
         return glpDisponibleSim;
     }
@@ -45,7 +54,7 @@ public class Planta {
                 this.glpDisponible=10000;
                 this.glpDisponibleSim=10000;
                 break;
-            case "SECUNDARIA":
+            case "SECUNDARIO":
                 this.capacidadMaxima = 60.0;
                 this.glpDisponible=60.0;
                 this.glpDisponibleSim=60.0;

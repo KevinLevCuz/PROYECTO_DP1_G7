@@ -3,6 +3,8 @@ package com.dp1code.routing.Model;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.springframework.cglib.core.Local;
+
 /**
  * PathFinder para cuadrícula con bloqueos dinámicos y mantenimientos de camión.
  * Implementa una búsqueda A* con heurística Manhattan.
@@ -13,7 +15,14 @@ public class PathFinder {
             Grid grid, Nodo start, Nodo end,
             LocalDateTime fechaSimulada, LocalDateTime fechaMaximaLlegada,
             LocalDateTime fechaMinimaLlegada, LocalDateTime fechaMinimaSalida, LocalDateTime fechaMaximaSalida,
-            Camion camion) {
+            Camion camion, LocalDateTime pedidoMasHoras) {
+
+        System.out.println("El nodo final es: "+ end.getPosX()+" "+end.getPosY()+" y el pedidoMasHoras es: "+pedidoMasHoras+" y la fechaMaximaLlegada es: "+fechaMaximaLlegada);
+        if(grid.getNodoAt(end.getPosX(), end.getPosY()).isBlockedBetween(pedidoMasHoras, fechaMaximaLlegada)){
+            System.out.println("El nodo end al principio era: "+ end);
+            end = obtenerNodoAlternativo(grid, end, start, fechaMinimaLlegada, fechaMaximaLlegada);
+            System.out.println("Cambio de nodo a: "+ end);
+        }
 
         System.out.println("[DEBUG] generarTrayectoria inicio: start=" + start + ", end=" + end + ", fechaSimulada=" + fechaSimulada);
         LocalDateTime fechaActual = fechaSimulada.isBefore(fechaMinimaSalida)
@@ -25,27 +34,26 @@ public class PathFinder {
         }
         System.out.println("[DEBUG] fechaActual ajustada: " + fechaActual);
 
-
         while (!fechaActual.isAfter(fechaMaximaLlegada) && !fechaActual.isAfter(fechaMaximaSalida)) {
-            System.out.println("[DEBUG] while: fechaActual=" + fechaActual + ", fechaMaximaLlegada=" + fechaMaximaLlegada);
+            //System.out.println("[DEBUG] while: fechaActual=" + fechaActual + ", fechaMaximaLlegada=" + fechaMaximaLlegada);
             if (!camion.isDisponiblePorMantenimiento(fechaActual)) {
-                System.out.println("[DEBUG] Camion en mantenimiento en " + fechaActual);
+              //  System.out.println("[DEBUG] Camion en mantenimiento en " + fechaActual);
                 int segs = calcularTiempoFinMantenimiento(camion, fechaActual);
-                System.out.println("[DEBUG] segundosHastaDisponible=" + segs);
+                //System.out.println("[DEBUG] segundosHastaDisponible=" + segs);
                 if (segs == -1 || fechaActual.plusSeconds(segs).isAfter(fechaMaximaLlegada)) {
-                    System.out.println("[DEBUG] mantenimiento excede ventana, cancelando ruta");
+                  //  System.out.println("[DEBUG] mantenimiento excede ventana, cancelando ruta");
                     return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
                 }
                 fechaActual = fechaActual.plusSeconds(segs);
                 if (fechaActual.isAfter(fechaMaximaSalida)) {
-                    System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
+                    //System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
                     return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
                 }
                 continue;
             }
 
             resetGrid(grid);
-            System.out.println("[DEBUG] Grid reseteada para A*");
+            //System.out.println("[DEBUG] Grid reseteada para A*");
 
             PriorityQueue<Nodo> openList = new PriorityQueue<>(Comparator.comparingDouble(n -> n.f));
             Set<Nodo> closedSet = new HashSet<>();
@@ -54,7 +62,7 @@ public class PathFinder {
             start.h = heuristic(start, end);
             start.f = start.h;
             openList.add(start);
-            System.out.println("[DEBUG] nodo inicial agregado: " + start);
+            //System.out.println("[DEBUG] nodo inicial agregado: " + start);
 
             ArrayList<Nodo> rutaFinal = null;
             LocalDateTime tiempoLlegada;
@@ -65,44 +73,44 @@ public class PathFinder {
                 //System.out.println("[DEBUG] expandiendo nodo: " + actual.getPosX() + "," + actual.getPosY());
 
                 if (actual.equals(end)) {
-                    System.out.println("[DEBUG] nodo final alcanzado: " + actual);
+                    //System.out.println("[DEBUG] nodo final alcanzado: " + actual);
                     rutaFinal = backtrace(actual);
                     long duracionSegs = (rutaFinal.size() - 1) * 72;
                     tiempoLlegada = fechaActual.plusSeconds(duracionSegs);
-                    System.out.println("[DEBUG] rutaFinal size=" + rutaFinal.size() + ", tiempoLlegada=" + tiempoLlegada);
+                    //System.out.println("[DEBUG] rutaFinal size=" + rutaFinal.size() + ", tiempoLlegada=" + tiempoLlegada);
 
                     if (tiempoLlegada.isBefore(fechaMinimaLlegada)) {
-                        System.out.println("[DEBUG] llegada antes de minima, ajustando salida");
+                        //System.out.println("[DEBUG] llegada antes de minima, ajustando salida");
                         LocalDateTime salidaOptima = fechaMinimaLlegada.minusSeconds(duracionSegs);
                         if (salidaOptima.isAfter(fechaActual) && !salidaOptima.isAfter(fechaMaximaLlegada)) {
                             fechaActual = salidaOptima;
                             if (fechaActual.isAfter(fechaMaximaSalida)) {
-                                System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
+                                //System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
                                 return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
                             }
-                            System.out.println("[DEBUG] nueva fechaActual=" + fechaActual);
+                            //System.out.println("[DEBUG] nueva fechaActual=" + fechaActual);
                             break;
                         }
                         long extra = java.time.Duration.between(tiempoLlegada, fechaMinimaLlegada).getSeconds() + duracionSegs;
                         if (fechaActual.plusSeconds(extra).isAfter(fechaMaximaLlegada)) {
-                            System.out.println("[DEBUG] excede ventana tras ajuste, cancelando ruta");
+                            //System.out.println("[DEBUG] excede ventana tras ajuste, cancelando ruta");
                             return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
                         }
                         fechaActual = fechaActual.plusSeconds(extra);
                         if (fechaActual.isAfter(fechaMaximaSalida)) {
-                            System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
+                            //System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
                             return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
                         }
-                        System.out.println("[DEBUG] fechaActual pos ajuste=" + fechaActual);
+                        //System.out.println("[DEBUG] fechaActual pos ajuste=" + fechaActual);
                         break;
                     }
 
                     if (tiempoLlegada.isAfter(fechaMaximaLlegada)) {
-                        System.out.println("[DEBUG] llegada despues de maxima, saliendo loop");
+                        //System.out.println("[DEBUG] llegada despues de maxima, saliendo loop");
                         break;
                     }
 
-                    System.out.println("[DEBUG] retornando rutaFinal");
+                    //System.out.println("[DEBUG] retornando rutaFinal");
                     return new AbstractMap.SimpleEntry<>(rutaFinal, fechaActual);
                 }
 
@@ -112,20 +120,20 @@ public class PathFinder {
 
             if (rutaFinal == null) {
                 int segs = calcularProximoCambio(grid, fechaActual);
-                System.out.println("[DEBUG] no se encontro ruta, segundos hasta proximo cambio=" + segs);
+                //System.out.println("[DEBUG] no se encontro ruta, segundos hasta proximo cambio=" + segs);
                 if (segs == 0 || fechaActual.plusSeconds(segs).isAfter(fechaMaximaLlegada)) {
-                    System.out.println("[DEBUG] no hay proximo cambio viable, cancelando");
+                  //  System.out.println("[DEBUG] no hay proximo cambio viable, cancelando");
                     return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
                 }
                 fechaActual = fechaActual.plusSeconds(segs);
                 if (fechaActual.isAfter(fechaMaximaSalida)) {
-                    System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
+                    //System.out.println("[DEBUG] Superada fecha máxima de salida, cancelando");
                     return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
                 }
             }
         }
 
-        System.out.println("[DEBUG] ventana agotada, retornando vacio");
+       // System.out.println("[DEBUG] ventana agotada, retornando vacio");
         return new AbstractMap.SimpleEntry<>(new ArrayList<>(), fechaActual);
     }
 
@@ -166,7 +174,7 @@ public class PathFinder {
             }
         } 
         
-        System.out.println("[DEBUG] calcularProximoCambio retornando=" + (minSegs == Integer.MAX_VALUE ? 0 : minSegs));
+        //System.out.println("[DEBUG] calcularProximoCambio retornando=" + (minSegs == Integer.MAX_VALUE ? 0 : minSegs));
         return minSegs == Integer.MAX_VALUE ? 0 : minSegs;
     }
 
@@ -211,4 +219,48 @@ public class PathFinder {
             }
         }
     }
+
+
+    public static Nodo obtenerNodoAlternativo(Grid grid, Nodo end, Nodo start, 
+                                          LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+    List<Nodo> candidatos = new ArrayList<>();
+
+    int x = end.getPosX();
+    int y = end.getPosY();
+
+    // Arriba
+    candidatos.add(grid.getNodoAt(x, y - 1));
+    // Abajo
+    candidatos.add(grid.getNodoAt(x, y + 1));
+    // Izquierda
+    candidatos.add(grid.getNodoAt(x - 1, y));
+    // Derecha
+    candidatos.add(grid.getNodoAt(x + 1, y));
+
+    // Filtrar nulos y no bloqueados
+    List<Nodo> disponibles = candidatos.stream()
+        .filter(Objects::nonNull)
+        .filter(n -> !n.isBlockedBetween(fechaInicio, fechaFin))
+        .toList();
+
+    // Elegir el más cercano al inicio
+    Nodo mejorNodo = null;
+    double mejorDistancia = Double.MAX_VALUE;
+
+    for (Nodo candidato : disponibles) {
+        double distancia = distanciaManhattan(candidato, start);
+        if (distancia < mejorDistancia) {
+            mejorDistancia = distancia;
+            mejorNodo = candidato;
+        }
+    }
+
+    return mejorNodo != null ? mejorNodo : end; // Si no hay otra opción, usar el original
+}
+
+private static double distanciaManhattan(Nodo a, Nodo b) {
+    return Math.abs(a.getPosX() - b.getPosX()) + Math.abs(a.getPosY() - b.getPosY());
+}
+
+    
 }
