@@ -1,67 +1,5 @@
 ls
 clear
-cd ..
-clear
-npm run build
-clear
-cs simulacion-routing/
-cd simulacion-routing/
-clear
-ls
-npm install
-cs
-cd
-clear
-rm -rf simulacion-routing/
-ls
-exit
-clear
-scp -r "C:\Users\josep\OneDrive\Desktop\PUCP\2025-1\PDDS\Final\PROYECTO_DP1_G7\simulacion-routing" bmorales@200.16.7.185:~/simulacion-routing
-exit
-clear
-ls
-cd simulacion-routing/
-clear
-ls
-cd ..
-ls
-cd simulacion-routing/
-ls
-lslslslsls
-ls
-l
-npm install
-clear
-cd
-exit
-sudo lsof -i :8080
-kill -9 240353
-sudo lsof -i :8080
-clear
-ls
-rm -rf dp1code/
-rm -rf simulacion-routing/
-ls
-clear
-ls
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8000"
-clear
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8000"
-sudo ./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8000"
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8000"
-clear
-chmod +x mvnw
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8000"
-clear
-cd 
-rm -rf simulacion-routing/
-clear
-ls
-clear
-rm -rf dp1code/
-ls
-clear
 cd /etc
 cd nginx/
 ls
@@ -1998,3 +1936,65 @@ clear
 cd ..
 clear
 npm run start
+sudo lsof -i :8080
+clear
+sudo lsof -i :8080
+sudo ss -tulnp | grep :3000
+clear
+cd dp1code/src/main/java/com/dp1code/routing/Service/
+sudo nano RoutingService.java 
+cd
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd src/main/java/com/dp1code/routing/Controller/
+clear
+ls
+sudo nano CamionController.java 
+LS
+cd ..
+ls
+cd dto/
+ls
+sudo nano CamionResumenDTO.java 
+cd ..
+CD
+cd
+cd simulacion-routing/src/lib/
+sudo nano api.ts 
+CD
+cd
+cd dp1code/src/main/java/com/dp1code/routing/Service/
+sudo nano RoutingService.java 
+clear
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd src/main/java/com/dp1code/routing/Service/
+sudo nano RoutingService.java 
+clear
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd
+clear
+pwd
+git add .
+git commit -m "video simulacion semanal"
+git remote add main https://github.com/KevinLevCuz/PROYECTO_DP1_G7.git
+git branch -m main
+git push -u origin main
+git force push -u origin main
+git push -u origin main --force
+clear
