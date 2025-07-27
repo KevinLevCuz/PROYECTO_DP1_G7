@@ -1,0 +1,19 @@
+0 verbose cli /usr/bin/node /usr/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.2
+3 silly config load:file:/usr/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/bmorales/simulacion-routing/.npmrc
+5 silly config load:file:/home/bmorales/.npmrc
+6 silly config load:file:/usr/etc/npmrc
+7 verbose title npm run build
+8 verbose argv "run" "build"
+9 verbose logfile logs-max:10 dir:/home/bmorales/.npm/_logs/2025-07-26T20_21_09_897Z-
+10 verbose logfile /home/bmorales/.npm/_logs/2025-07-26T20_21_09_897Z-debug-0.log
+11 silly logfile start cleaning logs, removing 1 files
+12 silly logfile done cleaning log files
+13 verbose cwd /home/bmorales/simulacion-routing
+14 verbose os Linux 6.8.0-49-generic
+15 verbose node v20.19.2
+16 verbose npm  v10.8.2
+17 verbose exit 0
+18 info ok
