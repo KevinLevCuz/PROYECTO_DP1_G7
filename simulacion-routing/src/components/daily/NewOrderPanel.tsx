@@ -1,19 +1,59 @@
-// components/daily/NewOrderPanel.tsx
-
 "use client";
-import { useEffect, useState } from "react";
-import { FiChevronRight, FiChevronLeft, FiX, FiPlus } from "react-icons/fi";
+import { useEffect, useState, useRef } from "react";
+import { FiChevronRight, FiX, FiPlus } from "react-icons/fi";
 import axios from "axios";
 
 export default function NewOrderPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
-    codigoCliente: '',
-    posX: '',
-    posY: '',
-    cantidadGLP: '',
-    tiempoMaximo: ''
+    codigoCliente: "",
+    posX: "",
+    posY: "",
+    cantidadGLP: "",
+    tiempoMaximo: ""
   });
+
+  const [mostrarCargaArchivo, setMostrarCargaArchivo] = useState(false);
+  const [archivo, setArchivo] = useState<File | null>(null);
+
+  // 🔹 Referencia para el input oculto
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const abrirSelectorArchivos = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleArchivoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setArchivo(e.target.files[0]);
+    }
+  };
+
+  const subirArchivo = async () => {
+    if (!archivo) return;
+
+    const data = new FormData();
+    data.append("archivo", archivo);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/api/pedidos/cargarArchivo",
+        data,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        }
+      );
+      console.log("Archivo subido:", response.data);
+      setMostrarCargaArchivo(false);
+      setArchivo(null);
+    } catch (error) {
+      console.error("Error al subir archivo:", error);
+    }
+  };
 
   useEffect(() => {
     console.log("NewOrderPanel montado");
@@ -31,11 +71,12 @@ export default function NewOrderPanel() {
     e.preventDefault();
 
     const ahora = new Date();
-    const horaPedido = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}T${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}:${String(ahora.getSeconds()).padStart(2, '0')}`;
-    const plazo = new Date(ahora.getTime() + parseInt(formData.tiempoMaximo) * 60 * 60 * 1000);
+    const horaPedido = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-${String(ahora.getDate()).padStart(2, "0")}T${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}:${String(ahora.getSeconds()).padStart(2, "0")}`;
+    const plazo = new Date(
+      ahora.getTime() + parseInt(formData.tiempoMaximo) * 60 * 60 * 1000
+    );
 
-    const plazoMaximo = `${plazo.getFullYear()}-${String(plazo.getMonth() + 1).padStart(2, '0')}-${String(plazo.getDate()).padStart(2, '0')}T${String(plazo.getHours()).padStart(2, '0')}:${String(plazo.getMinutes()).padStart(2, '0')}:${String(plazo.getSeconds()).padStart(2, '0')}`;
-
+    const plazoMaximo = `${plazo.getFullYear()}-${String(plazo.getMonth() + 1).padStart(2, "0")}-${String(plazo.getDate()).padStart(2, "0")}T${String(plazo.getHours()).padStart(2, "0")}:${String(plazo.getMinutes()).padStart(2, "0")}:${String(plazo.getSeconds()).padStart(2, "0")}`;
 
     const payload = {
       idCliente: formData.codigoCliente,
@@ -47,19 +88,21 @@ export default function NewOrderPanel() {
     };
 
     try {
-      const response = await axios.post("http://localhost:8080/api/pedidos/registrarPedido", payload);
+      const response = await axios.post(
+        "http://localhost:8080/api/pedidos/registrarPedido",
+        payload
+      );
       console.log("Pedido creado correctamente:", response.data);
     } catch (error) {
       console.error("Error al crear pedido:", error);
     }
 
-    // Limpiar formulario
     setFormData({
-      codigoCliente: '',
-      posX: '',
-      posY: '',
-      cantidadGLP: '',
-      tiempoMaximo: ''
+      codigoCliente: "",
+      posX: "",
+      posY: "",
+      cantidadGLP: "",
+      tiempoMaximo: ""
     });
   };
 
@@ -74,8 +117,12 @@ export default function NewOrderPanel() {
         </button>
       )}
 
-      <div className={`fixed left-16 top-22 h-[calc(62vh-3rem)] bg-white border-r shadow-lg transition-transform duration-300 z-20 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{ width: '300px' }}>
+      <div
+        className={`fixed left-16 top-22 h-[calc(62vh-3rem)] bg-white border-r shadow-lg transition-transform duration-300 z-20 ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{ width: "300px" }}
+      >
         <div className="h-full flex flex-col">
           <div className="bg-red-500 text-white p-3 flex justify-between items-center">
             <h3 className="font-semibold">Nuevo Pedido</h3>
@@ -173,11 +220,68 @@ export default function NewOrderPanel() {
                   <FiPlus className="mr-2" />
                   Crear Pedido
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setMostrarCargaArchivo(true)}
+                  className="w-full mt-2 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center justify-center"
+                >
+                  <FiPlus className="mr-2" />
+                  Registrar Pedidos (Archivo)
+                </button>
               </div>
             </form>
           </div>
         </div>
       </div>
+
+      {mostrarCargaArchivo && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-40">
+          <div className="bg-white p-6 rounded shadow-md w-96">
+            <h3 className="text-lg font-semibold mb-4">
+              Cargar Archivo de Pedidos
+            </h3>
+
+            {/* Input oculto */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleArchivoChange}
+              accept=".txt"
+              className="hidden"
+            />
+
+            {/* Botón para abrir el selector */}
+            <button
+              onClick={abrirSelectorArchivos}
+              className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mb-4"
+            >
+              Seleccionar Archivo (.txt)
+            </button>
+
+            {archivo && (
+              <p className="text-sm text-gray-700 mb-3">
+                Archivo seleccionado: <strong>{archivo.name}</strong>
+              </p>
+            )}
+
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setMostrarCargaArchivo(false)}
+                className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={subirArchivo}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                disabled={!archivo}
+              >
+                Subir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

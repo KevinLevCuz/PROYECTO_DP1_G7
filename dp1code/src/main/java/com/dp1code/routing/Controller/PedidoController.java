@@ -5,6 +5,7 @@ import com.dp1code.routing.dto.PedidoResumenDTO;
 import com.dp1code.routing.Model.Pedido;
 import com.dp1code.routing.Service.PedidoResumenService;
 import com.dp1code.routing.Service.PedidoService;
+import com.dp1code.routing.Service.PedidoArchivoService;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 @CrossOrigin(origins = {
     "https://h982equipo7g.duckdns.org",
     "http://localhost:3000"
@@ -23,6 +25,7 @@ public class PedidoController {
 
     @Autowired
     private PedidoService pedidoService;
+    private PedidoArchivoService pedidoArchivoService;
 
     @PostMapping("/registrarPedido")
     public ResponseEntity<String> insertarPedido(@RequestBody PedidoDTO input) {
@@ -77,6 +80,22 @@ public class PedidoController {
             return ResponseEntity.ok("Estado 'entregado' actualizado correctamente.");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Pedido no encontrado.");
+        }
+    }
+
+    @PostMapping("/cargarArchivo")
+    public ResponseEntity<String> cargarArchivo(@RequestParam("archivo") MultipartFile archivo) {
+        try {
+            if (archivo.isEmpty()) {
+                return ResponseEntity.badRequest().body("El archivo está vacío.");
+            }
+
+            pedidoArchivoService.procesarArchivoPedidos(archivo);
+            return ResponseEntity.ok("Archivo procesado e insertado correctamente.");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error procesando el archivo: " + e.getMessage());
         }
     }
 }

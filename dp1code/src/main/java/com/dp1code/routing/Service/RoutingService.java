@@ -10,6 +10,7 @@ import com.dp1code.routing.Model.Nodo;
 import com.dp1code.routing.Model.SimulatedAnnealing;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -64,9 +65,69 @@ public class RoutingService {
 
     }
 
+    public void iniciarSimulacionConWebSocketDiaDia(LocalDateTime fechaInicio, SimpMessagingTemplate messagingTemplate)
+            throws IOException {
+        LocalDateTime ahora = fechaInicio;
+        LocalDateTime fechaproxima = LocalDateTime.MIN;
+        while (true) {
+            long startNano = System.nanoTime();
+            Solucion solucion = obtenerDiaDia(fechaInicio, ahora, 1);
+
+            if (solucion == null) {
+                System.out.println("❌ Colapso detectado, se detiene la simulación.");
+                Map<String, Object> colapsoMsg = new HashMap<>();
+                colapsoMsg.put("colapso", true);
+                messagingTemplate.convertAndSend("/topic/simulacionSemanal", colapsoMsg);
+                break;
+            }
+            long endNano = System.nanoTime();
+            double durationSeconds = (endNano - startNano) / 1_000_000_000.0;
+            ArrayList<Pedido> pedidosObtenidos = new ArrayList<>(
+                    solucion.getPlanesCamion().stream()
+                            .flatMap(plan -> plan.getSubRutas().stream())
+                            .filter(subRuta -> subRuta.getPedido() != null)
+                            .map(SubRuta::getPedido)
+                            .collect(Collectors.toList()));
+            for (Pedido ped : pedidosObtenidos) {
+                if (ped.getHoraSiguientePedido() != null && !ped.getHoraSiguientePedido().isBefore(fechaproxima)) {
+                    fechaproxima = ped.getHoraSiguientePedido();
+                }
+            }
+            // Enviar por WebSocket
+            messagingTemplate.convertAndSend("/topic/operacionesDiaDia", solucion);
+
+            if (fechaproxima != null && fechaproxima.isAfter(ahora)) {
+                long millisToWait = Duration.between(LocalDateTime.now(), fechaproxima).toMillis();
+
+                if (millisToWait > 0) {
+                    System.out.println("⏳ Esperando " + millisToWait + " ms hasta la próxima planificación ("
+                            + fechaproxima + ")");
+                    try {
+                        Thread.sleep(millisToWait);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        System.err.println("⛔ Hilo interrumpido durante la espera");
+                        break;
+                    }
+                    ahora = fechaproxima;
+                } else {
+                    ahora = LocalDateTime.now();
+                    System.out.println("⚠️ Ya se pasó la hora programada (" + fechaproxima + "), no se duerme");
+                }
+                
+            }
+
+            
+
+            //ahora = ahora.plusSeconds(tiermpoSalto); // Avanzar el tiempo simulado
+        }
+    }
+
     public void iniciarSimulacionConWebSocket(LocalDateTime fechaInicio, SimpMessagingTemplate messagingTemplate)
             throws IOException {
         LocalDateTime ahora = fechaInicio;
+        fechaInicio = LocalDateTime.of(2025, 5, 15, 15, 0); /////////////////////
+
         while (true) {
             long startNano = System.nanoTime();
             Solucion solucion = simulacionSemanal(fechaInicio, ahora);
@@ -121,7 +182,6 @@ public class RoutingService {
                 System.out.println("Ocurrio un error: Actualizacion Pedidos.");
             }
             System.out.println("TERMINO DE ACTUALIZAR DATOS.");
-        }
         // ArrayList<Solucion> soluciones = new ArrayList<>();
         LocalDateTime fechaSimulada = ahora;
 

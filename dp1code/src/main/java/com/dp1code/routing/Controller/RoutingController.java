@@ -9,6 +9,7 @@ import com.dp1code.routing.Model.Bloqueo;
 import com.dp1code.routing.Model.Planta;
 import com.dp1code.routing.Model.Simulacion;
 import com.dp1code.routing.Service.PedidoService;
+import com.dp1code.routing.Service.PlantaService;
 import com.dp1code.routing.Service.RoutingService;
 
 // Los imports de Spring Web:
@@ -129,7 +130,8 @@ public class RoutingController {
 
     @PostMapping("/obtenerPlantas")
     public ArrayList<Planta> obtenerPlantas() throws IOException {
-        return routingService.obtenerPlantas(); 
+        PlantaService plantaService = new PlantaService();
+        return plantaService.obtenerTodas(); 
     }
 
     @PostMapping("/obtenerCamiones")
