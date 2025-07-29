@@ -102,7 +102,7 @@ public class PlantaService {
         return plantas;
     }
     public boolean actualizarTodasLasPlantasDiaDia() {
-        String sql = "UPDATE prueba_camiones_diario.Planta SET glpDisponible=capacidadMaxima";
+        String sql = "UPDATE prueba_camiones_diario.Planta SET glpDisponible=0 WHERE id=5 OR id=6";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {

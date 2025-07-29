@@ -16,7 +16,7 @@ import org.springframework.cglib.core.Local;
 public class SimulatedAnnealing {
     private static final double EARLY_PENALTY = 10.0;
     public static final double SPEED_KMH = 50.0;
-    public static final int horasPlazo = 4;
+    public static final int horasPlazo = 0;
     private double initialTemp;
     private double coolingRate;
     private int maxIterations;

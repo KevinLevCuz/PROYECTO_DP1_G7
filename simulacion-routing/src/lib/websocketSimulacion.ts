@@ -5,13 +5,13 @@ let client: Client;
 
 export const conectarSimulacionSemanal = (fechaInicio: string, onMensaje: (solucion: any) => void) => {
   client = new Client({
-    brokerURL: 'wss://h982equipo7g.duckdns.org/ws', // Cambia si usas nginx o dominio
+    brokerURL: 'wss://h982equipo7g.duckdns.org/ws',
     connectHeaders: {},
     debug: (str) => console.log(str),
     reconnectDelay: 5000,
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
-    webSocketFactory: () => new SockJS('https://h982equipo7g.duckdns.org/ws'), // Si usas SockJS en back
+     webSocketFactory: () => new SockJS('https://h982equipo7g.duckdns.org/ws'),
   });
 
   client.onConnect = () => {
@@ -48,13 +48,13 @@ export const desconectarSimulacion = () => {
 
 export const conectarSimulacionDiaDia = (fechaInicio: string, onMensaje: (solucion: any) => void) => {
   client = new Client({
-    brokerURL: 'wss://h982equipo7g.duckdns.org/ws',
+     brokerURL: 'wss://h982equipo7g.duckdns.org/ws',
     connectHeaders: {},
     debug: (str) => console.log(str),
     reconnectDelay: 5000,
     heartbeatIncoming: 4000,
     heartbeatOutgoing: 4000,
-    webSocketFactory: () => new SockJS('https://h982equipo7g.duckdns.org/ws'),
+     webSocketFactory: () => new SockJS('https://h982equipo7g.duckdns.org/ws'),
   });
 
   client.onConnect = () => {

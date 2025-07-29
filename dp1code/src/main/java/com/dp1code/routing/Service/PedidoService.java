@@ -64,7 +64,7 @@ public class PedidoService {
                 "SELECT ps.*, n.posX, n.posY " +
                 "FROM pedidos_con_siguiente ps " +
                 "INNER JOIN prueba_camiones_diario.Nodo n ON ps.destino_id = n.id " +
-                "WHERE horaPedido >= ? AND horaPedido <= ? AND siguienteId IS NOT NULL;";
+                "WHERE horaPedido >= ? AND horaPedido <= ?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {

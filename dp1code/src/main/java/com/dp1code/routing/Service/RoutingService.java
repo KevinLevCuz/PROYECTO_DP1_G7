@@ -59,7 +59,7 @@ import java.lang.Thread;
 public class RoutingService {
 
     static Grid grid = new Grid(71, 51);
-    static int tiermpoSalto = 3600;
+    static int tiermpoSalto = 120;
     static boolean existenPedidos = true;
 
     public RoutingService() {
@@ -69,9 +69,11 @@ public class RoutingService {
     public void iniciarSimulacionConWebSocketDiaDia(LocalDateTime fechaInicio, SimpMessagingTemplate messagingTemplate)
             throws IOException {
         LocalDateTime ahora = fechaInicio;
+        System.out.println("=========================La fecha de inicio es: " + fechaInicio + "==============================");
         fechaInicio = fechaInicio.minusMinutes(2); // Ajustar a la zona horaria de Lima
         LocalDateTime fechaproxima = LocalDateTime.MIN;
         int cont = 0;
+        System.out.println("=========================La fecha de inicio -2 es: " + fechaInicio + "=y ahora esto es fecha de INicio=============================");
         while (true) {
             long startNano = System.nanoTime();
             Solucion solucion = obtenerDiaDia(fechaInicio, ahora, cont);
@@ -103,7 +105,8 @@ public class RoutingService {
                 messagingTemplate.convertAndSend("/topic/operacionesDiaDia", solucion);
 
                 if (fechaproxima != null && fechaproxima.isAfter(ahora)) {
-                    long millisToWait = Duration.between(LocalDateTime.now(), fechaproxima).toMillis();
+                    System.out.println("Aquiiii el ahora es: " + ahora+" y la fecha proxima: "+fechaproxima+" antes del millisToWait");
+                    long millisToWait = Duration.between(ahora, fechaproxima).toMillis();
 
                     if (millisToWait > 0) {
                         System.out.println("⏳ Esperando " + millisToWait + " ms hasta la próxima planificación ("
@@ -127,9 +130,12 @@ public class RoutingService {
             } else {
                 try {
                     fechaproxima = ahora.plusMinutes(2);
-                    long millisToWait = Duration.between(LocalDateTime.now(), fechaproxima).toMillis();
-                    Thread.sleep(120000 - millisToWait); // Esperar 1 minuto menos el tiempo transcurrido hasta la próxima planificación
+                    System.out.println("La fecha proxima es: " + fechaproxima+" y el ahora es: "+ahora);
+                    long millisToWait = Duration.between(ahora, fechaproxima).toMillis();
+                    System.out.println("⏳ Esperando " + millisToWait + " ms hasta la siguiente planificación (" + fechaproxima + ")");
+                    Thread.sleep(millisToWait); // Esperar 1 minuto menos el tiempo transcurrido hasta la próxima planificación
                     ahora = fechaproxima;
+                    System.out.println("Y ahora el ahora es: "+ ahora);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     System.err.println("⛔ Hilo interrumpido durante la espera");
@@ -343,7 +349,7 @@ public class RoutingService {
             existenPedidos = false;
             return null;
         } else {
-            LocalDateTime sigTime = pedidos.get(pedidos.size() - 1).getHoraSiguientePedido();
+            LocalDateTime sigTime = ahora.plusMinutes(2);
 
             for (Pedido p : pedidos) {
                 System.out.println(
@@ -732,11 +738,7 @@ public class RoutingService {
         }
         if (fechaSimuladaAnterior.toLocalDate().isBefore(fechaSimulada.toLocalDate())) {
             for (Planta planta : plantas) {
-                if (Utilidades.esPlantaPrincipal(planta.getUbicacion(), plantas)) {
-                    planta.setGlpDisponible(10000);
-                } else {
-                    planta.setGlpDisponible(60);
-                }
+                planta.setGlpDisponible(planta.getCapacidadMaxima());
             }
         }
 
@@ -789,7 +791,7 @@ public class RoutingService {
                         c = camion;
                     }
                 }
-
+                System.out.println("El camion con codigo: " + c.getCodigo() + " ingresa en el tanque con: " + c.getGlpTanque() + " glp en el tanque. Y glpActual: " + c.getGlpActual());
                 // Primero verifiquemos si ya termino la ultima subRuta de este plan.
                 SubRuta last = plan.getSubRutas().get(plan.getSubRutas().size() - 1);
                 if (!last.getHoraFin().isAfter(fechaSimulada)) {
@@ -804,18 +806,15 @@ public class RoutingService {
                             c.setGlpActual(c.getGlpActual() - cargaEntregada);
 
                             sub.getPedido().setEntregado(true);
-                            System.out.println("Se entrego el pedido: " + sub.getPedido().getId() + " con carga de "
-                                    + sub.getPedido().getCantidadGlp());
                             sub.getPedido().setTiempoEntrega(sub.getHoraFin());
                             if (sub.getPedido().getId().startsWith("1000") && sub.getPedido().getId().length() > 8) {
-                                sub.getPedido().setId(
-                                        sub.getPedido().getId().substring(4, sub.getPedido().getId().length() - 1));
-                                ;
+                                actualizado = pedidoService.actualizarEstadoEntregadoPositivoDiaDia(
+                                        sub.getPedido().getId().substring(4, sub.getPedido().getId().length() - 1),
+                                        sub.getPedido().getTiempoEntrega());
+                            } else {
+                                actualizado = pedidoService.actualizarEstadoEntregadoPositivoDiaDia(sub.getPedido().getId(),
+                                        sub.getPedido().getTiempoEntrega());
                             }
-                            actualizado = pedidoService
-                                    .actualizarEstadoEntregadoPositivoDiaDia(sub.getPedido().getId(),
-                                            sub.getPedido().getTiempoEntrega());
-
                             c.setNumPedidosAtendidos(c.getNumPedidosAtendidos() + 1);
                             if (!actualizado) {
                                 System.out.println("Ocurrio un error: Pedido");
@@ -825,8 +824,7 @@ public class RoutingService {
                         }
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1),
                                 plantas)) {
-                            Planta planta = Utilidades
-                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpActual();
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
                             c.setGlpActual(c.getCapacidadMaxima());
@@ -861,36 +859,38 @@ public class RoutingService {
                     // Si ya paso esa subRuta(A-> B).
 
                     if (!sub.getHoraFin().isAfter(fechaSimulada) && !sub.getTrayectoria().isEmpty()) {
+                        System.out.println("Ingreso a paso la subRuta: "+ sub.getHoraInicio() + " a " + sub.getHoraFin());
                         double glpConsumida = c.calcularConsumo(sub.getTrayectoria().size() - 1);
                         c.setGlpTanque(c.getGlpTanque() - glpConsumida);
+                        c.setUbicacionActual(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1));
 
                         if (sub.getPedido() != null) {
                             double cargaEntregada = sub.getPedido().getCantidadGlp();
                             c.setGlpActual(c.getGlpActual() - cargaEntregada);
                             sub.getPedido().setEntregado(true);
-                            System.out.println("Se entrego el pedido: " + sub.getPedido().getId() + " con carga de "
-                                    + sub.getPedido().getCantidadGlp());
                             sub.getPedido().setTiempoEntrega(sub.getHoraFin());
-                            // ACTUALIZAR PEDIDO
                             if (sub.getPedido().getId().startsWith("1000") && sub.getPedido().getId().length() > 8) {
-                                sub.getPedido().setId(
-                                        sub.getPedido().getId().substring(4, sub.getPedido().getId().length() - 1));
-                                ;
+                                actualizado = pedidoService.actualizarEstadoEntregadoPositivoDiaDia(
+                                        sub.getPedido().getId().substring(4, sub.getPedido().getId().length() - 1),
+                                        sub.getPedido().getTiempoEntrega());
+                            } else {
+                                actualizado = pedidoService.actualizarEstadoEntregadoPositivoDiaDia(sub.getPedido().getId(),
+                                        sub.getPedido().getTiempoEntrega());
                             }
-                            actualizado = pedidoService
-                                    .actualizarEstadoEntregadoPositivoDiaDia(sub.getPedido().getId(),
-                                            sub.getPedido().getTiempoEntrega());
+
                             c.setNumPedidosAtendidos(c.getNumPedidosAtendidos() + 1);
 
                             if (!actualizado) {
                                 System.out.println("Ocurrio un error: Pedido");
                             }
+                            System.out.println("Se entrego el pedido: " + sub.getPedido().getId() + " con carga de "
+                                    + sub.getPedido().getCantidadGlp());
 
                         }
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1),
                                 plantas)) {
-                            Planta planta = Utilidades
-                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            System.out.println("Ingreso a actualizar a una planta Secundaria");
+                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpActual();
                             c.setGlpTanque(25);
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
@@ -921,11 +921,11 @@ public class RoutingService {
                             LocalDateTime tiempoParcial = sub.getTiemposNodo().get(i);
                             LocalDateTime tiempoParcialSiguiente = sub.getTiemposNodo().get(i + 1);
 
-                            if (fechaSimulada.isAfter(tiempoParcial)
+                            if (!fechaSimulada.isBefore(tiempoParcial)
                                     && fechaSimulada.isBefore(tiempoParcialSiguiente)) {
                                 double distancia = i;
-                                c.setUbicacionActual(sub.getTrayectoria().get(i));
-
+                                c.setUbicacionActual(sub.getTrayectoria().get(i+1));
+                                System.out.println("Entrooo aquiii: el camion con codigo: " + c.getCodigo() + " cambia su ubicacion a: " + c.getUbicacionActual().getPosX() + "," + c.getUbicacionActual().getPosY());
                                 c.setGlpTanque(c.getGlpTanque() - c.calcularConsumo(distancia));
 
                             }
@@ -938,9 +938,9 @@ public class RoutingService {
         if (fechaSimuladaAnterior.toLocalDate().isBefore(fechaSimulada.toLocalDate())) {
             for (Planta planta : plantas) {
                 if (Utilidades.esPlantaPrincipal(planta.getUbicacion(), plantas)) {
-                    planta.setGlpDisponible(10000);
+                    planta.setGlpDisponible(1000000);
                 } else {
-                    planta.setGlpDisponible(60);
+                    planta.setGlpDisponible(0);
                 }
             }
         }
@@ -955,7 +955,14 @@ public class RoutingService {
             if (!actualizado)
                 System.out.println("Error al actualizar plantas");
 
-            actualizado = camionService.actualizarCamionesBatchDiaADia(camiones, conn);
+            actualizado = camionService.actualizarCamionesBatchDiaADia(camiones, conn, fechaSimulada);
+            for(Camion camion : camiones){
+                if(camion.isDisponiblePorMantenimiento(fechaSimulada)){
+                    camion.setEstado("L");
+                } else {
+                    camion.setEstado("ND");
+                }
+            }
             if (!actualizado)
                 System.out.println("Error al actualizar camiones");
 
@@ -969,6 +976,7 @@ public class RoutingService {
         System.out.println("Tiempo en actualizar BD: " + duracion.toMillis() + " ms");
         System.out.println("TERMINOOOO DE ACTUALIZAR LA BD");
     }
+
 
     static void cargarBloqueosTotales() throws IOException {
         cargarBloqueos("data/bloqueosEnero.txt", Month.JANUARY);

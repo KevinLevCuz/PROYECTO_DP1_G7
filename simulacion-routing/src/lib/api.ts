@@ -340,7 +340,7 @@ export async function obtenerEstadisticasPedidosDiaDia(): Promise<PedidoStats[]>
 
 export async function obtenerResumenCamiones(): Promise<CamionResumen[]> {
   try {
-    const response = await fetch('https://h982equipo7g.duckdns.org/api/camiones/resumen');
+    const response = await fetch('/api/camiones/resumen');
 
     if (!response.ok) {
       throw new Error(`Error al obtener resumen de camiones: ${response.status}`);
@@ -359,7 +359,7 @@ export async function obtenerResumenPedidos(
   fechaFin: string
 ): Promise<PedidoResumen> {
   try {
-    const url = await fetch(`https://h982equipo7g.duckdns.org/api/pedidos/resumenPedidos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
+    const url = await fetch(`/api/pedidos/resumenPedidos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
 
     const response = await fetch(url.toString());
 

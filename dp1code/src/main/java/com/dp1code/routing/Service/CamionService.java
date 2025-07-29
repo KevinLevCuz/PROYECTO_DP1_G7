@@ -15,6 +15,7 @@ import java.util.List;
 import java.sql.Timestamp;
 import java.sql.Connection;
 
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -65,12 +66,22 @@ public class CamionService {
         }
     }
 
-    public boolean actualizarCamionesBatchDiaADia(List<Camion> camiones, Connection conn) {
-        String sql = "UPDATE prueba_camiones_diario.Camion SET " +
+    public boolean actualizarCamionesBatchDiaADia(List<Camion> camiones, Connection conn, LocalDateTime fechaSimulada) {
+       String sql = "UPDATE prueba_camiones_diario.Camion c SET " +
                 "glpTanque = ?, " +
                 "glpActual = ?, " +
                 "ubicacionActual_id = (SELECT id FROM prueba_camiones_diario.Nodo WHERE posX = ? AND posY = ?), " +
-                "num_pedidos_entregados = ? " + // <- espacio agregado
+                "num_pedidos_entregados = ?, " +
+                "estado = ( " +
+                "  SELECT CASE " +
+                "    WHEN EXISTS ( " +
+                "      SELECT 1 FROM prueba_camiones_diario.Mantenimiento m " +
+                "      WHERE m.codigoCamion = c.codigo " +
+                "        AND ? BETWEEN m.inicio AND m.fin " +
+                "    ) THEN 'ND' " +
+                "    ELSE 'L' " +
+                "  END " +
+                ") " +
                 "WHERE codigo = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -80,7 +91,8 @@ public class CamionService {
                 ps.setInt(3, camion.getUbicacionActual().getPosX());
                 ps.setInt(4, camion.getUbicacionActual().getPosY());
                 ps.setInt(5, camion.getNumPedidosAtendidos());
-                ps.setString(6, camion.getCodigo());
+                ps.setTimestamp(6, Timestamp.valueOf(fechaSimulada));
+                ps.setString(7, camion.getCodigo());
 
                 ps.addBatch();
             }

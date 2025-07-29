@@ -31,7 +31,7 @@ export default function NewOrderPanel() {
     formData.append('archivo', archivo);
 
     try {
-      const response = await axios.post('http://localhost:8080/api/pedidos/cargarArchivo', formData, {
+      const response = await axios.post('/api/pedidos/cargarArchivo', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
