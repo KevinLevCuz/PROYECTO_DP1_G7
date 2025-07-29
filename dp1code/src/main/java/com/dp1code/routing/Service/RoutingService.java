@@ -69,15 +69,13 @@ public class RoutingService {
     public void iniciarSimulacionConWebSocketDiaDia(LocalDateTime fechaInicio, SimpMessagingTemplate messagingTemplate)
             throws IOException {
         LocalDateTime ahora = fechaInicio;
-        System.out.println("=========================La fecha de inicio es: " + fechaInicio + "==============================");
         fechaInicio = fechaInicio.minusMinutes(2); // Ajustar a la zona horaria de Lima
         LocalDateTime fechaproxima = LocalDateTime.MIN;
         int cont = 0;
-        System.out.println("=========================La fecha de inicio -2 es: " + fechaInicio + "=y ahora esto es fecha de INicio=============================");
         while (true) {
             long startNano = System.nanoTime();
             Solucion solucion = obtenerDiaDia(fechaInicio, ahora, cont);
-            long endNano = System.nanoTime();
+            
             if (existenPedidos == true) {
                 if (solucion == null) {
                     System.out.println("❌ Colapso detectado, se detiene la simulación.");
@@ -87,7 +85,7 @@ public class RoutingService {
                     break;
                 }
                 
-                double durationSeconds = (endNano - startNano) / 1_000_000_000.0;
+                
                 /*ArrayList<Pedido> pedidosObtenidos = new ArrayList<>(
                         solucion.getPlanesCamion().stream()
                                 .flatMap(plan -> plan.getSubRutas().stream())
@@ -103,16 +101,16 @@ public class RoutingService {
                 System.out.println("La fecha proxima es: " + fechaproxima);
                 // Enviar por WebSocket
                 messagingTemplate.convertAndSend("/topic/operacionesDiaDia", solucion);
-
+                long endNano = System.nanoTime();
+                long durationSeconds = (long) ((endNano - startNano) / 1_000_000.0);
                 if (fechaproxima != null && fechaproxima.isAfter(ahora)) {
-                    System.out.println("Aquiiii el ahora es: " + ahora+" y la fecha proxima: "+fechaproxima+" antes del millisToWait");
                     long millisToWait = Duration.between(ahora, fechaproxima).toMillis();
-
+                    System.out.println("Esperando " + millisToWait + " ms hasta la próxima iteración");
                     if (millisToWait > 0) {
                         System.out.println("⏳ Esperando " + millisToWait + " ms hasta la próxima planificación ("
                                 + fechaproxima + ")");
                         try {
-                            Thread.sleep(millisToWait);
+                            Thread.sleep(120000 - durationSeconds);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             System.err.println("⛔ Hilo interrumpido durante la espera");
@@ -129,13 +127,13 @@ public class RoutingService {
                 // ahora = ahora.plusSeconds(tiermpoSalto); // Avanzar el tiempo simulado
             } else {
                 try {
+                    long endNano = System.nanoTime();
                     fechaproxima = ahora.plusMinutes(2);
-                    System.out.println("La fecha proxima es: " + fechaproxima+" y el ahora es: "+ahora);
                     long millisToWait = Duration.between(ahora, fechaproxima).toMillis();
-                    System.out.println("⏳ Esperando " + millisToWait + " ms hasta la siguiente planificación (" + fechaproxima + ")");
-                    Thread.sleep(millisToWait); // Esperar 1 minuto menos el tiempo transcurrido hasta la próxima planificación
+                    System.out.println("Esperando " + millisToWait + " ms hasta la próxima iteración");
+                    long durationSeconds = (long) ((endNano - startNano) / 1_000_000.0);
+                    Thread.sleep(120000 - durationSeconds); // Esperar 1 minuto menos el tiempo transcurrido hasta la próxima planificación
                     ahora = fechaproxima;
-                    System.out.println("Y ahora el ahora es: "+ ahora);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     System.err.println("⛔ Hilo interrumpido durante la espera");
@@ -924,7 +922,7 @@ public class RoutingService {
                             if (!fechaSimulada.isBefore(tiempoParcial)
                                     && fechaSimulada.isBefore(tiempoParcialSiguiente)) {
                                 double distancia = i;
-                                c.setUbicacionActual(sub.getTrayectoria().get(i+1));
+                                c.setUbicacionActual(sub.getTrayectoria().get(i));
                                 System.out.println("Entrooo aquiii: el camion con codigo: " + c.getCodigo() + " cambia su ubicacion a: " + c.getUbicacionActual().getPosX() + "," + c.getUbicacionActual().getPosY());
                                 c.setGlpTanque(c.getGlpTanque() - c.calcularConsumo(distancia));
 

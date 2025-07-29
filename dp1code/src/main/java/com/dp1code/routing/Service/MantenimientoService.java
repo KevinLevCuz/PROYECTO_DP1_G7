@@ -15,7 +15,7 @@ public class MantenimientoService {
 
     public void registrarMantenimiento(Mantenimiento mantenimiento) {
         String sql = """
-                    INSERT INTO Mantenimiento (inicio, fin, codigoCamion, tipo)
+                    INSERT INTO prueba_camiones_exper.Mantenimiento (inicio, fin, codigoCamion, tipo)
                     VALUES (?, ?, ?, ?)
                 """;
 

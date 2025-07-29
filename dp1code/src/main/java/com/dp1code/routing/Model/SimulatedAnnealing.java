@@ -127,14 +127,18 @@ public class SimulatedAnnealing {
         todosPedidos.sort(Comparator.comparing(Pedido::getPlazoMaximoEntrega));
 
         List<Pedido> noAsignados = new ArrayList<>();
-
+        int offset = 0; ///////////////////////////////////
         for (Pedido p : todosPedidos) {
             System.out.println("\n== Intentando asignar pedido " + p.getId()
                     + " (GLP=" + p.getCantidadGlp()
                     + ", destino=" + p.getDestino().getPosX() + ", " + p.getDestino().getPosY()
                     + ", plazo=" + p.getPlazoMaximoEntrega() + ")");
             boolean asignado = false;
-            for (PlanCamion plan : plans) {
+            ArrayList<PlanCamion> rotatedPlans = new ArrayList<>();////////////////////////////////////
+            for (int i = 0; i < plans.size(); i++) {
+                rotatedPlans.add(plans.get((i + offset) % plans.size()));
+            }//////////////////////////
+            for (PlanCamion plan : rotatedPlans) {////////////////////////
                 Camion c = plan.getCamion();
                 System.out.println("  -> Camión " + c.getCodigo()
                         + " (capMax=" + c.getCapacidadMaxima()
@@ -358,6 +362,7 @@ public class SimulatedAnnealing {
                 // hora de plazo maximo es: "+p.getPlazoMaximoEntrega()+" y la hora actual es:
                 // "+now);
             }
+            offset++;
         }
 
         // Segundo intento

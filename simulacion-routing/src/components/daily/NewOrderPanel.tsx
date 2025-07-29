@@ -7,6 +7,7 @@ import axios from "axios";
 
 export default function NewOrderPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const [mensaje, setMensaje] = useState('');///////////////////////////
   const [formData, setFormData] = useState({
     codigoCliente: '',
     posX: '',
@@ -39,6 +40,8 @@ export default function NewOrderPanel() {
       console.log("Archivo subido:", response.data);
       setMostrarCargaArchivo(false);
       setArchivo(null);
+      setMensaje("✅ Pedidos cargados desde archivo");
+      setTimeout(() => setMensaje(''), 1000);
     } catch (error) {
       console.error("Error al subir archivo:", error);
     }
@@ -77,8 +80,10 @@ export default function NewOrderPanel() {
     };
 
     try {
-      const response = await axios.post("http://localhost:8080/api/pedidos/registrarPedido", payload);
+      const response = await axios.post("/api/pedidos/registrarPedido", payload);
       console.log("Pedido creado correctamente:", response.data);
+      setMensaje("✅ Pedido cargado exitosamente");
+      setTimeout(() => setMensaje(''), 2000); // se borra en 2s
     } catch (error) {
       console.error("Error al crear pedido:", error);
     }
@@ -215,6 +220,11 @@ export default function NewOrderPanel() {
             </form>
           </div>
         </div>
+        {mensaje && (
+        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
+          {mensaje}
+        </div>
+)}
       </div>
       {mostrarCargaArchivo && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-40">

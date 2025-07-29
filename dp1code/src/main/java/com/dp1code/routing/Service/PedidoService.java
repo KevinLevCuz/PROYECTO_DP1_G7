@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -87,7 +89,7 @@ public class PedidoService {
                 pedido.setTiempoDescarga(rs.getTimestamp("tiempoDescarga").toLocalDateTime());
                 pedido.setIdCliente(rs.getString("idCliente"));
                 pedido.setEntregado(rs.getBoolean("entregado"));
-                pedido.setHoraSiguientePedido(rs.getTimestamp("siguienteHoraPedido").toLocalDateTime());
+                pedido.setHoraSiguientePedido(fin);
                 pedido.setSigId(String.valueOf(rs.getInt("siguienteId")));
                 pedido.setDestino(destino);
                 pedidos.add(pedido);
@@ -120,9 +122,11 @@ public class PedidoService {
             }
 
             // Insertar pedido
-            String sqlPedido = "INSERT INTO prueba_camiones_diario.Pedido (destino_id, cantidadGlp, horaPedido, plazoMaximoEntrega, tiempoDescarga, entregado, cliente) "
+            String sqlPedido = "INSERT INTO prueba_camiones_diario.Pedido (destino_id, cantidadGlp, horaPedido, plazoMaximoEntrega, tiempoDescarga, entregado, idCliente, id) "
                     +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            String id = "2000" + String.format("%04d", new Random().nextInt(10000));
+
             try (PreparedStatement ps = conn.prepareStatement(sqlPedido)) {
                 LocalDateTime horaPedido = input.getHoraPedido();
                 LocalDateTime plazoMax = input.getPlazoMaximoEntrega();
@@ -135,6 +139,7 @@ public class PedidoService {
                 ps.setTimestamp(5, Timestamp.valueOf(tiempoDescarga));
                 ps.setBoolean(6, false);
                 ps.setString(7, input.getIdCliente());
+                ps.setString(8, id);
 
                 int rows = ps.executeUpdate();
                 return rows > 0;

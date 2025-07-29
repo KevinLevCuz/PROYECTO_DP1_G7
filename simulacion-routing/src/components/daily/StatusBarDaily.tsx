@@ -13,6 +13,7 @@ export default function StatusBar() {
     const [pedidos, setPedidos] = useState({ entregados: 0, total: 3 });
     const { simTime } = useSimTime();
     const [mounted, setMounted] = useState(false);
+    
 
   useEffect(() => {
     const now = new Date();

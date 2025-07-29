@@ -32,7 +32,7 @@ public class CamionService {
         String sql = "UPDATE prueba_camiones_exper.Camion c SET " +
                 "glpTanque = ?, " +
                 "glpActual = ?, " +
-                "ubicacionActual_id = (SELECT id FROM prueba_camiones_diario.Nodo WHERE posX = ? AND posY = ?), " +
+                "ubicacionActual_id = (SELECT id FROM prueba_camiones_exper.Nodo WHERE posX = ? AND posY = ?), " +
                 "num_pedidos_entregados = ?, " +
                 "estado = ( " +
                 "  SELECT CASE " +
@@ -256,7 +256,7 @@ public class CamionService {
     }
 
     public boolean actualizarGlpTanqueCamion(double glpTanque, String codigoCamion) {
-        String sql = "UPDATE Camion SET glpTanque = ? WHERE codigo = ?";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET glpTanque = ? WHERE codigo = ?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -274,7 +274,7 @@ public class CamionService {
     }
 
     public boolean actualizarGlpCargaCamion(double glpActual, String codigoCamion) {
-        String sql = "UPDATE Camion SET glpActual = ? WHERE codigo = ?";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET glpActual = ? WHERE codigo = ?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -334,7 +334,7 @@ public class CamionService {
         return camiones;
     }
     public boolean actualizarEstadoEnRutaPosotivo(String codigoCamion) {
-        String sql = "UPDATE Camion SET enRuta = ? WHERE codigo = ?";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET enRuta = ? WHERE codigo = ?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -352,7 +352,7 @@ public class CamionService {
     }
 
     public boolean actualizarEstadoEnRutaNegativo(String codigoCamion) {
-        String sql = "UPDATE Camion SET enRuta = ? WHERE codigo = ?";
+        String sql = "UPDATE prueba_camiones_exper.Camion SET enRuta = ? WHERE codigo = ?";
 
         try (Connection conn = DatabaseService.getConnection();
                 PreparedStatement ps = conn.prepareStatement(sql)) {

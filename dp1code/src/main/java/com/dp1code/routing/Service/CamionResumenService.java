@@ -25,7 +25,7 @@ public class CamionResumenService {
                     WHEN num_pedidos_entregados = 0 THEN 0 
                     ELSE combustible_consumido / num_pedidos_entregados 
                 END AS promedioGLPPedido
-            FROM prueba_camiones.Camion;
+            FROM prueba_camiones_exper.Camion;
         """;
 
         try (Connection conn = DatabaseService.getConnection();

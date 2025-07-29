@@ -532,7 +532,7 @@ return () => { cancelado = true; };
     plant: Planta,
     spacing: number
   ) => {
-    const isPrincipal = plant.id == "1"; // Ajusta esta lógica según tu API
+    const isPrincipal = plant.id == "4"; // Ajusta esta lógica según tu API
     const img = isPrincipal ? plantPrincipalImgRef.current : plantSecundariaImgRef.current;
 
     if (!img) return;
@@ -1045,13 +1045,15 @@ return () => { cancelado = true; };
       </div>
 
       <div className="absolute inset-0 flex items-center justify-center overflow-auto">
-        <div className="absolute bottom-30 left-4 z-20 bg-white p-2 rounded shadow-md max-h-120 overflow-auto w-104 text-xs">
+        {/* <div className="absolute bottom-30 left-4 z-20 bg-white p-2 rounded shadow-md max-h-120 overflow-auto w-104 text-xs">
           <strong className="block mb-1">Pedidos Activos:</strong>
           <pre className="mb-2 whitespace-pre-wrap">{textoPedidos}</pre>
 
           <strong className="block mb-1">SubRutas Activas:</strong>
           <pre className="whitespace-pre-wrap">{textoSubRutas}</pre>
-        </div>
+        </div> */}
+        
+
         <canvas
           ref={canvasRef}
           className="bg-white border border-gray-400"

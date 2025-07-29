@@ -50,14 +50,14 @@ public class Planta {
     private void AsignarGlpPorTipo(String tipo) {
         switch (tipo) {
             case "PRINCIPAL":
-                this.capacidadMaxima = 10000;
-                this.glpDisponible=10000;
-                this.glpDisponibleSim=10000;
+                this.capacidadMaxima = 1000000;/////////////7
+                this.glpDisponible=1000000;/////////////////////7777
+                this.glpDisponibleSim=1000000;//////////////////777
                 break;
             case "SECUNDARIO":
-                this.capacidadMaxima = 60.0;
-                this.glpDisponible=60.0;
-                this.glpDisponibleSim=60.0;
+                this.capacidadMaxima = 60.0;////////////////
+                this.glpDisponible=0.0;///////////77
+                this.glpDisponibleSim=0.0;///////////////////
                 break;
             default:
                 System.out.println("Ingreso mal algún tipo de Planta.");
