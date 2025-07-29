@@ -15,6 +15,36 @@ export default function NewOrderPanel() {
     tiempoMaximo: ''
   });
 
+  const [mostrarCargaArchivo, setMostrarCargaArchivo] = useState(false);
+  const [archivo, setArchivo] = useState<File | null>(null);
+
+  const handleArchivoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setArchivo(e.target.files[0]);
+    }
+  };
+
+  const subirArchivo = async () => {
+    if (!archivo) return;
+
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+
+    try {
+      const response = await axios.post('http://localhost:8080/api/pedidos/cargarArchivo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      console.log("Archivo subido:", response.data);
+      setMostrarCargaArchivo(false);
+      setArchivo(null);
+    } catch (error) {
+      console.error("Error al subir archivo:", error);
+    }
+  };
+
+
   useEffect(() => {
     console.log("NewOrderPanel montado");
   }, []);
@@ -173,11 +203,33 @@ export default function NewOrderPanel() {
                   <FiPlus className="mr-2" />
                   Crear Pedido
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setMostrarCargaArchivo(true)}
+                  className="w-full mt-2 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center justify-center"
+                >
+                  <FiPlus className="mr-2" />
+                  Registrar Pedidos (Archivo)
+                </button>
               </div>
             </form>
           </div>
         </div>
       </div>
+      {mostrarCargaArchivo && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-40">
+          <div className="bg-white p-6 rounded shadow-md w-96">
+            <h3 className="text-lg font-semibold mb-4">Cargar Archivo de Pedidos</h3>
+            <input type="file" onChange={handleArchivoChange} className="mb-4" />
+            <div className="flex justify-end space-x-2">
+              <button onClick={() => setMostrarCargaArchivo(false)} className="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Cancelar</button>
+              <button onClick={subirArchivo} className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Subir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </>
+
   );
 }

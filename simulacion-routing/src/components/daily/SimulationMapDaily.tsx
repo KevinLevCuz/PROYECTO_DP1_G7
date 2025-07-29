@@ -11,6 +11,7 @@ import { CamionStats } from "../../lib/api";
 import { PedidoStats } from "../../lib/api";
 import { obtenerEstadisticasCamionesDiaDia } from "../../lib/api";
 import { obtenerEstadisticasPedidosDiaDia } from "../../lib/api";
+import { iniciarSimulacionDiaDiaSocket, detenerSimulacionDiaDiaSocket } from "../../lib/api";
 
 
 
@@ -185,7 +186,7 @@ export default function SimulationMap() {
   }, [simulationTrigger]); */
 
   //const fetchLoop = async () => {
-  useEffect(() => {
+  /*useEffect(() => {
     if (fechaInicioRef.current === null) return;
     let cancelado = false;
 
@@ -193,78 +194,99 @@ export default function SimulationMap() {
       try {
         //console.log("FECHA PROXIMA: " + fechaProxima.current + " FECHA INIcIO: " + fechaInicioRef.current + "FECHA ACTUAL: " + simTimeRef.current);
         //********************************** */
-        if (
-          cont.current === 0 ||
-          (fechaProxima.current && Math.floor(simTimeRef.current.getTime() / 1000) === Math.floor(fechaProxima.current.getTime() / 1000))
-        ) {
-          console.log("Ingresooo")
-          /*if (cont.current === 0) {
-            // Establece la próxima fecha esperada 2h más adelante (en tiempo simulado)
-            fechaProxima.current = new Date(fechaInicioRef.current.getTime() + 2 * 60 * 60 * 1000);
-            console.log("Set fechaProxima por primera vez:", fechaProxima.current);
-          }*/
+  /*if (
+    cont.current === 0 ||
+    (fechaProxima.current && Math.floor(simTimeRef.current.getTime() / 1000) === Math.floor(fechaProxima.current.getTime() / 1000))
+  ) {
+    console.log("Ingresooo")*/
+  /*if (cont.current === 0) {
+    // Establece la próxima fecha esperada 2h más adelante (en tiempo simulado)
+    fechaProxima.current = new Date(fechaInicioRef.current.getTime() + 2 * 60 * 60 * 1000);
+    console.log("Set fechaProxima por primera vez:", fechaProxima.current);
+  }*/
 
-          const isoStr = simTimeRef.current.toISOString().replace("Z", "");
+  /*const isoStr = simTimeRef.current.toISOString().replace("Z", "");
 
-          if (fechaInicioRef.current == null) return;
-          //const start = Date.now();
-          //console.log("FECHA PROXIMA: " + fechaProxima.current?.getTime().toString() + " FECHA INIcIO: " + fechaInicioRef.current + "FECHA ACTUAL: " + simTime);
-          const [solucion] = await Promise.all([
-            monitoreoDiario(fechaInicioRef.current.toISOString().replace("Z", ""), isoStr, cont.current)
-          ]);
-          if (!solucion) {
-            console.warn("⚠️ La solución es null");
-            setShowErrorModal(true);
-            return;
-          }
-          const pedidosObtenidos = solucion.planesCamion.flatMap(plan =>
-            plan.subRutas
-              .filter(subRuta => subRuta.pedido)
-              .map(subRuta => subRuta.pedido)
-          ).filter(pedido => pedido) as Pedido[];
+  if (fechaInicioRef.current == null) return;
+  //const start = Date.now();
+  //console.log("FECHA PROXIMA: " + fechaProxima.current?.getTime().toString() + " FECHA INIcIO: " + fechaInicioRef.current + "FECHA ACTUAL: " + simTime);
+  const [solucion] = await Promise.all([
+    monitoreoDiario(fechaInicioRef.current.toISOString().replace("Z", ""), isoStr, cont.current)
+  ]);
+  if (!solucion) {
+    console.warn("⚠️ La solución es null");
+    setShowErrorModal(true);
+    return;
+  }
+  const pedidosObtenidos = solucion.planesCamion.flatMap(plan =>
+    plan.subRutas
+      .filter(subRuta => subRuta.pedido)
+      .map(subRuta => subRuta.pedido)
+  ).filter(pedido => pedido) as Pedido[];
 
-          pedidosObtenidos.forEach(pedido => {
-            const horaSiguiente = new Date(pedido.horaSiguientePedido);
-            console.log("FECHA DEL PEDIDOOOO: " + horaSiguiente);
-            if (fechaProxima.current && fechaProxima.current < horaSiguiente) {
-              // lógica aquí
+  pedidosObtenidos.forEach(pedido => {
+    const horaSiguiente = new Date(pedido.horaSiguientePedido);
+    console.log("FECHA DEL PEDIDOOOO: " + horaSiguiente);
+    if (fechaProxima.current && fechaProxima.current < horaSiguiente) {
+      // lógica aquí
 
-              fechaProxima.current = horaSiguiente;
-            }
-          });
-          if (fechaProxima.current != null && (fechaProxima.current?.getTime() < simTimeRef.current.getTime())) {
-            // Add 30 seconds (30 * 1000 milliseconds) to the current timestamp of fechaProxima.current
-            fechaProxima.current = new Date(simTimeRef.current.getTime() + 30 * 1000);
-          }
-          console.log("PROXIMA LLAMADA AL BACKKKKKKKK: " + fechaProxima.current);
-          //console.log("La solucion obtenida con la nueva fecha:" + isoStr + " es: " + solucion.planesCamion.map(plan => plan.subRutas.map(subR => subR.trayectoria.map(tray => tray.posX + " " + tray.posY))));
-          setlistSolucion(prev => [...prev, solucion]);
-          //console.log("NUEVOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO") ************************
-          ///fechaActual = new Date(fechaActual.getTime() + 6 * 60 * 1000 + 40 * 1000); // 6 min 40 s simulados
-          //await new Promise(resolve => setTimeout(resolve, 7));
-          //const elapsed = Date.now() - start; 
-          /*await new Promise((resolve) =>
-            setTimeout(resolve, 0)  // Espera 90 segundos
-          );*/
-          cont.current = 1;
-        }
-      } catch (error) {
-        console.error("Error al obtener solución:", error);
-      }
-      setTimeout(ejecutarLoop, 1000);
-    };
-    ejecutarLoop();
-    return () => { cancelado = true; };
-  }, [loop.current]);
+      fechaProxima.current = horaSiguiente;
+    }
+  });
+  if (fechaProxima.current != null && (fechaProxima.current?.getTime() < simTimeRef.current.getTime())) {
+    // Add 30 seconds (30 * 1000 milliseconds) to the current timestamp of fechaProxima.current
+    fechaProxima.current = new Date(simTimeRef.current.getTime() + 30 * 1000);
+  }
+  console.log("PROXIMA LLAMADA AL BACKKKKKKKK: " + fechaProxima.current);
+  //console.log("La solucion obtenida con la nueva fecha:" + isoStr + " es: " + solucion.planesCamion.map(plan => plan.subRutas.map(subR => subR.trayectoria.map(tray => tray.posX + " " + tray.posY))));
+  setlistSolucion(prev => [...prev, solucion]);
+  //console.log("NUEVOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO") ************************
+  ///fechaActual = new Date(fechaActual.getTime() + 6 * 60 * 1000 + 40 * 1000); // 6 min 40 s simulados
+  //await new Promise(resolve => setTimeout(resolve, 7));
+  //const elapsed = Date.now() - start; 
+  /*await new Promise((resolve) =>
+    setTimeout(resolve, 0)  // Espera 90 segundos
+  );*/
+  /*cont.current = 1;
+}
+} catch (error) {
+console.error("Error al obtener solución:", error);
+}
+setTimeout(ejecutarLoop, 1000);
+};
+ejecutarLoop();
+return () => { cancelado = true; };
+}, [loop.current]);*/
 
-  useEffect(() => {
+  /*useEffect(() => {
     fechaInicioRef.current = new Date();
     fechaProxima.current = fechaInicioRef.current;
     /*********************console.log("FECHA ACTUAL: " + fechaInicioRef.current);*/
-    if (fechaInicioRef.current !== null) {
-      loop.current = 1;
-    }
+  /*if (fechaInicioRef.current !== null) {
+    loop.current = 1;
+  }
+}, []);*/
+
+  useEffect(() => {
+    /*if (!fechaInicioRef.current) return;
+
+    const fecha = fechaInicioRef.current.toISOString().replace("Z", "");
+    console.log("Iniciando simulación día a día con fecha:", fecha);*/
+    const ahora = new Date().toISOString().replace("Z", "");
+    iniciarSimulacionDiaDiaSocket(ahora, (solucion) => {
+      if (!solucion) {
+        // Mostrar error o mensaje de colapso
+        return;
+      }
+
+      setlistSolucion(prev => [...prev, solucion]);
+    });
+
+    return () => {
+      detenerSimulacionDiaDiaSocket();
+    };
   }, []);
+
 
   /*useEffect(() => {
     if (fechaInicioRef.current !== null) {
@@ -837,7 +859,7 @@ export default function SimulationMap() {
         progressData.progress = 0;
         progressData.currentStep++;
         const currentStep = fullRoute[progressData.currentStep] || { posX: 0, posY: 0 };
-        
+
         const nextStep = fullRoute[progressData.currentStep + 1] || { posX: 0, posY: 0 };
         progressData.currentPos = [currentStep.posX, currentStep.posY];
         progressData.targetPos = [nextStep.posX, nextStep.posY];

@@ -9,6 +9,7 @@ import com.dp1code.routing.Model.Bloqueo;
 import com.dp1code.routing.Model.Planta;
 import com.dp1code.routing.Model.Simulacion;
 import com.dp1code.routing.Service.PedidoService;
+import com.dp1code.routing.Service.PlantaService;
 import com.dp1code.routing.Service.RoutingService;
 
 // Los imports de Spring Web:
@@ -31,16 +32,17 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 @CrossOrigin(origins = {
-    "https://h982equipo7g.duckdns.org",
-    "http://localhost:3000"
+        "https://h982equipo7g.duckdns.org",
+        "http://localhost:3000"
 })
 
 @RestController
 @RequestMapping("/api/routing")
 public class RoutingController {
 
-   private final RoutingService routingService;
+    private final RoutingService routingService;
     private final SimpMessagingTemplate messagingTemplate;
+    private boolean simulacionActiva = false;
 
     public RoutingController(RoutingService routingService, SimpMessagingTemplate messagingTemplate) {
         this.routingService = routingService;
@@ -48,31 +50,53 @@ public class RoutingController {
     }
 
     @MessageMapping("/IniciarSimulacionSemanal")
-    public void iniciarSimulacion(Map<String, String> payload) throws IOException{
+    public void iniciarSimulacion(Map<String, String> payload) throws IOException {
         String inicioStr = payload.get("ahora") + "Z"; // usamos el "ahora" inicial
         Instant inicio = Instant.parse(inicioStr);
         LocalDateTime fechaInicio = LocalDateTime.ofInstant(inicio, ZoneOffset.UTC).minusHours(5);
         routingService.iniciarSimulacionConWebSocket(fechaInicio, messagingTemplate);
     }
 
+    @MessageMapping("/iniciarSimulacionDiaDia")
+    public void iniciarSimulacionDiaDia(Map<String, String> payload) throws IOException {
 
-//@RequestBody OptimizeRequest request, LocalDateTime ahora = LocalDateTime.parse(request.getAhora());
+        synchronized (this) {
+            if (!simulacionActiva) {
+                simulacionActiva = true;
+                try {
+                    System.out.println("🔄 Iniciando simulación día a día...");
+                    String inicioStr = payload.get("ahora") + "Z";
+                    Instant inicio = Instant.parse(inicioStr);
+                    LocalDateTime fechaInicio = LocalDateTime.ofInstant(inicio, ZoneOffset.UTC).minusHours(5);
+                    routingService.iniciarSimulacionConWebSocketDiaDia(fechaInicio, messagingTemplate);
+                } catch (Exception e) {
+                    simulacionActiva = false;
+                    throw e; // o loguea el error
+                }
+            } else {
+                System.out.println("⚠️ Simulación ya está activa, no se puede iniciar de nuevo.");
+            }
+        }
+
+    }
+
+    // @RequestBody OptimizeRequest request, LocalDateTime ahora =
+    // LocalDateTime.parse(request.getAhora());
     @PostMapping("/simulacionSemanal")
     public Solucion simulacionSemanal(@RequestBody Map<String, String> payload) throws IOException {
         String ahoraStr = payload.get("ahora");
         String fechaVariableStr = payload.get("fechaVariable");
 
-        
         LocalDateTime ahoraLocal = LocalDateTime.parse(ahoraStr);
         LocalDateTime fechaVariableLocal = LocalDateTime.parse(fechaVariableStr);
 
-        System.out.println("Esta ingresando con la hora local de: "+ahoraLocal);
-        
+        System.out.println("Esta ingresando con la hora local de: " + ahoraLocal);
+
         Solucion solucion = routingService.simulacionSemanal(ahoraLocal, fechaVariableLocal);
-        
 
         return solucion;
     }
+
     @PostMapping("/monitoreoDiario")
     public Solucion monitoreoDiario(@RequestBody Map<String, String> payload) throws IOException {
         String ahoraStr = payload.get("ahora") + "Z";
@@ -84,39 +108,42 @@ public class RoutingController {
         LocalDateTime ahoraLocal = LocalDateTime.ofInstant(ahora, ZoneOffset.UTC).minusHours(5);
         LocalDateTime fechaVariableLocal = LocalDateTime.ofInstant(fechaVariable, ZoneOffset.UTC).minusHours(5);
 
-        System.out.println("Esta ingresando con la hora local de: "+ahoraLocal);
-        
-        Solucion solucion = routingService.obtenerDiaDia(ahoraLocal, fechaVariableLocal, cont);
-        
-        
+        System.out.println("Esta ingresando con la hora local de: " + ahoraLocal);
 
-        /* 
-        System.out.println("Se retorna: ");
-        for(Solucion s : simulacion.getSoluciones()) {
-            for(PlanCamion p: s.getPlanesCamion()) {
-                System.out.println("El camion: "+p.getCamion().getCodigo() + " y el size de subRutas es: "+p.getSubRutas().size());
-                for(SubRuta sub: p.getSubRutas()) {
-                    System.out.println(sub.getTrayectoria().get(0).getPosX()+", "+sub.getTrayectoria().get(0).getPosY() + " Fin: "+sub.getTrayectoria().get(sub.getTrayectoria().size()-1).getPosX()+", "+sub.getTrayectoria().get(sub.getTrayectoria().size()-1).getPosY());
-                }
-            }
-        }*/
+        Solucion solucion = routingService.obtenerDiaDia(ahoraLocal, fechaVariableLocal, cont);
+
+        /*
+         * System.out.println("Se retorna: ");
+         * for(Solucion s : simulacion.getSoluciones()) {
+         * for(PlanCamion p: s.getPlanesCamion()) {
+         * System.out.println("El camion: "+p.getCamion().getCodigo() +
+         * " y el size de subRutas es: "+p.getSubRutas().size());
+         * for(SubRuta sub: p.getSubRutas()) {
+         * System.out.println(sub.getTrayectoria().get(0).getPosX()+", "+sub.
+         * getTrayectoria().get(0).getPosY() +
+         * " Fin: "+sub.getTrayectoria().get(sub.getTrayectoria().size()-1).getPosX()
+         * +", "+sub.getTrayectoria().get(sub.getTrayectoria().size()-1).getPosY());
+         * }
+         * }
+         * }
+         */
         return solucion;
     }
 
-/* 
-    @PostMapping("/optimize")
-    public Solucion optimize() throws IOException {
-        LocalDateTime ahora = LocalDateTime.now()
-                .withDayOfMonth(25)
-                .withHour(12)
-                .withMinute(53)
-                .withSecond(20)
-                .withNano(0);
-        return routingService.optimize(ahora);
-    }*/
+    /*
+     * @PostMapping("/optimize")
+     * public Solucion optimize() throws IOException {
+     * LocalDateTime ahora = LocalDateTime.now()
+     * .withDayOfMonth(25)
+     * .withHour(12)
+     * .withMinute(53)
+     * .withSecond(20)
+     * .withNano(0);
+     * return routingService.optimize(ahora);
+     * }
+     */
 
-    
-    @PostMapping("/obtenerPedidos") 
+    @PostMapping("/obtenerPedidos")
     public ArrayList<Pedido> obtenerPedidos() throws IOException {
         LocalDateTime now = LocalDateTime.now()
                 .withDayOfMonth(18)
@@ -124,12 +151,13 @@ public class RoutingController {
                 .withMinute(53)
                 .withSecond(20)
                 .withNano(0);
-        return routingService.cargarPedidosSegmentado("data/pedidos.txt", now); 
+        return routingService.cargarPedidosSegmentado("data/pedidos.txt", now);
     }
 
     @PostMapping("/obtenerPlantas")
     public ArrayList<Planta> obtenerPlantas() throws IOException {
-        return routingService.obtenerPlantas(); 
+        PlantaService plantaService = new PlantaService();
+        return plantaService.obtenerTodas();
     }
 
     @PostMapping("/obtenerCamiones")
@@ -140,7 +168,7 @@ public class RoutingController {
                 .withMinute(53)
                 .withSecond(20)
                 .withNano(0);
-        return routingService.cargarCamiones("data/camiones.txt", ahora); 
+        return routingService.cargarCamiones("data/camiones.txt", ahora);
     }
 
     @PostMapping("/obtenerBloqueos")
@@ -149,7 +177,6 @@ public class RoutingController {
     }
 
     // Registrar un pedido:
-    
 
     // DTO para recibir el POST
     public static class OptimizeRequest {
@@ -158,18 +185,32 @@ public class RoutingController {
         private String ahora;
 
         // Jackson necesita el constructor vacío:
-        public OptimizeRequest() {}
+        public OptimizeRequest() {
+        }
 
         // getters y setters:
-        public List<Pedido> getPedidos() { return pedidos; }
-        public void setPedidos(List<Pedido> pedidos) { this.pedidos = pedidos; }
+        public List<Pedido> getPedidos() {
+            return pedidos;
+        }
 
-        public List<Camion> getCamiones() { return camiones; }
-        public void setCamiones(List<Camion> camiones) { this.camiones = camiones; }
+        public void setPedidos(List<Pedido> pedidos) {
+            this.pedidos = pedidos;
+        }
 
-        public String getAhora() { return ahora; }
-        public void setAhora(String ahora) { this.ahora = ahora; }
+        public List<Camion> getCamiones() {
+            return camiones;
+        }
+
+        public void setCamiones(List<Camion> camiones) {
+            this.camiones = camiones;
+        }
+
+        public String getAhora() {
+            return ahora;
+        }
+
+        public void setAhora(String ahora) {
+            this.ahora = ahora;
+        }
     }
 }
-
-

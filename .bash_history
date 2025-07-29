@@ -1,665 +1,3 @@
-ls
-clear
-cd /etc
-cd nginx/
-ls
-cd sites-available/
-ls
-nano default
-ls
-cd
-ls
-clear
-ls
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-curl -X OPTIONS http://localhost:8080/api/routing/simulacionSemanal -v
-sudo lsof -i :8080
-sudo kill -9 244001
-ls
-ls -la
-cd /etc/nginx/ sites-available/
-sudo cd /etc/nginx/sites-available/
-sudo
-sudo s
-sudo -s
-curl -X OPTIONS http://200.16.7.185/api/api/routing/simulacionSemanal -v
-clear
-cd /etc/nginx/
-ls
-cd sites-available/
-ls
-clear
-sudo nano default
-cd
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-ls
-cd src/main/java/com/dp1code/routing/Controller/
-ls
-sudo nano RoutingController.java 
-cd
-cd simulacion-routing/simulacion-routing/
-ls
-cd src/
-ls
-cd lib/
-sudo nano api.tsx
-sudo nano api.ts
-cd
-clear
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-./mvnw clean package
-clear
-cd src/main/java/com/dp1code/routing/Controller/
-sudo nano RoutingController.java 
-cd
-clear
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd
-cd /etc/nginx/
-ls
-de sites-available/
-cd sites-available/
-clear
-ls
-sudo nano default
-clear
-cd
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-cd
-sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl reload nginx
-clear
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd /etc/nginx/sites-available/
-ls
-sudo nano default
-clear
-cd /etc/nginx/sites-available/
-sudo nano default
-sudo nginx -t
-sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl reload nginx
-cd
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-ls
-cd simulacion-routing/
-ls
-cd simulacion-routing/
-ls
-cd src/
-ls
-cd components/
-ls
-cd daily/
-ls
-sudo nano SimulationMapDaily.tsx 
-cd
-clear
-ls
-cd simulacion-routing/
-ls
-cd simulacion-routing/
-clear
-npm install
-clear
-npm run build
-ls
-clear
-cd src/
-ls
-cd components/
-ls
-cd collapse/
-ls
-sudo nano SimulationMap.tsx 
-clear
-cd
-clear
-cd simulacion-routing/
-npm run build
-cd src/components/daily/
-ls
-sudo nano SimulationMapDaily.tsx 
-cd
-clear
-cd simulacion-routing/simulacion-routing/
-npm run build
-clear
-npm run start
-sudo lsof -i :8080
-sudo kill -9 242544
-sudo lsof -i :8080
-clear
-clear
-cd /etc/nginx/sites-available/
-ls
-sudo nano default
-clear
-sudo nginx -t
-clear
-sudo systemctl reload nginx
-clear
-sudo lsof -i :8080
-sudo kill -9 246093
-sudo lsof -i :8080
-clear
-cd dp1code/
-cd src/main/java/com/dp1code/routing/Controller/
-sudo nano RoutingController.java 
-cd
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd /etc/nginx/sites-available/
-sudo nano default
-clear
-cd /etc/nginx//sites-available/
-ls
-sudo nano default
-sudo nginx -t
-sudo systemctl reload nginx
-clear
-cd
-clear
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd simulacion-routing/simulacion-routing/
-clear
-nom run start
-clear
-ls
-cd src/lib/
-ls
-nano api.ts
-cd
-cd simulacion-routing/simulacion-routing/
-clear
-npm run build
-clear
-npm run start
-clear
-clear
-cd simulacion-routing/simulacion-routing/src/lib/
-clear
-ls
-sudo nano api.ts 
-cd ..
-ls
-cd components/
-ls
-cd weekly/
-clear
-ls
-sudi nano SimulationMap.tsx 
-sudo nano SimulationMap.tsx 
-clear
-cd
-clear
-sudo certbot certificates
-cd /etc/nginx/
-ls
-cd sites-available/
-clear
-ls
-sudo nano default
-sudo nginx -t
-sudo systemctl reload nginx
-clear
-cd
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-sudo certbot --nginx -d h982equipo7g.duckdns.org
-clear
-cd /etc/nginx/sites-available/
-sudo nano default
-cs
-cd
-clear
-sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-sudo certbot --nginx -d h982equipo7g.duckdns.org
-sudo systemctl restart nginx
-cd simulacion-routing/simulacion-routing/
-clear
-npm run build
-clear
-npm run build
-clear
-npm run start
-clear
-cd simulacion-routing/simulacion-routing/src/lib/
-clear
-ls
-sudo nano api.ts
-cd
-cd simulacion-routing/simulacion-routing/
-clear
-npm run build
-clear
-npm run start
-clear
-cd
-clear
-sudo lsof -i :8080
-clear
-cd simulacion-routing/simulacion-routing/
-clear
-npm run build
-clear
-npm run start
-cd
-clear
-cd /etc/nginx/sites-available/
-clear
-sudo nano default
-clear
-sudo ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
-sudo nginx -t
-sudo systemctl reload nginx
-clear
-cd simulacion-routing/simulacion-routing/
-npm run build
-cd
-clear
-sudo certbot certificates
-clear
-sudo lsof -i :8080
-sudo kill -9 250689
-sudo lsof -i :8080
-clear
-cd dp1code/
-cd src/main/java/com/dp1code/routing/Controller/
-clear
-sudo nano BloqueoController.java 
-sudo nano CamionController.java 
-sudo nano MantenimientoController.java 
-sudo nano NodoController.java 
-sudo nano PedidoController.java 
-sudo nano Pla
-sudo nano PlantaController.java 
-sudo nano RoutingController.java 
-sudo nano SubrutaController.java 
-sudo nano TimeRangeController.java 
-clear
-cd 
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd simulacion-routing/simulacion-routing/
-clear
-npm run build
-clear
-npm run start
-sudo lsof -i :3000
-clear
-npm run start
-sudo lsof -i :3000
-ps aux | grep node
-clear
-sudo systemctl restart nginx
-npm run start
-ps aux | grep node
-sudo lsof -nP -iTCP:3000 -sTCP:LISTEN
-sudo ss -tulnp | grep :3000
-sudo kill -9 250060
-clear
-npm run start
-clear
-sudo lsof -i :3000
-clear
-sudo lsof -i :3000
-sudo lsof -i :3001
-clear
-sudo lsof -i :8080
-sudo kill -9 249174
-sudo lsof -i :8080
-clear
-sudo systemctl status certbot.timer
-clear
-clear
-sudo lsof -i :8080
-sudo kill -9 251585
-sudo lsof -i :3000
-sudo lsof -nP -iTCP:3000 -sTCP:LISTEN
-sudo ss -tulnp | grep :3000
-sudo kill -9 251679
-sudo ss -tulnp | grep :3000
-clear
-ls
-cd simulacion-routing/simulacion-routing/
-cd src/lib/
-clear
-ls
-sudo nano api.ts 
-clear
-cd
-rm -rf dp1code/
-rm -rf simulacion-routing/
-clear
-ls
-clear
-ls
-rm -rf dp1code/
-ls
-rm -rf dp1code/
-clear
-sudo rm -rf dp1code/
-ls
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-chmod +x mvnw
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd simulacion-routing/simulacion-routing/
-clear
-npm run build
-clear
-sudo lsof -i :8080
-sudo kill -9 25246
-sudo kill -9 252546
-clear
-sudo lsof -i :8080
-clear
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-ls
-sudo rm -rf simulacion-routing/
-ls
-clear
-ls
-cd simulacion-routing/
-npm run build
-npm install
-clear
-npm run build
-cd src/app/daily/
-clear
-sudo nano page.tsx 
-clear
-cd ..
-npm run build
-clear
-npm run start
-clear
-cd simulacion-routing/
-npm run build
-clear
-npm run start
-clear
-cd src/components/weekly/
-ls
-sudo nano SimulationMap.tsx 
-clear
-cd ..
-clear
-npm run build
-clear
-npm run start
-clear
-cd simulacion-routing/src/components/weekly/
-ls
-clear
-ls
-sudo nano SimulationMap.tsx 
-clear
-cd
-sudo lsof -nP -iTCP:3000 -sTCP:LISTEN
-sudo ss -tulnp | grep :3000
-sudo kill -9 253946
-sudo ss -tulnp | grep :3000
-clear
-cd simulacion-routing/
-sudo lsof -i :8080
-cd
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd dp1code/
-ls
-cd src/main/
-ls
-cd java/
-ls
-cd com/
-ls
-cd dp1code/
-ls
-cd r
-cd routing/
-clear
-ls
-cd Controller/
-ls
-sudo nano BloqueoController.java 
-cd
-clear
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd simulacion-routing/src/lib/
-clear
-sudo nano api.ts 
-sudo systemctl restart nginx
-sudo ss -tulnp | grep :3000
-sudo kill -9 254680
-sudo lsof -i :8080
-sudo kill -9 254354
-clear
-cd
-cd simulacion-routing/
-clear
-npm run build
-clear
-npm run start
-clear
-cd src/
-cd components/
-cd weekly/
-clear
-ls
-sudo nano SimulationMap.tsx 
-clear
-cd ..
-clear
-npm run build
-clear
-npm run start
-cd src/components/weekly/
-sudo nano SimulationMap.tsx 
-cd ..
-clear
-npm run build
-npm run start
-clear
-cd src/components/weekly/
-clear
-sudo nano SimulationMap.tsx 
-clear
-cd ..
-clear
-npm run build
-npm run start
-clear
-cd s
-cd simulacion-routing/
-clear
-ls
-clear
-npm install
-npm run build
-clear
-cd
-sudo rm -rf simulacion-routing/
-ls
-clear
-ls
-cd s
-cd simulacion-routing/
-clear
-ls
-npm run build
-npm install
-clear
-npm run build
-cd src/app/collapse/
-ls
-sudo nano page.tsx 
-clear
-cd
-cd simulacion-routing/
-clear
-npm run build
-cd src/a
-cd src/app/collapse/
-clear
-sudo nano page.tsx 
-clear
-cd ..
-clear
-npm run build
-cd src/app/collapse/
-sudo nano page.tsx 
-clear
-cd ..
-npm run build
-cd src/components/daily/
-clear
-sudo lsof -i :8080
-sudo kill -9 12345
-sudo kill -9 255062
-clear
-cd dp1code/
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-sudo ss -tulnp | grep :3000
-clear
-sudo ss -tulnp | grep :3000
-sudo kill -9 255698
-clear
-clear
-cd simulacion-routing/
-clea
-clear
-npm run build
-clear
-npm run start
-clear
-clear
-cd simulacion-routing/src/components/weekly/
-clear
-sudo nano SimulationMap.tsx 
-clear
-cd 
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd simulacion-routing/
-npm run build
-clear
-npm run build
-clear
-npm run start
-cd dp1code/src/
-ls
-cd main/java/com/dp1code/routing/
-ls
-cd Service/
-clear
-ls
-sudo nano CamionService.java 
-clear
-cd
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd
-cd /etc/nginx/sites-available/
-clear
-sudo nano default
-sudo nginx -t
-sudo systemctl reload nginx
-clear
-cd
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-clear
-cd dp1code/src/
-ls
-cd ..
-clear
-cd simulacion-routing/src/components/weekly/
-ls
-sudo nano SimulationMap.tsx 
-clear
-clear
-cd simulacion-routing/src/components/weekly/
-clear
-ls
-sudo nano SimulationMap.tsx 
-sudo nano TimeContext.tsx 
-cd ..
-cd 
-cd simulacion-routing/
-clear
-npm run build
-clear
-npm run start
-clear
-clear
-sudo lsof -i :8080
-clear
-sudo lsof -i :8080
-clear
-sudo ss -tulnp | grep :3000
-clear
-cd dp1code/
-clear
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
-c
-clear
 clear
 cd simulacion-routing/
 clear
@@ -1997,4 +1335,666 @@ git branch -m main
 git push -u origin main
 git force push -u origin main
 git push -u origin main --force
+clear
+git init
+git add .
+git commit -m "video semanal"
+git remote add origin https://github.com/KevinLevCuz/PROYECTO_DP1_G7.git
+git remote add https://github.com/KevinLevCuz/PROYECTO_DP1_G7.git
+git remote add master https://github.com/KevinLevCuz/PROYECTO_DP1_G7.git
+git branch -M master
+git push
+git push -u origin master
+clear
+cd simulacion-routing/
+ls
+cd src
+ls
+clear
+sudo lsof -i :8080
+cd simulacion-routing/
+ls
+cd src/components/weekly/
+ls
+sudo nano SimulationMap.tsx 
+cd 
+cd simulacion-routing/
+npm run dev
+cd src/components/weekly/
+sudo nano SimulationMap.tsx 
+cd 
+cd simulacion-routing/
+npm run dev
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd simulacion-routing/src/components/weekly/
+sudo nano SimulationMap.tsx 
+CD 
+cd 
+cd simulacion-routing/
+npm run dev
+npm run build
+npm run dev
+npm run start
+cls
+clear
+npm run dev
+netstat -ano | findstr :3000
+npm run dev
+Get-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess
+npm run dev
+sudo netstat -tuln | grep :3000
+sudo ss -tuln | grep :3000
+sudo lsof -i :3000
+sudo netstat -tulpn | grep :3000
+sudo ss -tulnp | grep :3000
+sudo kill -9 <374340>
+sudo kill -9 374340
+clear
+npm run dev
+ps aux
+ps aux | grep java
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd simulacion-routing/src
+ls
+cd lib
+ls
+sudo nano api.ts
+cd
+cd sim
+cd simulacion-routing/
+npm run build
+npm run dev
+ls
+cd src/components/
+ls
+cd weekly/
+ls
+sudo nano SimulationMap.tsx 
+cd
+cd simulacion-routing/
+npm run dev
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src/main/java/com/dp1code/routing/Service/
+sudo nano RoutingService.java 
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cls
+clear
+ls
+cd src/
+ls
+cd main
+ls
+cd java/com/
+ls
+cd dp1code/routing/
+ls
+cd Service/
+cd ..
+cd Controller/
+sudo nano RoutingController.java 
+cd 
+cd dp1code/
+cd dp1code/
+ls
+cd src/
+ls
+cd main/java/
+ls
+cd com
+ls
+cd dp1code/routing/
+ls
+cd Controller/
+sudo nano RoutingController.java 
+cd 
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+ls
+cd src/main/java/com/
+ls
+cd dp1code/
+cd routing/
+ls
+cd Controller/
+sudo nano RoutingController.java 
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+ls
+cd src
+ls
+cd main/java/com
+ls
+cd dp1code
+cd 
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd simulacion-routing/
+npm run ev
+npm run dev
+sudo ss -tulnp | grep :3000
+sudo kill -9 375613
+clear
+npm run dev
+npm run start
+npm run build
+npm run start
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd simulacion-routing/
+ls
+cd src/
+ls
+cd components/
+ls
+cs weekly/
+cd weekly/
+cd
+cd simulacion-routing/src/components/weekly/
+sudo nano SimulationMap.tsx 
+cd simulacion-routing/
+cd src/components/weekly/
+sudo nano SimulationMap.tsx 
+sudo nano TimeContext.tsx 
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd 
+cd simulacion-routing/
+npm run build
+npm run start
+sudo ss -tulnp | grep :3000
+sudo kill -9 376054
+clear
+npm run build
+npm run start
+cd simulacion-routing/
+npm run build
+npm run start
+cd src/components/weekly/
+ls
+sudo nano SimulationMap.tsx 
+sudo nano TimeContext.tsx 
+sudo nano SimulationMap.tsx 
+CD
+cd
+cd simulacion-routing/
+npm run build
+npm run start
+ls
+cd src/components/weekly/
+sudo nano SimulationMap.tsx 
+sudo nano TimeContext.tsx 
+cd 
+cd simulacion-routing/
+npm run start
+cd simulacion-routing/
+ls
+cd src
+ls
+cd components/
+cd weekly/
+ls
+sudo nano SimulationMap.tsx 
+cd 
+cd simulacion-routing/
+npm run build
+npm run start
+sudo ss -tulnp | grep :3000
+sudo kill -9 380418
+npm run start
+sudo mysql
+ls
+mkdir backup
+ls
+cd backup/
+cd 
+sudo rm -rf backup
+ls
+exit
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src
+ls
+cd main
+ls
+cd java
+ls
+cd com
+ls
+cd dp1code/
+ls
+cd routing/
+ls
+cd Service/
+sudo nano RoutingService.java 
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src/
+ls
+cd main
+
+cd com
+cd dp1code/routing/
+ls
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src
+ls
+cd main/java/com
+ls
+cd dp1code/routing/
+ls
+cd Service/
+sudo nano RoutingService.java 
+cd 
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+mysql -u admin -p
+cd backup
+ls
+sudo nano prueba_camiones_exper.sql 
+cd
+clear
+exit
+clear
+cd backup/
+sudo nano prueba_camiones_exper.sql 
+exit
+clear
+exit
+cd simulacion-routing/src/components/weekly/
+sudo nano SimulationMap.tsx 
+cd
+cd simulacion-routing/
+npm run build
+npm run start
+cd src/components/weekly/
+sudo nano SimulationMap.tsx 
+sudo nano TimeContext.tsx 
+cd 
+cd simulacion-routing/
+npm run build
+npm run start
+mysql -u root
+sudo apt update
+sudo apt install mysql-server -y
+sudo mysql
+sudo mysql -u root -p
+sudo systemctl stop mysql
+sudo mysqld_safe --skip-grant-tables &
+sudo mysql -u root -p
+sudo mysql
+clear
+cd dp1code/
+cd src/main/java/com
+ls
+cd dp1code/routing/Service/
+sudo nano RoutingService.java 
+sudo nano DatabaseService.java
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd drc/main/java/com/
+ls
+cd backup/
+ls
+pwd
+mysql -u root prueba_camiones_exper < /home/bmorales/backup/pruebas_camiones_exper.sql
+mysql -u root prueba_camiones_exper < /home/bmorales/backup/prueba_camiones_exper.sql
+mysql -u root prueba_camiones < /home/bmorales/backup/pruebas_camiones_exper.sql
+mysql -u root prueba_camiones < /home/bmorales/backup/prueba_camiones_exper.sql
+mysql -u root prueba_camiones_diario < /home/bmorales/backup/prueba_camiones_exper.sql
+mysql -u root prueba_camiones < /home/bmora
+les/backup/prueba_camiones_exper.sql
+mysql -u root prueba_camiones < /home/bmora
+les/backup/prueba_camiones_exper.sql
+mysql -u root prueba_camiones < /home/bmorales/backup/prueba_camiones_exper.sql
+mysql -u root prueba_camiones_diario < /home/bmorales/backup/prueba_camiones_exper.sql
+sudo mysql
+mysql -u root prueba_camiones < /home/bmorales/backup/prueba_camiones_exper.sql
+mysql -u root prueba_camiones_diario < /home/bmorales/backup/prueba_camiones_exper.sql
+sudo mysql
+EXIT
+sudo systemctl start mysql
+clear
+sudo systemctl status mysql
+sudo tail -n 50 /var/log/mysql/error.log
+ps aux | grep mysqld
+sudo kill -9 385277 385278 385279 385404
+ps aux | grep mysqld
+sudo systemctl status mysql
+sudo mysql -u root
+netstat -an | grep 3306
+sudo systemctl status mysql
+sudo nano /etc/mysql/my.cnf
+/etc/mysql/mysql.conf.d/mysqld.cnf
+sudo /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+sudo nano /etc/my.cnf
+ls -ld /var/lib/mysql
+ls -ld /var/run/mysqld
+ls /var/log/mysql/error.log
+ls -ld /var/log/mysql/error.log
+ls mysql:mysql /var/log/mysql/error.log
+sudo nano mysql:mysql /var/log/mysql/error.log
+sudo systemctl restart mysql
+sudo systemctl status mysql
+df -h
+sudo ls -l /var/lib/mysql
+cd dp1code/
+cd src/main/java/com/dp1code/routing/Service/
+sudo nano DatabaseService.java
+cd 
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+sudo systemctl status mysql
+sudo systemctl start mysql
+sudo journalctl -xeu mysql.service --no-pager
+sudo less /var/log/mysql/mysql.log
+sudo journalctl -u mysql.service -n 50 --no-pager
+sudo cat /var/log/mysql/error.log
+sudo ls -l /var/log/mysql
+sudo chown mysql:mysql /var/log/mysql/error.log
+sudo chown -R mysql:mysql /var/log/mysql
+sudo systemctl start mysql
+ps aux | grep mysqld
+sudo kill -9 389750
+sudo mysqld_safe --skip-grant-tables &
+mysql -u root -p
+ps aux | grep mysqld
+sudo kill -9 390076
+sudo mysqld_safe --skip-grant-tables &
+ps aux | grep mysqld
+mysql -u root
+clear
+cd dp1code/src/main/java/com/dp1code/routing/
+ls
+cd Service/
+sudo nano DatabaseService.java
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src/main/java/com/dp1code/routing/
+ls
+cd Service/
+sudo nano DatabaseService.java
+cd 
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src/main/java/com/
+ls
+cd dp1code/routing/
+ls
+cd Service/
+ls
+sudo nano RoutingService.java 
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cc
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd dp1code/
+ls
+cd src
+ls
+cd main/java
+ls
+cd com
+cd dp1code/routing/
+cd Model/
+sudo nano PathFinder.java
+cd ..
+cd Service/
+sudo nano RoutingService.java 
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src/main/java/com
+ls
+cd dp1code/
+cd routing/
+ls
+cd Service/
+sudo nano RoutingService.java 
+cd 
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cd src/main/java/
+ls
+cd com
+ls
+cd dp1code/
+ls
+cd routing/
+cd Service/
+ls
+sudo nano RoutingService.java 
+CD
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+cls
+clear
+npm run build
+cd ..
+npm run build
+npm run start
+sudo ss -tulnp | grep :3000
+sudo kill -9 386604
+npm run start
+cd src/components/weekly/
+sudo nano StatusBar.tsx 
+cd
+cd simulacion-routing/
+npm run build
+npm run start
+cd src/
+ls
+cd components/weekly/
+sudo nano StatusBar.tsx 
+cd
+cd simulacion-routing/
+npm run start
+cd src/components/weekly/
+sudo nano StatusBar.tsx 
+sudo nano TimeContext.tsx 
+cd
+cd simulacion-routing/
+npm run build
+npm run start
+cd src/components/weekly/
+sudo nano TimeContext.tsx 
+sudo nano StatusBar.tsx 
+sudo nano SimulationMap.tsx 
+cd
+cd simulacion-routing/
+npm run build
+sudo nano /src/components/weekly/SimulationMap.tsx
+sudo nano ./src/components/weekly/SimulationMap.tsx
+npm run build
+npm run start
+cd src/components/weekly/
+sudo nano StatusBar.tsx 
+cd
+cd simulacion-routing/
+npm run build
+npm run start
+clear
+ls
+exit
+clear
+ls
+sudo rm -rf dp1code/
+sudo rm -rf simulacion-routing/
+clear
+ls
+clear
+scp -r "C:\Users\josep\OneDrive\Desktop\PUCP\2025-1\PDDS\Final\PROYECTO_DP1_G7\simulacion-routing" bmorales@200.16.7.185:~/simulacion-routing
+exit
+ls
+sudo rm -rf simulacion-routing/
+clear
+ls
+cd dp1code/
+cd src/main/java/com/dp1code/routing/Controller/
+sudo nano RoutingController.java 
+cd
+clear
+ls
+cd dp1code/
+clear
+chmod +x mvnw
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd simulacion-routing/
+npm install
+npm install axios
+npm install --save-dev @types/sockjs-client
+clear
+npm run build
+cd src/lib/
+sudo nano api.ts 
+cd
+cd simulacion-routing/
+clear
+npm run build
+cd src/lib/
+ls
+sudo nano websocketSimulacion.ts 
+sudo nano api.ts 
+cd
+cd simulacion-routing/src/components/daily/
+sudo nano SimulationMapDaily.tsx 
+cd
+cd simulacion-routing/
+clear
+npm run build
+clear
+sudo lsof -i :8080
+sudo kill -9 396156
+clear
+cd
+clear
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+sudo lsof -i :8080
+sudo ss -tulnp | grep :3000
+sudo kill -9 396906
+clear
+cd simulacion-routing/
+clear
+npm run start
+clear
+mysql -u root
+sudo killall mysqld
+sudo systemctl start mysql
+mysql -u root -p
+clear
+sudo systemctl status mysql
+clear
+mysql -u root -p
+clear
+clear
+ls
+cd dp1code/src/main/java/com/dp1code/routing/Service/
+sudo nano DatabaseService.java 
+cd
+clear
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd src/main/java/com/dp1code/routing/Service/
+sudo nano DatabaseService.java 
+cd
+cd dp1code/
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd
+clear
+sudo mysql -u root -p
+sudo systemctl stop mysql
+sudo mysqld_safe --skip-grant-tables &
+clear
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd src/main/java/com/dp1code/routing/Service/
+sudo nano DatabaseService.java 
+clear
+cd
+cd dp1code/
+clear
+cd src/main/java/com/dp1code/routing/Service/
+sudo nano DatabaseService.java 
+cd
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+sudo ss -tulnp | grep :3000
+sudo kill -9 400203
+sudo lsof -i :8080
+clear
+exit
+clear
+cd simulacion-routing/
+clear
+npm run start
+clear
+mysql -u root
+mysql -u root -p
+clear
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd dp1code/
+cear
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd src/main/java/com/dp1code/routing/Service/
+sudo nano DatabaseService.java 
+cd
+cd dp1code/
+clear
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8080"
+clear
+cd
+clear
+mysql -u root -p
+clear
+cd backup/
+mysqldump -u root -p --routines --no-create-info --no-data --no-create-db prueba_camiones_exper > procedures.sql
+ls
+sudo nano procedures.sql
+mysql -u root -p prueba_camiones_exper < procedures.sql
+cd
+ls
+sudo rm -rf backup/
+clear
+mysql -u root -p
+clear
+ls
+mysql -u root -p
+clear
+cd backup/
+ls
+mysql -u root -p < backup2.sql
+sudo nano backup2.sql 
+mysql -u root -p < backup2.sql
+sudo nano backup2.sql 
+mysql -u root -p < backup2.sql
+cd
+cd simulacion-routing/
 clear

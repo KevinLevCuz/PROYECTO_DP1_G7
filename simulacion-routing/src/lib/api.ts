@@ -1,5 +1,6 @@
 import { conectarSimulacionSemanal } from "./websocketSimulacion";
 import { desconectarSimulacion } from "./websocketSimulacion";
+import { conectarSimulacionDiaDia } from "./websocketSimulacion";
 // lib/api.ts
 export interface Ubicacion {
   posX: number;
@@ -358,7 +359,7 @@ export async function obtenerResumenPedidos(
   fechaFin: string
 ): Promise<PedidoResumen> {
   try {
-    const response = await fetch(`https://h982equipo7g.duckdns.org/api/pedidos/resumenPedidos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
+    const url = await fetch(`https://h982equipo7g.duckdns.org/api/pedidos/resumenPedidos?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`);
 
     const response = await fetch(url.toString());
 
@@ -391,5 +392,25 @@ export function iniciarSimulacionSemanalSocket(
  * Detiene la escucha de simulación.
  */
 export function detenerSimulacionSocket() {
+  desconectarSimulacion();
+}
+
+
+/**
+ * Inicia la simulación día a día por WebSocket.
+ * @param fechaInicio - fecha inicial en ISO string sin "Z"
+ * @param callback - función que se ejecuta cuando llega cada solución
+ */
+export function iniciarSimulacionDiaDiaSocket(
+  fechaInicio: string,
+  callback: (solucion: Solucion) => void
+) {
+  conectarSimulacionDiaDia(fechaInicio, callback);
+}
+
+/**
+ * Detiene la escucha de simulación.
+ */
+export function detenerSimulacionDiaDiaSocket() {
   desconectarSimulacion();
 }

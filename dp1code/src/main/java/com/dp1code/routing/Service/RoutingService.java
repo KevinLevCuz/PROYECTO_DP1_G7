@@ -10,6 +10,7 @@ import com.dp1code.routing.Model.Nodo;
 import com.dp1code.routing.Model.SimulatedAnnealing;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -64,9 +65,70 @@ public class RoutingService {
 
     }
 
+    public void iniciarSimulacionConWebSocketDiaDia(LocalDateTime fechaInicio, SimpMessagingTemplate messagingTemplate)
+            throws IOException {
+        LocalDateTime ahora = fechaInicio;
+        fechaInicio = fechaInicio.minusHours(3); // Ajustar a la zona horaria de Lima
+        LocalDateTime fechaproxima = LocalDateTime.MIN;
+        int cont = 0;
+        while (true) {
+            long startNano = System.nanoTime();
+            Solucion solucion = obtenerDiaDia(fechaInicio, ahora, cont);
+
+            if (solucion == null) {
+                System.out.println("❌ Colapso detectado, se detiene la simulación.");
+                Map<String, Object> colapsoMsg = new HashMap<>();
+                colapsoMsg.put("colapso", true);
+                messagingTemplate.convertAndSend("/topic/operacionesDiaDia", colapsoMsg);
+                break;
+            }
+            long endNano = System.nanoTime();
+            double durationSeconds = (endNano - startNano) / 1_000_000_000.0;
+            ArrayList<Pedido> pedidosObtenidos = new ArrayList<>(
+                    solucion.getPlanesCamion().stream()
+                            .flatMap(plan -> plan.getSubRutas().stream())
+                            .filter(subRuta -> subRuta.getPedido() != null)
+                            .map(SubRuta::getPedido)
+                            .collect(Collectors.toList()));
+            for (Pedido ped : pedidosObtenidos) {
+                if (ped.getHoraSiguientePedido() != null && !ped.getHoraSiguientePedido().isBefore(fechaproxima)) {
+                    fechaproxima = ped.getHoraSiguientePedido();
+                }
+            }
+            System.out.println("La fecha proxima es: " + fechaproxima);
+            // Enviar por WebSocket
+            messagingTemplate.convertAndSend("/topic/operacionesDiaDia", solucion);
+
+            if (fechaproxima != null && fechaproxima.isAfter(ahora)) {
+                long millisToWait = Duration.between(LocalDateTime.now(), fechaproxima).toMillis();
+
+                if (millisToWait > 0) {
+                    System.out.println("⏳ Esperando " + millisToWait + " ms hasta la próxima planificación ("
+                            + fechaproxima + ")");
+                    try {
+                        Thread.sleep(millisToWait);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        System.err.println("⛔ Hilo interrumpido durante la espera");
+                        break;
+                    }
+                    ahora = fechaproxima;
+                } else {
+                    ahora = LocalDateTime.now();
+                    System.out.println("⚠️ Ya se pasó la hora programada (" + fechaproxima + "), no se duerme");
+                }
+
+            }
+            cont = 1;
+            // ahora = ahora.plusSeconds(tiermpoSalto); // Avanzar el tiempo simulado
+        }
+    }
+
     public void iniciarSimulacionConWebSocket(LocalDateTime fechaInicio, SimpMessagingTemplate messagingTemplate)
             throws IOException {
         LocalDateTime ahora = fechaInicio;
+        fechaInicio = LocalDateTime.of(2025, 5, 15, 15, 0); /////////////////////
+
         while (true) {
             long startNano = System.nanoTime();
             Solucion solucion = simulacionSemanal(fechaInicio, ahora);
@@ -137,7 +199,8 @@ public class RoutingService {
                     + " y su glpTanque es: " + c.getGlpTanque() + " y su glpCarga es: " + c.getGlpActual());
         }
         System.out.println("La fecha Input que esta ingresando es: " + fechaInput + " y la de ahora es: " + ahora);
-        ArrayList<Pedido> pedidos = pedidoService.obtenerPedidosAnteriores(fechaInput.minusSeconds(tiermpoSalto), ahora);
+        ArrayList<Pedido> pedidos = pedidoService.obtenerPedidosAnteriores(fechaInput.minusSeconds(tiermpoSalto),
+                ahora);
         System.out.println(
                 "Los pedidos obtenidos son:  y son: " + pedidos.size() + " desde fechaInput menos tiempoSalto: "
                         + fechaInput.minusSeconds(tiermpoSalto) + " hasta ahora: " + ahora);
@@ -160,14 +223,14 @@ public class RoutingService {
         long endNano = System.nanoTime();
         double durationSeconds2 = (endNano - startNano) / 1_000_000_000.0;
         System.out.println("Tiempo de ejecución del Optimize: " + durationSeconds2 + " s");
- 
+
         for (PlanCamion p : mejor.getPlanesCamion()) {
             System.out.println("----RETORNOOOOOOO LA SOLUCION---------");
             System.out.println("El camion: " + p.getCamion().getCodigo() + " y su ubi: "
                     + p.getCamion().getUbicacionActual().getPosX() + ", "
                     + p.getCamion().getUbicacionActual().getPosY());
             for (SubRuta sub : p.getSubRutas()) {
-                if(sub.getTrayectoria().size() == 0) {
+                if (sub.getTrayectoria().size() == 0) {
                     continue;
                 }
                 System.out
@@ -187,16 +250,22 @@ public class RoutingService {
         actualizarDatosBD(mejor, fechaSimulada, fechaSimulada.plusSeconds(tiermpoSalto), camiones, plantas);
         ArrayList<Pedido> pedidos2 = pedidoService.obtenerPedidosAnteriores(fechaInput.minusSeconds(tiermpoSalto),
                 ahora);
-        
-        /*for (Pedido p : pedidos2) {
-            System.out.println("Los pedidos que quedan son: " + p.getId() + " y su estado es: " + p.isEntregado());
-            if (p.getPlazoMaximoEntrega().isBefore(fechaSimulada.plusSeconds(tiermpoSalto)) && !p.isEntregado()) {
-                System.out.println("Colapso a las: " + fechaSimulada.plusSeconds(tiermpoSalto) + " y con el pedido: "
-                        + p.getId() + "  y su fecha de plazo maximo es: " + p.getPlazoMaximoEntrega()
-                        + " y la hora Pedido: " + p.getHoraPedido());
-                return null;
-            }
-        }*/
+
+        /*
+         * for (Pedido p : pedidos2) {
+         * System.out.println("Los pedidos que quedan son: " + p.getId() +
+         * " y su estado es: " + p.isEntregado());
+         * if
+         * (p.getPlazoMaximoEntrega().isBefore(fechaSimulada.plusSeconds(tiermpoSalto))
+         * && !p.isEntregado()) {
+         * System.out.println("Colapso a las: " +
+         * fechaSimulada.plusSeconds(tiermpoSalto) + " y con el pedido: "
+         * + p.getId() + "  y su fecha de plazo maximo es: " + p.getPlazoMaximoEntrega()
+         * + " y la hora Pedido: " + p.getHoraPedido());
+         * return null;
+         * }
+         * }
+         */
 
         mejor.setPlantas(plantas);
 
@@ -398,7 +467,8 @@ public class RoutingService {
                         }
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1),
                                 plantas)) {
-                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            Planta planta = Utilidades
+                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpActual();
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
 
@@ -434,7 +504,8 @@ public class RoutingService {
                                     + sub.getPedido().getCantidadGlp());
                         }
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(0), plantas)) {
-                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            Planta planta = Utilidades
+                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpTanque();
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
                         }
@@ -479,14 +550,14 @@ public class RoutingService {
         for (PlanCamion plan : solucion.getPlanesCamion()) {
             if (plan.getSubRutas().size() != 0) {
                 Camion c = new Camion();
-                
 
                 for (Camion camion : camiones) {
                     if (camion.getCodigo() == plan.getCamion().getCodigo()) {
                         c = camion;
                     }
                 }
-                System.out.println("El camion con codigo: " + c.getCodigo() + " ingresa en el tanque con: " + c.getGlpTanque() + " glp en el tanque. Y glpActual: " + c.getGlpActual());
+                System.out.println("El camion con codigo: " + c.getCodigo() + " ingresa en el tanque con: "
+                        + c.getGlpTanque() + " glp en el tanque. Y glpActual: " + c.getGlpActual());
                 // Primero verifiquemos si ya termino la ultima subRuta de este plan.
                 SubRuta last = plan.getSubRutas().get(plan.getSubRutas().size() - 1);
                 if (!last.getHoraFin().isAfter(fechaSimulada)) {
@@ -520,7 +591,8 @@ public class RoutingService {
                         }
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1),
                                 plantas)) {
-                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            Planta planta = Utilidades
+                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpActual();
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
                             c.setGlpActual(c.getCapacidadMaxima());
@@ -553,9 +625,10 @@ public class RoutingService {
                 // checandolo desde ahí.
                 for (SubRuta sub : plan.getSubRutas()) {
                     // Si ya paso esa subRuta(A-> B).
-                    
+
                     if (!sub.getHoraFin().isAfter(fechaSimulada) && !sub.getTrayectoria().isEmpty()) {
-                        System.out.println("Ingreso a paso la subRuta: "+ sub.getHoraInicio() + " a " + sub.getHoraFin());
+                        System.out.println(
+                                "Ingreso a paso la subRuta: " + sub.getHoraInicio() + " a " + sub.getHoraFin());
                         double glpConsumida = c.calcularConsumo(sub.getTrayectoria().size() - 1);
                         c.setGlpTanque(c.getGlpTanque() - glpConsumida);
                         c.setUbicacionActual(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1));
@@ -582,11 +655,11 @@ public class RoutingService {
                                     + sub.getPedido().getCantidadGlp());
                         }
 
-
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1),
                                 plantas)) {
                             System.out.println("Ingreso a actualizar a una planta Secundaria");
-                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            Planta planta = Utilidades
+                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpActual();
                             c.setGlpTanque(25);
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
@@ -656,8 +729,8 @@ public class RoutingService {
                 System.out.println("Error al actualizar plantas");
 
             actualizado = camionService.actualizarCamionesBatch(camiones, conn, fechaSimulada);
-            for(Camion camion : camiones){
-                if(camion.isDisponiblePorMantenimiento(fechaSimulada)){
+            for (Camion camion : camiones) {
+                if (camion.isDisponiblePorMantenimiento(fechaSimulada)) {
                     camion.setEstado("L");
                 } else {
                     camion.setEstado("ND");
@@ -729,7 +802,8 @@ public class RoutingService {
                         }
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1),
                                 plantas)) {
-                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            Planta planta = Utilidades
+                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpActual();
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
                             c.setGlpActual(c.getCapacidadMaxima());
@@ -792,7 +866,8 @@ public class RoutingService {
                         }
                         if (Utilidades.esPlantaSecundaria(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1),
                                 plantas)) {
-                            Planta planta = Utilidades.obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
+                            Planta planta = Utilidades
+                                    .obtenerPlanta(sub.getTrayectoria().get(sub.getTrayectoria().size() - 1), plantas);
                             double glpFaltante = c.getCapacidadMaxima() - c.getGlpActual();
                             c.setGlpTanque(25);
                             planta.setGlpDisponible(planta.getGlpDisponible() - glpFaltante);
@@ -911,7 +986,7 @@ public class RoutingService {
             }
 
             LocalDateTime inicio = parsearFechaHora(tiempos[0], mes);
-            LocalDateTime fin = parsearFechaHora(tiempos[1],  mes);
+            LocalDateTime fin = parsearFechaHora(tiempos[1], mes);
 
             String[] coordenadas = partes[1].split(",");
             if (coordenadas.length % 2 != 0) {
@@ -937,7 +1012,6 @@ public class RoutingService {
         }
         br.close();
     }
-
 
     public static ArrayList<Pedido> cargarPedidosCompletos(String filePath, LocalDateTime ahora) throws IOException {
         ArrayList pedidos = new ArrayList<>();
@@ -1094,6 +1168,7 @@ public class RoutingService {
         bloqueos.addAll(obtenerBloqueos("data/bloqueosDiciembre.txt", Month.DECEMBER));
         return bloqueos;
     }
+
     public static ArrayList<Bloqueo> obtenerBloqueos(String filePath, Month mes) throws IOException {
         ArrayList<Bloqueo> bloqueos = new ArrayList<>();
         Path path = Paths.get(filePath);
@@ -1106,7 +1181,7 @@ public class RoutingService {
             // Cada rango es "dd'd'HH'h'MM'm'-dd'd'HH'h'MM'm'"
             String[] span = parts[0].split("-");
             LocalDateTime start = parsearFechaHora(span[0], mes);
-            LocalDateTime end = parsearFechaHora(span[1],  mes);
+            LocalDateTime end = parsearFechaHora(span[1], mes);
             String[] coords = parts[1].split(",");
             ArrayList<Nodo> nodos = new ArrayList<>();
             for (int i = 0; i < coords.length; i += 2) {
