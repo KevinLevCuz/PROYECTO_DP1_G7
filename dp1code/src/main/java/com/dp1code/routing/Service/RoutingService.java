@@ -60,6 +60,7 @@ public class RoutingService {
 
     static Grid grid = new Grid(71, 51);
     static int tiermpoSalto = 3600;
+    static boolean existenPedidos = true;
 
     public RoutingService() {
 
@@ -68,59 +69,73 @@ public class RoutingService {
     public void iniciarSimulacionConWebSocketDiaDia(LocalDateTime fechaInicio, SimpMessagingTemplate messagingTemplate)
             throws IOException {
         LocalDateTime ahora = fechaInicio;
-        fechaInicio = fechaInicio.minusHours(3); // Ajustar a la zona horaria de Lima
+        fechaInicio = fechaInicio.minusMinutes(2); // Ajustar a la zona horaria de Lima
         LocalDateTime fechaproxima = LocalDateTime.MIN;
         int cont = 0;
         while (true) {
             long startNano = System.nanoTime();
             Solucion solucion = obtenerDiaDia(fechaInicio, ahora, cont);
-
-            if (solucion == null) {
-                System.out.println("❌ Colapso detectado, se detiene la simulación.");
-                Map<String, Object> colapsoMsg = new HashMap<>();
-                colapsoMsg.put("colapso", true);
-                messagingTemplate.convertAndSend("/topic/operacionesDiaDia", colapsoMsg);
-                break;
-            }
             long endNano = System.nanoTime();
-            double durationSeconds = (endNano - startNano) / 1_000_000_000.0;
-            ArrayList<Pedido> pedidosObtenidos = new ArrayList<>(
-                    solucion.getPlanesCamion().stream()
-                            .flatMap(plan -> plan.getSubRutas().stream())
-                            .filter(subRuta -> subRuta.getPedido() != null)
-                            .map(SubRuta::getPedido)
-                            .collect(Collectors.toList()));
-            for (Pedido ped : pedidosObtenidos) {
-                if (ped.getHoraSiguientePedido() != null && !ped.getHoraSiguientePedido().isBefore(fechaproxima)) {
-                    fechaproxima = ped.getHoraSiguientePedido();
+            if (existenPedidos == true) {
+                if (solucion == null) {
+                    System.out.println("❌ Colapso detectado, se detiene la simulación.");
+                    Map<String, Object> colapsoMsg = new HashMap<>();
+                    colapsoMsg.put("colapso", true);
+                    messagingTemplate.convertAndSend("/topic/operacionesDiaDia", colapsoMsg);
+                    break;
                 }
-            }
-            System.out.println("La fecha proxima es: " + fechaproxima);
-            // Enviar por WebSocket
-            messagingTemplate.convertAndSend("/topic/operacionesDiaDia", solucion);
-
-            if (fechaproxima != null && fechaproxima.isAfter(ahora)) {
-                long millisToWait = Duration.between(LocalDateTime.now(), fechaproxima).toMillis();
-
-                if (millisToWait > 0) {
-                    System.out.println("⏳ Esperando " + millisToWait + " ms hasta la próxima planificación ("
-                            + fechaproxima + ")");
-                    try {
-                        Thread.sleep(millisToWait);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        System.err.println("⛔ Hilo interrumpido durante la espera");
-                        break;
+                
+                double durationSeconds = (endNano - startNano) / 1_000_000_000.0;
+                /*ArrayList<Pedido> pedidosObtenidos = new ArrayList<>(
+                        solucion.getPlanesCamion().stream()
+                                .flatMap(plan -> plan.getSubRutas().stream())
+                                .filter(subRuta -> subRuta.getPedido() != null)
+                                .map(SubRuta::getPedido)
+                                .collect(Collectors.toList()));
+                for (Pedido ped : pedidosObtenidos) {
+                    if (ped.getHoraSiguientePedido() != null && !ped.getHoraSiguientePedido().isBefore(fechaproxima)) {
+                        fechaproxima = ped.getHoraSiguientePedido();
                     }
-                    ahora = fechaproxima;
-                } else {
-                    ahora = LocalDateTime.now();
-                    System.out.println("⚠️ Ya se pasó la hora programada (" + fechaproxima + "), no se duerme");
-                }
+                }*/
+                fechaproxima = ahora.plusMinutes(2);
+                System.out.println("La fecha proxima es: " + fechaproxima);
+                // Enviar por WebSocket
+                messagingTemplate.convertAndSend("/topic/operacionesDiaDia", solucion);
 
+                if (fechaproxima != null && fechaproxima.isAfter(ahora)) {
+                    long millisToWait = Duration.between(LocalDateTime.now(), fechaproxima).toMillis();
+
+                    if (millisToWait > 0) {
+                        System.out.println("⏳ Esperando " + millisToWait + " ms hasta la próxima planificación ("
+                                + fechaproxima + ")");
+                        try {
+                            Thread.sleep(millisToWait);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            System.err.println("⛔ Hilo interrumpido durante la espera");
+                            break;
+                        }
+                        ahora = fechaproxima;
+                    } else {
+                        ahora = LocalDateTime.now();
+                        System.out.println("⚠️ Ya se pasó la hora programada (" + fechaproxima + "), no se duerme");
+                    }
+
+                }
+                cont = 1;
+                // ahora = ahora.plusSeconds(tiermpoSalto); // Avanzar el tiempo simulado
+            } else {
+                try {
+                    fechaproxima = ahora.plusMinutes(2);
+                    long millisToWait = Duration.between(LocalDateTime.now(), fechaproxima).toMillis();
+                    Thread.sleep(120000 - millisToWait); // Esperar 1 minuto menos el tiempo transcurrido hasta la próxima planificación
+                    ahora = fechaproxima;
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.err.println("⛔ Hilo interrumpido durante la espera");
+                    break;
+                }
             }
-            cont = 1;
-            // ahora = ahora.plusSeconds(tiermpoSalto); // Avanzar el tiempo simulado
         }
     }
 
@@ -324,61 +339,69 @@ public class RoutingService {
         System.out.println("la fecha de entrada es: " + fechaInput + " y la fecha a comparar es: " + ahora);
         ArrayList<Pedido> pedidos = pedidoService
                 .obtenerPedidosConSiguienteEnRango(fechaInput.minusSeconds(tiermpoSalto), ahora);
-        LocalDateTime sigTime = pedidos.get(pedidos.size() - 1).getHoraSiguientePedido();
+        if (pedidos == null || pedidos.isEmpty()) {
+            existenPedidos = false;
+            return null;
+        } else {
+            LocalDateTime sigTime = pedidos.get(pedidos.size() - 1).getHoraSiguientePedido();
 
-        for (Pedido p : pedidos) {
-            System.out.println("El pedido con id:" + p.getId() + " y glp: " + p.getCantidadGlp() + " y su ubicacion es:"
-                    + p.getDestino().getPosX() + ", " + p.getDestino().getPosY());
-            if (p.getHoraSiguientePedido() == null)
-                System.out.println("****************************** es fecha null ********************");
-        }
+            for (Pedido p : pedidos) {
+                System.out.println(
+                        "El pedido con id:" + p.getId() + " y glp: " + p.getCantidadGlp() + " y su ubicacion es:"
+                                + p.getDestino().getPosX() + ", " + p.getDestino().getPosY());
+                if (p.getHoraSiguientePedido() == null)
+                    System.out.println("****************************** es fecha null ********************");
+            }
 
-        // ArrayList<Camion> camionesBackup = deepCopyCamiones(camiones);
-        // ArrayList<Pedido> pedidosBackup = deepCopyPedidos(pedidosParaPlanificar);
-        // ArrayList<Planta> plantasBackup = deepCopyPlantas(plantas);
+            // ArrayList<Camion> camionesBackup = deepCopyCamiones(camiones);
+            // ArrayList<Pedido> pedidosBackup = deepCopyPedidos(pedidosParaPlanificar);
+            // ArrayList<Planta> plantasBackup = deepCopyPlantas(plantas);
 
-        SimulatedAnnealing sa = new SimulatedAnnealing(5000, 0.005, 100, plantas, camiones, pedidos, grid);
-        Solucion mejor = sa.optimize(fechaSimulada);
-        // pedidosNoEntregados = new ArrayList<>();
-        // pedidosNoEntregados = actualizarDatos(mejor,
-        // fechaSimulada.plusMinutes(tiermpoSalto), camiones, plantas);
-        for (PlanCamion p : mejor.getPlanesCamion()) {
-            System.out.println("----RETORNOOOOOOO LA SOLUCION---------");
-            System.out.println("El camion: " + p.getCamion().getCodigo() + " y su ubi: "
-                    + p.getCamion().getUbicacionActual().getPosX() + ", "
-                    + p.getCamion().getUbicacionActual().getPosY());
-            for (SubRuta sub : p.getSubRutas()) {
-                System.out
-                        .println("El Inicio: " + sub.getHoraInicio() + ", ubi: " + sub.getTrayectoria().get(0).getPosX()
-                                + ", " + sub.getTrayectoria().get(0).getPosY() + " y Fin: " + sub.getHoraFin()
-                                + ", ubi: " + sub.getTrayectoria().get(sub.getTrayectoria().size() - 1).getPosX() + ", "
-                                + sub.getTrayectoria().get(sub.getTrayectoria().size() - 1).getPosY()
-                                + " y el size es: " + sub.getTrayectoria().size());
-                System.out.println("--");
-                for (Nodo n : sub.getTrayectoria()) {
-                    System.out.print("(" + n.getPosX() + ", " + n.getPosY() + "), ");
+            SimulatedAnnealing sa = new SimulatedAnnealing(5000, 0.005, 100, plantas, camiones, pedidos, grid);
+            Solucion mejor = sa.optimize(fechaSimulada);
+            // pedidosNoEntregados = new ArrayList<>();
+            // pedidosNoEntregados = actualizarDatos(mejor,
+            // fechaSimulada.plusMinutes(tiermpoSalto), camiones, plantas);
+            for (PlanCamion p : mejor.getPlanesCamion()) {
+                System.out.println("----RETORNOOOOOOO LA SOLUCION---------");
+                System.out.println("El camion: " + p.getCamion().getCodigo() + " y su ubi: "
+                        + p.getCamion().getUbicacionActual().getPosX() + ", "
+                        + p.getCamion().getUbicacionActual().getPosY());
+                for (SubRuta sub : p.getSubRutas()) {
+                    System.out
+                            .println("El Inicio: " + sub.getHoraInicio() + ", ubi: "
+                                    + sub.getTrayectoria().get(0).getPosX()
+                                    + ", " + sub.getTrayectoria().get(0).getPosY() + " y Fin: " + sub.getHoraFin()
+                                    + ", ubi: " + sub.getTrayectoria().get(sub.getTrayectoria().size() - 1).getPosX()
+                                    + ", "
+                                    + sub.getTrayectoria().get(sub.getTrayectoria().size() - 1).getPosY()
+                                    + " y el size es: " + sub.getTrayectoria().size());
+                    System.out.println("--");
+                    for (Nodo n : sub.getTrayectoria()) {
+                        System.out.print("(" + n.getPosX() + ", " + n.getPosY() + "), ");
+                    }
+                    System.out.println("--");
                 }
-                System.out.println("--");
             }
-        }
-        // new Thread(() -> {
+            // new Thread(() -> {
 
-        // }).start();
-        System.out.println("LA FECHA DEL PEDIDO PRÖXIMO ES:" + sigTime);
-        actualizarDatosBDDiaADia(mejor, fechaSimulada, sigTime, camiones, plantas);
-        for (Pedido p : pedidos) {
-            if (p.getPlazoMaximoEntrega().isBefore(sigTime) && !p.isEntregado()) {
-                System.out.println("Colapso a las: " + sigTime + " y con el pedido: " + p.getId()
-                        + "  y su fecha de plazo maximo es: " + p.getPlazoMaximoEntrega() + " y la hora Pedido: "
-                        + p.getHoraPedido());
-                return null;
+            // }).start();
+            System.out.println("LA FECHA DEL PEDIDO PRÖXIMO ES:" + sigTime);
+            actualizarDatosBDDiaADia(mejor, fechaSimulada, sigTime, camiones, plantas);
+            for (Pedido p : pedidos) {
+                if (p.getPlazoMaximoEntrega().isBefore(sigTime) && !p.isEntregado()) {
+                    System.out.println("Colapso a las: " + sigTime + " y con el pedido: " + p.getId()
+                            + "  y su fecha de plazo maximo es: " + p.getPlazoMaximoEntrega() + " y la hora Pedido: "
+                            + p.getHoraPedido());
+                    return null;
+                }
             }
+            // System.out.println("Se agrego una nueva solucion al arreglo");
+            // soluciones.add(mejor);
+            // fechaSimulada = fechaSimulada.plusMinutes(tiermpoSalto);
+            existenPedidos = true;
+            return mejor;
         }
-        // System.out.println("Se agrego una nueva solucion al arreglo");
-        // soluciones.add(mejor);
-        // fechaSimulada = fechaSimulada.plusMinutes(tiermpoSalto);
-
-        return mejor;
     }
 
     public static ArrayList<Camion> deepCopyCamiones(ArrayList<Camion> original) {

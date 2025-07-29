@@ -15,17 +15,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 @CrossOrigin(origins = {
-    "https://h982equipo7g.duckdns.org",
-    "http://localhost:3000"
+        "https://h982equipo7g.duckdns.org",
+        "http://localhost:3000"
 })
 @RestController
 @RequestMapping("/api/pedidos")
 public class PedidoController {
 
-    @Autowired
+    //@Autowired
     private PedidoService pedidoService;
     private PedidoArchivoService pedidoArchivoService;
+
+    //@Autowired
+    public PedidoController(PedidoArchivoService pedidoArchivoService) {
+        this.pedidoArchivoService = pedidoArchivoService;
+    }
 
     @PostMapping("/registrarPedido")
     public ResponseEntity<String> insertarPedido(@RequestBody PedidoDTO input) {
@@ -38,15 +44,14 @@ public class PedidoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al insertar pedido");
         }
     }
+
     @GetMapping("/resumenPedidos")
     public PedidoResumenDTO obtenerResumenPedidos(
-        @RequestParam("fechaInicio") String fechaInicio,
-        @RequestParam("fechaFin") String fechaFin
-    ) {
+            @RequestParam("fechaInicio") String fechaInicio,
+            @RequestParam("fechaFin") String fechaFin) {
         PedidoResumenService pedidoResumenService = new PedidoResumenService();
         return pedidoResumenService.obtenerResumenPedidos(fechaInicio, fechaFin);
     }
-
 
     @GetMapping("/rango")
     public List<Pedido> obtenerPedidosEnRango() {
@@ -83,19 +88,52 @@ public class PedidoController {
         }
     }
 
+    /*
+     * @PostMapping("/cargarArchivo")
+     * public ResponseEntity<String> cargarArchivo(@RequestParam("archivo")
+     * MultipartFile archivo) {
+     * try {
+     * if (archivo.isEmpty()) {
+     * return ResponseEntity.badRequest().body("El archivo está vacío.");
+     * }
+     * 
+     * pedidoArchivoService.procesarArchivoPedidos(archivo);
+     * return ResponseEntity.ok("Archivo procesado e insertado correctamente.");
+     * 
+     * } catch (Exception e) {
+     * e.printStackTrace();
+     * return ResponseEntity.status(500).body("Error procesando el archivo: " +
+     * e.getMessage());
+     * }
+     * }
+     */
+
     @PostMapping("/cargarArchivo")
     public ResponseEntity<String> cargarArchivo(@RequestParam("archivo") MultipartFile archivo) {
         try {
+            if (archivo == null) {
+                return ResponseEntity.badRequest().body("No se recibió ningún archivo");
+            }
+
             if (archivo.isEmpty()) {
                 return ResponseEntity.badRequest().body("El archivo está vacío.");
             }
 
+            // Log para diagnóstico
+            System.out.println("Recibido archivo: " + archivo.getOriginalFilename() +
+                    ", tamaño: " + archivo.getSize() + " bytes");
+
             pedidoArchivoService.procesarArchivoPedidos(archivo);
-            return ResponseEntity.ok("Archivo procesado e insertado correctamente.");
+            return ResponseEntity.ok("Archivo procesado correctamente");
 
         } catch (Exception e) {
+            // Log más detallado
+            System.err.println("ERROR al procesar archivo:");
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Error procesando el archivo: " + e.getMessage());
+
+            return ResponseEntity.internalServerError()
+                    .body("Error procesando el archivo: " +
+                            e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 }
